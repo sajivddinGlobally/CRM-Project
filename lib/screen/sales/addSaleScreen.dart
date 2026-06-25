@@ -1,20 +1,48 @@
+import 'dart:developer';
 import 'dart:io';
+import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/data/Model/GetProductIdModel.dart';
+import 'package:crm_app/screen/home/homeScreen.dart';
+import 'package:dio/dio.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class AddSaleScreen extends StatefulWidget {
+class AddSaleScreen extends ConsumerStatefulWidget {
   const AddSaleScreen({super.key});
 
   @override
-  State<AddSaleScreen> createState() => _AddSaleScreenState();
+  ConsumerState<AddSaleScreen> createState() => _AddSaleScreenState();
 }
 
-class _AddSaleScreenState extends State<AddSaleScreen> {
-  final List<String> productList = ["Laptop", "Mobile", "Keyboard", "Mouse"];
+class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
+  final noteContoller = TextEditingController();
+  final reminderNoteController = TextEditingController();
+  int? selectedProductId;
+  List<Datum> products = [];
+  @override
+  void initState() {
+    super.initState();
+    getProducts();
+  }
+
+  Future<void> getProducts() async {
+    try {
+      final service = ref.read(authServiceProvider);
+
+      final response = await service.getProductIdData();
+
+      setState(() {
+        products = List<Datum>.from(response.data ?? []);
+      });
+    } catch (e) {
+      log(e.toString());
+    }
+  }
 
   final List<String> qtyList = ["1", "2", "3", "4", "5"];
 
@@ -26,6 +54,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   String? selectedQty;
   String? selectedPaymentStatus;
   String? selectedPaymentMethod;
+
+  bool isLoading = false;
 
   bool isReminder = false;
   DateTime? selectedDate;
@@ -39,7 +69,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'],
+        allowedExtensions: ['jpg', 'jpeg', 'png'],
       );
 
       if (result != null) {
@@ -56,6 +86,10 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     } catch (e) {
       debugPrint("File Pick Error: $e");
     }
+  }
+
+  void showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -156,15 +190,66 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               SizedBox(height: 30.h),
               sectionTitle("PRODUCT DETAILS"),
               SizedBox(height: 15.h),
-              customDropdown<String>(
-                value: selectedProduct,
-                hint: "Select Product",
-                items: productList,
-                onChanged: (value) {
-                  setState(() {
-                    selectedProduct = value;
-                  });
-                },
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(horizontal: 14.w),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14.r),
+                  border: Border.all(
+                    color: const Color.fromARGB(25, 0, 0, 0),
+                    width: 1.w,
+                  ),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<Datum>(
+                    borderRadius: BorderRadius.circular(20.r),
+                    value:
+                        products
+                            .where((e) => e.id == selectedProductId)
+                            .isNotEmpty
+                        ? products.firstWhere((e) => e.id == selectedProductId)
+                        : null,
+                    hint: Text(
+                      "Select Product",
+                      style: GoogleFonts.inter(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF063466),
+                        letterSpacing: -0.54,
+                      ),
+                    ),
+                    icon: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: const Color(0xFF063466),
+                      size: 22.sp,
+                    ),
+                    isExpanded: true,
+                    items: products.map<DropdownMenuItem<Datum>>((product) {
+                      return DropdownMenuItem<Datum>(
+                        value: product,
+                        child: Text(
+                          product.itemName ?? "",
+                          style: GoogleFonts.inter(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF063466),
+                            letterSpacing: -0.54,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (Datum? value) {
+                      setState(() {
+                        selectedProduct = value?.itemName;
+                        selectedProductId = value?.id;
+                      });
+
+                      log("Product Name : ${value?.itemName}");
+                      log("Product Id : ${value?.id}");
+                    },
+                  ),
+                ),
               ),
               SizedBox(height: 10.h),
               customDropdown<String>(
@@ -226,6 +311,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               sectionTitle("ADD SALES NOTE"),
               SizedBox(height: 12.h),
               TextField(
+                controller: noteContoller,
+                keyboardType: TextInputType.streetAddress,
                 style: GoogleFonts.inter(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w400,
@@ -460,6 +547,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                     ),
                     SizedBox(height: 10.h),
                     TextField(
+                      controller: reminderNoteController,
+                      keyboardType: TextInputType.streetAddress,
                       style: GoogleFonts.inter(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w400,
@@ -531,16 +620,62 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                     ),
                     elevation: 0,
                   ),
-                  onPressed: () {},
-                  child: Text(
-                    "Save Sale",
-                    style: GoogleFonts.inter(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                      letterSpacing: -0.54,
-                    ),
-                  ),
+                  onPressed: () async {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    try {
+                      final service = ref.read(authServiceProvider);
+                      final response = await service.AddSaleData(
+                        productName: selectedProductId.toString(),
+                        quantity: selectedQty ?? "",
+                        paymentStatus: selectedPaymentStatus ?? "",
+                        paymentMethod: selectedPaymentMethod ?? "",
+                        note: noteContoller.text.trim(),
+                        image: selectedFile!,
+                        date: selectedDate,
+                        time: selectedTime?.format(context),
+                        remeniderNote: reminderNoteController.text.trim(),
+                      );
+
+                      if (response.status == true) {
+                        log("Add Sale SuccessFull");
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MyBottomNav(),
+                          ),
+                        );
+                      }
+                    } on DioException catch (e) {
+                      setState(() => isLoading = false);
+
+                      showError(e.response?.data.toString() ?? "Network Error");
+                    } catch (e) {
+                      setState(() => isLoading = false);
+
+                      showError("Something went wrong");
+                    }
+                  },
+                  child: isLoading
+                      ? SizedBox(
+                          width: 20.w,
+                          height: 20.w,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          "Save Sale",
+                          style: GoogleFonts.inter(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                            letterSpacing: -0.54,
+                          ),
+                        ),
                 ),
               ),
 

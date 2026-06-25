@@ -1,21 +1,26 @@
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/data/Provider/GetClientProvider.dart';
 import 'package:crm_app/screen/clients/addClientScreen.dart';
 import 'package:crm_app/screen/clients/clientDetailScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
-class ClientScreen extends StatefulWidget {
-  const ClientScreen({super.key});
+class ClientScreen extends ConsumerStatefulWidget {
+  
+  const ClientScreen({super.key,});
 
   @override
-  State<ClientScreen> createState() => _ClientScreenState();
+  ConsumerState<ClientScreen> createState() => _ClientScreenState();
 }
 
-class _ClientScreenState extends State<ClientScreen> {
+class _ClientScreenState extends ConsumerState<ClientScreen> {
   @override
   Widget build(BuildContext context) {
+    final client = ref.watch(getClientProvider);
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(
@@ -134,156 +139,194 @@ class _ClientScreenState extends State<ClientScreen> {
               ],
             ),
             SizedBox(height: 20.h),
-            Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.only(bottom: 100.h),
-                itemCount: 8,
-                itemBuilder: (context, index) {
-                  return Container(
-                    margin: EdgeInsets.only(bottom: 20.w),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20.r),
-                      color: Colors.transparent,
-                      border: Border.all(color: Color.fromARGB(25, 0, 0, 0)),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        left: 20.w,
-                        right: 20.w,
-                        top: 20.h,
-                        bottom: 20.h,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          "Rajesh Enterprises",
-                                          style: GoogleFonts.inter(
-                                            fontSize: 15.sp,
-                                            color: Color(0xFF050A14),
-                                            fontWeight: FontWeight.w500,
-                                            letterSpacing: -0.54,
-                                          ),
-                                        ),
-                                        SizedBox(width: 10.w),
-                                        Container(
-                                          width: 4.w,
-                                          height: 4.w,
-                                          decoration: BoxDecoration(
-                                            color: Color(0xFF00B94A),
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                        SizedBox(width: 10.w),
-                                        Text(
-                                          "ACTIVE",
-                                          style: GoogleFonts.inter(
-                                            fontSize: 12.sp,
-                                            fontWeight: FontWeight.w500,
-                                            color: Color(0xFF00B94A),
-                                            letterSpacing: -0.54,
-                                          ),
-                                        ),
-                                        Spacer(),
-                                        Icon(
-                                          Icons.more_horiz,
-                                          color: const Color(0xFF063466),
-                                          size: 25.sp,
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+            client.when(
+              data: (data) {
+                return Expanded(
+                  child: ListView.builder(
+                    padding: EdgeInsets.only(bottom: 100.h),
+                    itemCount: data.data?.length,
+                    itemBuilder: (context, index) {
+                      final client = data.data?[index];
+                      return Container(
+                        margin: EdgeInsets.only(bottom: 20.w),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20.r),
+                          color: Colors.transparent,
+                          border: Border.all(
+                            color: Color.fromARGB(25, 0, 0, 0),
                           ),
-                          SizedBox(height: 15.h),
-                          InkWell(
-                            borderRadius: BorderRadius.circular(10.r),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                CupertinoPageRoute(
-                                  builder: (context) => ClientDetailScreen(),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              padding: EdgeInsets.symmetric(
-                                vertical: 11.h,
-                                horizontal: 14.w,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10.r),
-                                color: Color(0xFFECF0F5),
-                              ),
-                              child: Row(
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            left: 20.w,
+                            right: 20.w,
+                            top: 20.h,
+                            bottom: 20.h,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "GreenTech Innovations",
-                                        style: GoogleFonts.inter(
-                                          fontSize: 13.sp,
-                                          fontWeight: FontWeight.w500,
-                                          color: Color(0xFF050A14),
-                                          letterSpacing: -0.54,
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              client?.clientName ??
+                                                  "Rajesh Enterprises",
+                                              style: GoogleFonts.inter(
+                                                fontSize: 15.sp,
+                                                color: Color(0xFF050A14),
+                                                fontWeight: FontWeight.w500,
+                                                letterSpacing: -0.54,
+                                              ),
+                                            ),
+                                            SizedBox(width: 10.w),
+                                            Container(
+                                              width: 4.w,
+                                              height: 4.w,
+                                              decoration: BoxDecoration(
+                                                color: Color(0xFF00B94A),
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                            SizedBox(width: 10.w),
+                                            Text(
+                                              "ACTIVE",
+                                              style: GoogleFonts.inter(
+                                                fontSize: 12.sp,
+                                                fontWeight: FontWeight.w500,
+                                                color: Color(0xFF00B94A),
+                                                letterSpacing: -0.54,
+                                              ),
+                                            ),
+                                            Spacer(),
+                                            Icon(
+                                              Icons.more_horiz,
+                                              color: const Color(0xFF063466),
+                                              size: 25.sp,
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                      SizedBox(height: 4.h),
-                                      Text(
-                                        "12 May 2026",
-                                        style: GoogleFonts.inter(
-                                          fontSize: 11.sp,
-                                          fontWeight: FontWeight.w500,
-                                          color: Color(0xFF263238),
-                                          height: 0,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: 8.h,
-                                      horizontal: 10.w,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(6.r),
-                                      color: Color(0xFFD4E4F6),
-                                    ),
-                                    child: Text(
-                                      "PREMIUM",
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11.sp,
-                                        fontWeight: FontWeight.w500,
-                                        color: Color(0xFF007AFF),
-                                        letterSpacing: -0.54,
-                                      ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
+                              SizedBox(height: 15.h),
+                              InkWell(
+                                borderRadius: BorderRadius.circular(10.r),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    CupertinoPageRoute(
+                                      builder: (context) =>
+                                          ClientDetailScreen(
+                                          
+                                          ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: 11.h,
+                                    horizontal: 14.w,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10.r),
+                                    color: Color(0xFFECF0F5),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            client?.industry ??
+                                                "GreenTech Innovations",
+                                            style: GoogleFonts.inter(
+                                              fontSize: 13.sp,
+                                              fontWeight: FontWeight.w500,
+                                              color: Color(0xFF050A14),
+                                              letterSpacing: -0.54,
+                                            ),
+                                          ),
+                                          SizedBox(height: 4.h),
+                                          Text(
+                                            client?.planStartDate != null
+                                                ? DateFormat(
+                                                    'dd MMM yyyy',
+                                                  ).format(
+                                                    DateTime.parse(
+                                                      client!.planStartDate
+                                                          .toString(),
+                                                    ),
+                                                  )
+                                                : "",
+                                            style: GoogleFonts.inter(
+                                              fontSize: 11.sp,
+                                              fontWeight: FontWeight.w500,
+                                              color: const Color(0xFF263238),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 8.h,
+                                          horizontal: 10.w,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            6.r,
+                                          ),
+                                          color: Color(0xFFD4E4F6),
+                                        ),
+                                        child: Text(
+                                          "PREMIUM",
+                                          style: GoogleFonts.inter(
+                                            fontSize: 11.sp,
+                                            fontWeight: FontWeight.w500,
+                                            color: Color(0xFF007AFF),
+                                            letterSpacing: -0.54,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+              error: (error, stackTrace) {
+                return Center(
+                  child: Text(
+                    "Something went wrong",
+                    style: GoogleFonts.outfit(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
                     ),
-                  );
-                },
+                  ),
+                );
+              },
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: Color(0xFF007AFF)),
               ),
             ),
           ],
@@ -320,7 +363,7 @@ class _ClientScreenState extends State<ClientScreen> {
               ),
             ],
           ),
-      ),
+        ),
       ),
     );
   }

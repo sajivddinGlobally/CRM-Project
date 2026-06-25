@@ -1,10 +1,17 @@
+import 'dart:developer' show log;
+
+import 'package:crm_app/screen/home/homeScreen.dart';
 import 'package:crm_app/screen/splashScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:hive_flutter/adapters.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  await Hive.initFlutter();
+  await Hive.openBox("userdata");
+  runApp(ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -13,6 +20,9 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+     var box = Hive.box("userdata");
+    var token = box.get("token");
+    log("Token =========== ${token ?? "No token Found"}");
     return ScreenUtilInit(
       designSize: Size(440, 956),
       minTextAdapt: true,
@@ -47,7 +57,7 @@ class MyApp extends StatelessWidget {
                 // tested with just a hot reload.
                 colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
               ),
-              home: SplashScreen(),
+              home: token == null ? SplashScreen() : MyBottomNav(),
             ),
           ),
         );

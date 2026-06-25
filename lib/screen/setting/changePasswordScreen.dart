@@ -1,16 +1,30 @@
+import 'dart:developer';
+
+import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class ChangePasswordScreen extends StatefulWidget {
+class ChangePasswordScreen extends ConsumerStatefulWidget {
   const ChangePasswordScreen({super.key});
 
   @override
-  State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
+  ConsumerState<ChangePasswordScreen> createState() =>
+      _ChangePasswordScreenState();
 }
 
-class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
+class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
+  final newPasswordController = TextEditingController();
+  final ConfirmPasswordController = TextEditingController();
+  bool isLoading = false;
+
+  void showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,10 +69,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             _inputForm(
               hintText: "Enter New Password",
               type: TextInputType.visiblePassword,
+              controller: newPasswordController,
             ),
             _inputForm(
               hintText: "Confirm New Password",
               type: TextInputType.visiblePassword,
+              controller: ConfirmPasswordController,
             ),
             Expanded(child: SizedBox()),
             ElevatedButton(
@@ -69,15 +85,52 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   borderRadius: BorderRadius.circular(15.r),
                 ),
               ),
-              onPressed: () {},
-              child: Text(
-                "Update Password",
-                style: GoogleFonts.inter(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.buttonText,
-                ),
-              ),
+              onPressed: () async {
+                setState(() {
+                  isLoading = true;
+                });
+                try {
+                  final service = ref.read(authServiceProvider);
+                  final response = await service.ChangePasswordData(
+                    newPassword: newPasswordController.text.trim(),
+                    confirmPassword: ConfirmPasswordController.text.trim(),
+                  );
+
+                  if (response.status == true) {
+                    log("Change Password Successfull");
+                    await Future.delayed(const Duration(seconds: 1));
+
+                    if (!mounted) return;
+
+                    Navigator.pop(context);
+                  }
+                } on DioException catch (e) {
+                  setState(() => isLoading = false);
+
+                  showError(e.response?.data.toString() ?? "Network Error");
+                } catch (e) {
+                  setState(() => isLoading = false);
+
+                  showError("Something went wrong");
+                }
+              },
+              child: isLoading
+                  ? SizedBox(
+                      width: 20.w,
+                      height: 20.w,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      "Update Password",
+                      style: GoogleFonts.inter(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.buttonText,
+                      ),
+                    ),
             ),
 
             SizedBox(height: 24.h),
@@ -87,10 +140,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     );
   }
 
-  Widget _inputForm({required String hintText, required TextInputType type}) {
+  Widget _inputForm({
+    required String hintText,
+    required TextInputType type,
+    TextEditingController? controller,
+  }) {
     return Padding(
       padding: EdgeInsets.only(bottom: 10.h),
       child: TextField(
+        controller: controller,
         keyboardType: type,
         style: GoogleFonts.inter(
           fontSize: 15.sp,

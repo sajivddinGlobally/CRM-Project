@@ -1,18 +1,34 @@
+import 'dart:developer' show log;
+
+import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/screen/loginScreen.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class CreatePasswordScreen extends StatefulWidget {
-  const CreatePasswordScreen({super.key});
+class CreatePasswordScreen extends ConsumerStatefulWidget {
+  final String email;
+  const CreatePasswordScreen({super.key, required this.email});
 
   @override
-  State<CreatePasswordScreen> createState() => _CreatePasswordScreenState();
+  ConsumerState<CreatePasswordScreen> createState() =>
+      _CreatePasswordScreenState();
 }
 
-class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
+class _CreatePasswordScreenState extends ConsumerState<CreatePasswordScreen> {
+  final newPasswordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+  bool isLoading = false;
+  bool isNewPasswordHide = true;
+  bool isConfirmPasswordHide = true;
+  void showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,9 +91,31 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
               radius: BorderRadius.circular(40.r),
             ),
             SizedBox(height: 30.h),
-            _inputForm(hintText: "Enter new password"),
+            _inputForm(
+              hintText: "Enter new password",
+              controller: newPasswordController,
+              type: TextInputType.visiblePassword,
+              obsureText: true,
+              isHidden: isNewPasswordHide,
+              onToggle: () {
+                setState(() {
+                  isNewPasswordHide = !isNewPasswordHide;
+                });
+              },
+            ),
             SizedBox(height: 10.h),
-            _inputForm(hintText: "Confirm new password"),
+            _inputForm(
+              hintText: "Confirm new password",
+              controller: confirmPasswordController,
+              type: TextInputType.visiblePassword,
+              obsureText: true,
+              isHidden: isConfirmPasswordHide,
+              onToggle: () {
+                setState(() {
+                  isConfirmPasswordHide = !isConfirmPasswordHide;
+                });
+              },
+            ),
             SizedBox(height: 30.h),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -87,20 +125,52 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                   borderRadius: BorderRadius.circular(15.r),
                 ),
               ),
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                );
+              onPressed: () async {
+                setState(() {
+                  isLoading = true;
+                });
+
+                try {
+                  final service = ref.read(authServiceProvider);
+                  final response = await service.CreatePasswordData(
+                    email: widget.email,
+                    newPassword: newPasswordController.text.trim(),
+                    confirmNewPassword: confirmPasswordController.text.trim(),
+                  );
+                  if (response.status = true) {
+                    log("New Password Successfull");
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginScreen()),
+                    );
+                  }
+                } on DioException catch (e) {
+                  setState(() => isLoading = false);
+
+                  showError(e.response?.data.toString() ?? "Network Error");
+                } catch (e) {
+                  setState(() => isLoading = false);
+
+                  showError("Something went wrong");
+                }
               },
-              child: Text(
-                "Reset Password",
-                style: GoogleFonts.inter(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.buttonText,
-                ),
-              ),
+              child: isLoading
+                  ? SizedBox(
+                      width: 20.w,
+                      height: 20.w,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      "Reset Password",
+                      style: GoogleFonts.inter(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.buttonText,
+                      ),
+                    ),
             ),
             SizedBox(height: 15.h),
           ],
@@ -109,10 +179,20 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
     );
   }
 
-  Widget _inputForm({required String hintText}) {
+  Widget _inputForm({
+    required String hintText,
+    required TextEditingController controller,
+    required TextInputType type,
+    required bool isHidden,
+    required VoidCallback onToggle,
+    bool obsureText = false,
+  }) {
     return Padding(
       padding: EdgeInsets.only(left: 24.w, right: 24.w),
       child: TextField(
+        obscureText: obsureText ? isHidden : false,
+        controller: controller,
+        keyboardType: type,
         style: GoogleFonts.inter(
           fontSize: 15.sp,
           fontWeight: FontWeight.w400,
@@ -124,6 +204,17 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
             horizontal: 25.w,
             vertical: 18.h,
           ),
+          suffixIcon: obsureText
+              ? IconButton(
+                  onPressed: onToggle,
+                  icon: Icon(
+                    isHidden
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    size: 20.sp,
+                  ),
+                )
+              : SizedBox(width: 40.w),
           hint: Text(
             hintText,
             style: GoogleFonts.inter(

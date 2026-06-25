@@ -1,0 +1,130 @@
+import 'package:crm_app/data/Model/AddNewClientResModel.dart';
+import 'package:crm_app/data/Model/AddSaleResModel.dart';
+import 'package:crm_app/data/Model/ChangePasswordBodyModel.dart';
+import 'package:crm_app/data/Model/ChangePasswordResModel.dart';
+import 'package:crm_app/data/Model/CreatePasswordBodyModel.dart';
+import 'package:crm_app/data/Model/CreatePasswordResModel.dart';
+import 'package:crm_app/data/Model/CreateTicketResModel.dart';
+import 'package:crm_app/data/Model/EditProfileResModel.dart';
+import 'package:crm_app/data/Model/ForgotPasswordBodyModel.dart';
+import 'package:crm_app/data/Model/ForgotPasswordResModel.dart';
+import 'package:crm_app/data/Model/GetClientDetailsModel.dart';
+import 'package:crm_app/data/Model/GetClientModel.dart';
+import 'package:crm_app/data/Model/GetProductIdModel.dart';
+import 'package:crm_app/data/Model/GetProfileModel.dart';
+import 'package:crm_app/data/Model/GetSaleDetilesModel.dart';
+import 'package:crm_app/data/Model/GetSaleModel.dart';
+import 'package:crm_app/data/Model/GetTicketDetailsModel.dart';
+import 'package:crm_app/data/Model/GetTicketModel.dart';
+import 'package:crm_app/data/Model/OtpVerifyBodyModel.dart';
+import 'package:crm_app/data/Model/OtpVerifyResModel.dart';
+import 'package:crm_app/data/Model/loginBodyModel.dart';
+import 'package:crm_app/data/Model/loginResModel.dart';
+import 'package:dio/dio.dart';
+import 'package:retrofit/retrofit.dart';
+
+part 'api.stateNetwork.g.dart';
+
+@RestApi(baseUrl: "https://zylviontech.gwsstaging.com")
+abstract class ApiStateNetwork {
+  factory ApiStateNetwork(Dio dio, {String baseUrl}) = _ApiStateNetwork;
+
+  @POST("/api/auth/login")
+  Future<LoginResModel> login(@Body() LoginBodyModel body);
+
+  @POST("/api/auth/forgot-password")
+  Future<ForgotPasswordResModel> forgotPassword(
+    @Body() ForgotPasswordBodyModel body,
+  );
+
+  @POST("/api/auth/verify-otp")
+  Future<OtpVerifyResModel> otpVerify(@Body() OtpVerifyBodyModel body);
+
+  @POST("/api/auth/reset-password")
+  Future<CreatePasswordResModel> createPassword(
+    @Body() CreatePasswordBodyModel body,
+  );
+  @MultiPart()
+  @POST("/api/add-sales")
+  Future<AddSaleResModel> addSale(
+    @Part(name: "product_id") String productId,
+    @Part(name: "quantity") String quantity,
+    @Part(name: "payment_status") String paymentStatus,
+    @Part(name: "payment_method") String paymentMethod,
+    @Part(name: "note") String note,
+    @Part(name: "date") String? date,
+    @Part(name: "time") String? time,
+    @Part(name: "remenider_note") String? remeniderNote,
+    @Part(name: "image") MultipartFile? image,
+  );
+  @MultiPart()
+  @POST("/api/add-ticket")
+  Future<CreateTicketResModel> createTicket(
+    @Part(name: "issue_title") String issueTitle,
+    @Part(name: "issue_description") String issueDescription,
+    @Part(name: "issue_category") String issueCategory,
+    @Part(name: "priority") String priority,
+    @Part(name: "attachment") MultipartFile attachment,
+    @Part(name: "internal_note") String internalNote,
+  );
+  @MultiPart()
+  @POST("/api/add-client")
+  Future<AddNewClientResModel> addNewClient(
+    @Part(name: "client_name") String clientName,
+    @Part(name: "primary_phone") String primaryPhone,
+    @Part(name: "alternate_phone") String alternatePhone,
+    @Part(name: "email") String email,
+    @Part(name: "business_name") String businessName,
+    @Part(name: "industry") String industry,
+    @Part(name: "city") String city,
+    @Part(name: "plan") String plan,
+    @Part(name: "plan_start_date") String? planStartDate,
+    @Part(name: "plan_duration") String planDuration,
+    @Part(name: "assigned_to") String assignedTo,
+    @Part(name: "document") MultipartFile? document,
+  );
+
+  @GET("/api/auth/sales/10")
+  Future<GetSaleDetilesModel> getSaleDetiles();
+
+  @POST("/api/auth/change-password")
+  Future<ChangePasswordResModel> changePassword(
+    @Body() ChangePasswordBodyModel body,
+  );
+
+  @GET("/api/auth/sales")
+  Future<GetSaleModel> getSale();
+
+  @GET("/api/auth/tickets")
+  Future<GetTicketModel> getTicket();
+
+  @GET("/api/auth/tickets/15")
+  Future<GetTicketDetailsModel> getTicketDetails();
+
+  @GET("/api/auth/clients")
+  Future<GetClientModel> getClient();
+
+  @GET("/api/auth/clients/7")
+  Future<GetClienDetailsModel> getClientDetails();
+
+  @GET("/api/auth/profile")
+  Future<GetProfileModel> getProfile();
+
+  @MultiPart()
+  @POST("/api/auth/profile/update")
+  Future<EditProfileResModel> editProfile(
+    @Part(name: "full_name") String fullName,
+    @Part(name: "phone") String phone,
+    @Part(name: "email") String? email,
+    @Part(name: "date") String? date,
+    @Part(name: "gender") String? gender,
+    @Part(name: "sale") String? sale,
+    @Part(name: "department") String? department,
+    @Part(name: "employee_id") String? employeeId,
+    @Part(name: "contact") String? contact,
+    @Part(name: "offer_letter") MultipartFile? offerLetter,
+  );
+
+  @GET("/api/auth/products")
+  Future<ProductIdModel> getProductId();
+}

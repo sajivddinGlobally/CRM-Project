@@ -1,24 +1,35 @@
 import 'dart:async';
+import 'dart:math' show log;
 
+import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/screen/forgot/createPasswordScreen.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:otp_pin_field/otp_pin_field.dart';
 
-class OtpVerifyScreen extends StatefulWidget {
-  const OtpVerifyScreen({super.key});
+class OtpVerifyScreen extends ConsumerStatefulWidget {
+  final String email;
+  const OtpVerifyScreen({super.key, required this.email});
 
   @override
-  State<OtpVerifyScreen> createState() => _OtpVerifyScreenState();
+  ConsumerState<OtpVerifyScreen> createState() => _OtpVerifyScreenState();
 }
 
-class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
+class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
   int secondRemaining = 30;
   Timer? timer;
+  bool isLoading = false;
+  String Otp = "";
+
+  void showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
 
   @override
   void initState() {
@@ -123,8 +134,12 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                 ),
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 maxLength: 6,
-                onSubmit: (text) {},
-                onChange: (text) {},
+                onSubmit: (text) {
+                  Otp = text;
+                },
+                onChange: (text) {
+                  Otp = text;
+                },
               ),
             ),
             SizedBox(height: 30.h),
@@ -136,22 +151,56 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                   borderRadius: BorderRadius.circular(15.r),
                 ),
               ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  CupertinoPageRoute(
-                    builder: (context) => CreatePasswordScreen(),
-                  ),
-                );
+              onPressed: () async {
+                setState(() {
+                  isLoading = true;
+                });
+
+                try {
+                  final service = ref.read(authServiceProvider);
+                  final response = await service.OtpVerifyData(
+                    email: widget.email,
+                    otp: Otp,
+                  );
+                  if (response.status = true) {
+                    print("Otp Verify Successfull");
+                    Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                        builder: (context) =>
+                            CreatePasswordScreen(
+                              email: widget.email,
+                            ),
+                      ),
+                    );
+                  }
+                } on DioException catch (e) {
+                  setState(() => isLoading = false);
+
+                  showError(e.response?.data.toString() ?? "Network Error");
+                } catch (e) {
+                  setState(() => isLoading = false);
+
+                  showError("Something went wrong");
+                }
               },
-              child: Text(
-                "Verify Code",
-                style: GoogleFonts.inter(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.buttonText,
-                ),
-              ),
+              child: isLoading
+                  ? SizedBox(
+                      width: 20.w,
+                      height: 20.w,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      "Verify Code",
+                      style: GoogleFonts.inter(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.buttonText,
+                      ),
+                    ),
             ),
             SizedBox(height: 15.h),
             GestureDetector(
@@ -186,6 +235,5 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
         ),
       ),
     );
-    ;
   }
 }

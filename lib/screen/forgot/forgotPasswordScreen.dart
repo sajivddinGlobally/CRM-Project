@@ -1,13 +1,43 @@
+import 'dart:developer';
+import 'dart:math' hide log;
+
+import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/screen/forgot/otpVerifyScreen.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class ForgotPasswordScreen extends StatelessWidget {
+class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
+
+  @override
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
+}
+
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
+  final emailController = TextEditingController();
+  bool isLoading = false;
+
+  void showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  bool validate() {
+    if (emailController.text.trim().isEmpty) {
+      showError("Enter Email");
+      return false;
+    }
+    if (!emailController.text.contains("@")) {
+      showError("Enter Valid Email");
+    }
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +103,8 @@ class ForgotPasswordScreen extends StatelessWidget {
             Padding(
               padding: EdgeInsets.only(left: 24.w, right: 24.w),
               child: TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
                 style: GoogleFonts.inter(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w400,
@@ -118,20 +150,52 @@ class ForgotPasswordScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(15.r),
                 ),
               ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  CupertinoPageRoute(builder: (context) => OtpVerifyScreen()),
-                );
+              onPressed: () async {
+                setState(() {
+                  isLoading = true;
+                });
+
+                try {
+                  final service = ref.read(authServiceProvider);
+                  final response = await service.forgotPasswordData(
+                    email: emailController.text.trim(),
+                  );
+                  if (response.status = true) {
+                    log("OTP Send Successfull");
+                    Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                        builder: (context) => OtpVerifyScreen(email: emailController.text.trim()),
+                      ),
+                    );
+                  }
+                } on DioException catch (e) {
+                  setState(() => isLoading = false);
+
+                  showError(e.response?.data.toString() ?? "Network Error");
+                } catch (e) {
+                  setState(() => isLoading = false);
+
+                  showError("Something went wrong");
+                }
               },
-              child: Text(
-                "Submit Code",
-                style: GoogleFonts.inter(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.buttonText,
-                ),
-              ),
+              child: isLoading
+                  ? SizedBox(
+                      width: 20.w,
+                      height: 20.w,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      "Submit Code",
+                      style: GoogleFonts.inter(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.buttonText,
+                      ),
+                    ),
             ),
             SizedBox(height: 80.h),
             Text(

@@ -1,16 +1,28 @@
+import 'dart:developer';
+
+import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class AddnewLeadScreen extends StatefulWidget {
+class AddnewLeadScreen extends ConsumerStatefulWidget {
   const AddnewLeadScreen({super.key});
 
   @override
-  State<AddnewLeadScreen> createState() => _AddnewLeadScreenState();
+  ConsumerState<AddnewLeadScreen> createState() => _AddnewLeadScreenState();
 }
 
-class _AddnewLeadScreenState extends State<AddnewLeadScreen> {
+class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
+  final nameController = TextEditingController();
+  final mobileController = TextEditingController();
+  final contactController = TextEditingController();
+  final emailController = TextEditingController();
+  final businessController = TextEditingController();
+  final reminderController = TextEditingController();
+
   String? selectedIndustry;
   String? selectedCity;
   String? selectedProduct;
@@ -62,6 +74,10 @@ class _AddnewLeadScreenState extends State<AddnewLeadScreen> {
   bool isReminder = false;
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
+  bool isLoading = false;
+  void showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,20 +129,24 @@ class _AddnewLeadScreenState extends State<AddnewLeadScreen> {
               formField(
                 hintText: 'Enter lead name',
                 keyboardType: TextInputType.name,
+                controller: nameController,
               ),
               formField(
                 hintText: 'Enter mobile number',
                 keyboardType: TextInputType.number,
+                controller: mobileController,
                 maxLength: 10,
               ),
               formField(
                 hintText: 'Enter alternate contact',
                 keyboardType: TextInputType.number,
                 maxLength: 10,
+                controller: contactController,
               ),
               formField(
                 hintText: 'Enter email address',
                 keyboardType: TextInputType.emailAddress,
+                controller: emailController,
               ),
               SizedBox(height: 30.h),
               Text(
@@ -141,6 +161,7 @@ class _AddnewLeadScreenState extends State<AddnewLeadScreen> {
               formField(
                 hintText: 'Enter business/company name',
                 keyboardType: TextInputType.name,
+                controller: businessController,
               ),
               customDropdown(
                 hint: "Select Industry Type",
@@ -371,6 +392,7 @@ class _AddnewLeadScreenState extends State<AddnewLeadScreen> {
                     SizedBox(height: 10.h),
                     TextField(
                       maxLines: 4,
+                      controller: reminderController,
                       style: GoogleFonts.inter(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w400,
@@ -441,7 +463,12 @@ class _AddnewLeadScreenState extends State<AddnewLeadScreen> {
                     ),
                     elevation: 0,
                   ),
-                  onPressed: () {},
+                  onPressed: () async {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    
+                  },
                   child: Text(
                     "Save Sale",
                     style: GoogleFonts.inter(
@@ -466,6 +493,7 @@ class _AddnewLeadScreenState extends State<AddnewLeadScreen> {
     required String hintText,
     required TextInputType keyboardType,
     int? maxLength,
+    TextEditingController? controller,
   }) {
     return Padding(
       padding: EdgeInsets.only(bottom: 10.h),

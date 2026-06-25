@@ -1,21 +1,38 @@
+import 'dart:developer';
+import 'dart:ffi';
 import 'dart:io';
+import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/data/Provider/GetProfileProvider.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
-class EditProfleScreen extends StatefulWidget {
+class EditProfleScreen extends ConsumerStatefulWidget {
   const EditProfleScreen({super.key});
 
   @override
-  State<EditProfleScreen> createState() => _EditProfleScreenState();
+  ConsumerState<EditProfleScreen> createState() => _EditProfleScreenState();
 }
 
-class _EditProfleScreenState extends State<EditProfleScreen> {
+class _EditProfleScreenState extends ConsumerState<EditProfleScreen> {
+  final nameController = TextEditingController();
+  final phoneController = TextEditingController();
+  final emailController = TextEditingController();
+  final saleController = TextEditingController();
+  final departmentController = TextEditingController();
+  final empController = TextEditingController();
+  final contactController = TextEditingController();
+
+  bool isLoading = false;
+  DateTime? selectedDate;
   File? profileImage;
+  String? image = "";
   final ImagePicker picker = ImagePicker();
 
   Future<void> pickImage(ImageSource source) async {
@@ -61,6 +78,81 @@ class _EditProfleScreenState extends State<EditProfleScreen> {
 
   String? selectGender;
   final List<String> genderList = ["Male", "Famale", "Other"];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    loadProfileData();
+  }
+
+  void loadProfileData() async {
+    final profile = ref.read(getProfileProvider);
+    profile.whenData((profileData) {
+      nameController.text = profileData.data?.fullName ?? "";
+      phoneController.text = profileData.data?.phone ?? "";
+      emailController.text = profileData.data?.email ?? "";
+      empController.text = profileData.data?.employeeId ?? "";
+      image = profileData.data?.offerLetter ?? "";
+    });
+  }
+
+  void showError(String msg) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+          margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.h),
+          content: Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF4F4),
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: const Color(0xFFFFD6D6)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(8.w),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFFE5E5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.error_outline_rounded,
+                    color: Color(0xFFE53935),
+                    size: 20.sp,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Text(
+                    msg,
+                    style: GoogleFonts.inter(
+                      color: const Color(0xFF1F2937),
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w500,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -131,27 +223,41 @@ class _EditProfleScreenState extends State<EditProfleScreen> {
                                 height: 90.h,
                               ),
                             )
-                          : Image.asset(
-                              "assets/profile.png",
-                              fit: BoxFit.cover,
+                          // : Image.network(
+                          //     profileImage!.path,
+                          //     fit: BoxFit.cover,
+                          //     width: 88.w,
+                          //     height: 90.h,
+                          //     errorBuilder: (context, error, stackTrace) {
+                          //       return Container(
+                          //         width: 88.w,
+                          //         height: 90.h,
+                          //         decoration: BoxDecoration(
+                          //           borderRadius: BorderRadius.circular(20.r),
+                          //           color: Colors.grey,
+                          //         ),
+                          //         child: Center(
+                          //           child: Icon(
+                          //             Icons.person_2_outlined,
+                          //             color: Colors.black,
+                          //           ),
+                          //         ),
+                          //       );
+                          //     },
+                          //   ),
+                          : Container(
                               width: 88.w,
                               height: 90.h,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: 88.w,
-                                  height: 90.h,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20.r),
-                                    color: Colors.grey,
-                                  ),
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.person_2_outlined,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                );
-                              },
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20.r),
+                                color: Colors.grey,
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  Icons.person_2_outlined,
+                                  color: Colors.black,
+                                ),
+                              ),
                             ),
                     ),
                   ),
@@ -194,17 +300,20 @@ class _EditProfleScreenState extends State<EditProfleScreen> {
               _inputForm(
                 hintText: "Enter Name",
                 keyboardType: TextInputType.name,
+                controller: nameController,
               ),
               SizedBox(height: 10.h),
               _inputForm(
                 hintText: "+91-95555-89666",
                 keyboardType: TextInputType.number,
                 maxLength: 10,
+                controller: phoneController,
               ),
               SizedBox(height: 10.h),
               _inputForm(
                 hintText: "Enter Email",
                 keyboardType: TextInputType.emailAddress,
+                controller: emailController,
               ),
               SizedBox(height: 10.h),
               _inputForm(
@@ -239,16 +348,19 @@ class _EditProfleScreenState extends State<EditProfleScreen> {
               _inputForm(
                 hintText: "Sales Executive",
                 keyboardType: TextInputType.text,
+                controller: saleController,
               ),
               SizedBox(height: 10.h),
               _inputForm(
                 hintText: "Department",
                 keyboardType: TextInputType.text,
+                controller: departmentController,
               ),
               SizedBox(height: 10.h),
               _inputForm(
                 hintText: "EMP-1024",
                 keyboardType: TextInputType.text,
+                controller: empController,
               ),
               SizedBox(height: 30.h),
               Text(
@@ -264,6 +376,7 @@ class _EditProfleScreenState extends State<EditProfleScreen> {
                 hintText: "+91-95555-89666",
                 keyboardType: TextInputType.number,
                 maxLength: 10,
+                controller: contactController,
               ),
               SizedBox(height: 30.h),
               SizedBox(
@@ -277,16 +390,58 @@ class _EditProfleScreenState extends State<EditProfleScreen> {
                     ),
                     elevation: 0,
                   ),
-                  onPressed: () {},
-                  child: Text(
-                    "Save Changes",
-                    style: GoogleFonts.inter(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                      letterSpacing: -0.54,
-                    ),
-                  ),
+                  onPressed: () async {
+                    setState(() {
+                      isLoading = true;
+                    });
+
+                    try {
+                      final service = ref.read(authServiceProvider);
+                      final response = await service.editProfileData(
+                        fullName: nameController.text.trim(),
+                        phone: phoneController.text.trim(),
+                        email: emailController.text.trim(),
+                        date: selectedDate,
+                        gender: selectGender,
+                        sale: saleController.text.trim(),
+                        department: departmentController.text.trim(),
+                        employeeId: empController.text.trim(),
+                        contact: contactController.text.trim(),
+                        offerLetter: profileImage,
+                      );
+                      if (response.status == true) {
+                        log("Update Profile Successfull");
+                        ref.invalidate(getProfileProvider);
+                        Navigator.pop(context);
+                      }
+                    } on DioException catch (e) {
+                      setState(() => isLoading = false);
+
+                      showError(e.response?.data.toString() ?? "Network Error");
+                    } catch (e) {
+                      setState(() => isLoading = false);
+
+                      showError("Something went wrong");
+                    }
+                  },
+                  child: isLoading
+                      ? SizedBox(
+                          width: 20.w,
+                          height: 20.w,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          "Save Changes",
+                          style: GoogleFonts.inter(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                            letterSpacing: -0.54,
+                          ),
+                        ),
                 ),
               ),
               SizedBox(height: 24.h),
@@ -302,8 +457,10 @@ class _EditProfleScreenState extends State<EditProfleScreen> {
     required TextInputType keyboardType,
     int? maxLength,
     List<TextInputFormatter>? inputFormatters,
+    TextEditingController? controller,
   }) {
     return TextFormField(
+      controller: controller,
       style: GoogleFonts.inter(
         fontSize: 15.sp,
         fontWeight: FontWeight.w400,

@@ -1,21 +1,33 @@
+import 'dart:developer';
 import 'dart:io';
+import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/screen/home/homeScreen.dart';
+import 'package:dio/dio.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class AddClientScreen extends StatefulWidget {
+class AddClientScreen extends ConsumerStatefulWidget {
   const AddClientScreen({super.key});
 
   @override
-  State<AddClientScreen> createState() => _AddClientScreenState();
+  ConsumerState<AddClientScreen> createState() => _AddClientScreenState();
 }
 
-class _AddClientScreenState extends State<AddClientScreen> {
+class _AddClientScreenState extends ConsumerState<AddClientScreen> {
+  final nameController = TextEditingController();
+  final mobileController = TextEditingController();
+  final contactController = TextEditingController();
+  final emailController = TextEditingController();
+  final businessController = TextEditingController();
+  bool isLoading = false;
   String? selectedIndustry;
   String? selectedCity;
+  DateTime? selectedDate;
   final List<String> industryList = [
     "IT Services",
     "Real Estate",
@@ -84,6 +96,10 @@ class _AddClientScreenState extends State<AddClientScreen> {
     }
   }
 
+  void showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -134,20 +150,24 @@ class _AddClientScreenState extends State<AddClientScreen> {
               addClientForm(
                 hintText: 'Enter client name',
                 keyboardType: TextInputType.name,
+                controller: nameController,
               ),
               addClientForm(
                 hintText: 'Enter mobile number',
                 keyboardType: TextInputType.number,
                 maxLength: 10,
+                controller: mobileController,
               ),
               addClientForm(
                 hintText: 'Enter alternate contact',
                 keyboardType: TextInputType.number,
                 maxLength: 10,
+                controller: contactController,
               ),
               addClientForm(
                 hintText: 'Enter email address',
                 keyboardType: TextInputType.emailAddress,
+                controller: emailController,
               ),
               SizedBox(height: 30.h),
               Text(
@@ -162,6 +182,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
               addClientForm(
                 hintText: 'Enter business/company name',
                 keyboardType: TextInputType.name,
+                controller: businessController,
               ),
               customDropdown(
                 hint: "Select Industry Type",
@@ -204,9 +225,59 @@ class _AddClientScreenState extends State<AddClientScreen> {
                 },
               ),
               SizedBox(height: 10.h),
-              addClientForm(
-                hintText: 'Enter Plan Start Date',
-                keyboardType: TextInputType.name,
+
+              InkWell(
+                onTap: () async {
+                  final pickedDate = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                  );
+
+                  if (pickedDate != null) {
+                    setState(() {
+                      selectedDate = pickedDate;
+                    });
+                  }
+                },
+                child: Container(
+                  height: 50.h,
+                  padding: EdgeInsets.only(
+                    left: 18.w,
+                    right: 15.w,
+                    bottom: 12.h,
+                    top: 12.h,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15.r),
+                    border: Border.all(
+                      color: Color.fromARGB(25, 0, 0, 0),
+                      width: 1.w,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        selectedDate == null
+                            ? "Select Date"
+                            : "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}",
+                        style: GoogleFonts.inter(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFF063466),
+                          letterSpacing: -0.1,
+                        ),
+                      ),
+                      Spacer(),
+                      Icon(
+                        Icons.date_range,
+                        size: 20.sp,
+                        color: const Color(0xFF063466),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               SizedBox(height: 10.h),
               customDropdown(
@@ -309,16 +380,64 @@ class _AddClientScreenState extends State<AddClientScreen> {
                     ),
                     elevation: 0,
                   ),
-                  onPressed: () {},
-                  child: Text(
-                    "Create Client",
-                    style: GoogleFonts.inter(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                      letterSpacing: -0.54,
-                    ),
-                  ),
+                  onPressed: () async {
+                    setState(() {
+                      isLoading = false;
+                    });
+                    try {
+                      final service = ref.read(authServiceProvider);
+                      final response = await service.addNewClientData(
+                        clientName: nameController.text.trim(),
+                        primaryPhone: mobileController.text.trim(),
+                        alternatePhone: contactController.text.trim(),
+                        email: emailController.text.trim(),
+                        businessName: businessController.text.trim(),
+                        industry: selectedIndustry ?? "",
+                        city: selectedCity ?? "",
+                        plan: selectedPlan ?? "",
+                        planStartDate: selectedDate,
+                        planDuration: selectedDuration ?? "",
+                        assignedTo: selectedEmployee ?? "",
+                        document: selectedFile!,
+                      );
+                      log("Token => ${response.data?.token}");
+                      if (response.status = true) {
+                        log("Add New Client Successfull");
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MyBottomNav(),
+                          ),
+                        );
+                      }
+                    } on DioException catch (e) {
+                      setState(() => isLoading = false);
+
+                      showError(e.response?.data.toString() ?? "Network Error");
+                    } catch (e) {
+                      setState(() => isLoading = false);
+
+                      showError("Something went wrong");
+                    }
+                  },
+                  child: isLoading
+                      ? SizedBox(
+                          width: 20.w,
+                          height: 20.w,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          "Create Client",
+                          style: GoogleFonts.inter(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                            letterSpacing: -0.54,
+                          ),
+                        ),
                 ),
               ),
               SizedBox(height: 30.h),
@@ -333,10 +452,12 @@ class _AddClientScreenState extends State<AddClientScreen> {
     required String hintText,
     required TextInputType keyboardType,
     int? maxLength,
+    required TextEditingController controller,
   }) {
     return Padding(
       padding: EdgeInsets.only(bottom: 10.h),
       child: TextFormField(
+        controller: controller,
         style: GoogleFonts.inter(
           fontSize: 15.sp,
           fontWeight: FontWeight.w400,

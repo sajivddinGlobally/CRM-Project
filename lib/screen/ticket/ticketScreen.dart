@@ -1,21 +1,24 @@
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/data/Provider/GetTicketProvider.dart';
 import 'package:crm_app/screen/ticket/createTicketScreen.dart';
 import 'package:crm_app/screen/ticket/ticketDetailScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class TicketScreen extends StatefulWidget {
-  const TicketScreen({super.key});
+class TicketScreen extends ConsumerStatefulWidget {
+  const TicketScreen({super.key,});
 
   @override
-  State<TicketScreen> createState() => _TicketScreenState();
+  ConsumerState<TicketScreen> createState() => _TicketScreenState();
 }
 
-class _TicketScreenState extends State<TicketScreen> {
+class _TicketScreenState extends ConsumerState<TicketScreen> {
   @override
   Widget build(BuildContext context) {
+    final getTicket = ref.watch(getTicketProvider);
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(
@@ -102,181 +105,205 @@ class _TicketScreenState extends State<TicketScreen> {
               ],
             ),
             SizedBox(height: 20.h),
-            Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.only(bottom: 100.h),
-                itemCount: 7,
-                itemBuilder: (context, index) {
-                  return Container(
-                    margin: EdgeInsets.only(bottom: 10.w),
-                    padding: EdgeInsets.only(
-                      left: 20.w,
-                      right: 20.w,
-                      top: 20.h,
-                      bottom: 20.h,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20.r),
-                      color: Colors.transparent,
-                      border: Border.all(color: Color.fromARGB(25, 0, 0, 0)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                vertical: 10.h,
-                                horizontal: 15.w,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(7.r),
-                                color: Color(0xFFFFE5E5),
-                              ),
-                              child: Text(
-                                "URGENT",
-                                style: GoogleFonts.inter(
-                                  fontSize: 11.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFFFF0000),
-                                  letterSpacing: -0.54,
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                vertical: 10.h,
-                                horizontal: 15.w,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(7.r),
-                                color: Color(0xFFF7F9E5),
-                              ),
-                              child: Text(
-                                "IN PROGRESS",
-                                style: GoogleFonts.inter(
-                                  fontSize: 11.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFFB0C000),
-                                  letterSpacing: -0.54,
-                                ),
-                              ),
-                            ),
-                          ],
+            getTicket.when(
+              data: (data) {
+                return Expanded(
+                  child: ListView.builder(
+                    padding: EdgeInsets.only(bottom: 100.h),
+                    itemCount: data.data?.length ?? 0,
+                    itemBuilder: (context, index) {
+                      final item = data.data?[index];
+                      return Container(
+                        margin: EdgeInsets.only(bottom: 10.w),
+                        padding: EdgeInsets.only(
+                          left: 20.w,
+                          right: 20.w,
+                          top: 20.h,
+                          bottom: 20.h,
                         ),
-                        SizedBox(height: 20.h),
-                        Text(
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          "Payment not reflecting",
-                          style: GoogleFonts.inter(
-                            fontSize: 15.sp,
-                            color: Color(0xFF050A14),
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: -0.54,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20.r),
+                          color: Colors.transparent,
+                          border: Border.all(
+                            color: Color.fromARGB(25, 0, 0, 0),
                           ),
                         ),
-                        SizedBox(height: 4.h),
-                        Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              "#TK-1024",
-                              style: GoogleFonts.inter(
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w400,
-                                color: Color(0xFF263238),
-                                height: 0,
-                                letterSpacing: -0.54,
-                              ),
-                            ),
-                            SizedBox(width: 10.w),
-                            Container(
-                              width: 4.w,
-                              height: 4.w,
-                              decoration: BoxDecoration(
-                                color: Color(0xFF263238),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            SizedBox(width: 10.w),
-                            Text(
-                              "Rajesh Traders",
-                              style: GoogleFonts.inter(
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w400,
-                                color: Color(0xFF263238),
-                                height: 0,
-                                letterSpacing: -0.54,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 20.h),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    CupertinoPageRoute(
-                                      builder: (context) =>
-                                          TicketDetailScreen(),
-                                    ),
-                                  );
-                                },
-                                child: Container(
-                                  height: 35.h,
+                            Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: 10.h,
+                                    horizontal: 15.w,
+                                  ),
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10.r),
-                                    border: Border.all(
-                                      color: Color(0xFF007AFF),
-                                      width: 1.w,
+                                    borderRadius: BorderRadius.circular(7.r),
+                                    color: Color(0xFFFFE5E5),
+                                  ),
+                                  child: Text(
+                                    "URGENT",
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11.sp,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFFFF0000),
+                                      letterSpacing: -0.54,
                                     ),
                                   ),
-                                  child: Center(
-                                    child: Text(
-                                      "View details",
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11.sp,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppColors.buttonBg,
+                                ),
+                                SizedBox(width: 8.w),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: 10.h,
+                                    horizontal: 15.w,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(7.r),
+                                    color: Color(0xFFF7F9E5),
+                                  ),
+                                  child: Text(
+                                    item?.status ?? "IN PROGRESS",
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11.sp,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFFB0C000),
+                                      letterSpacing: -0.54,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 20.h),
+                            Text(
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              item?.issueCategory ?? "Payment not reflecting",
+                              style: GoogleFonts.inter(
+                                fontSize: 15.sp,
+                                color: Color(0xFF050A14),
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: -0.54,
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  item?.ticketId ?? "#TK-1024",
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xFF263238),
+                                    height: 0,
+                                    letterSpacing: -0.54,
+                                  ),
+                                ),
+                                SizedBox(width: 10.w),
+                                Container(
+                                  width: 4.w,
+                                  height: 4.w,
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF263238),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                SizedBox(width: 10.w),
+                                Text(
+                                  item?.raisedBy ?? "Rajesh Traders",
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xFF263238),
+                                    height: 0,
+                                    letterSpacing: -0.54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 20.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        CupertinoPageRoute(
+                                          builder: (context) =>
+                                              TicketDetailScreen(
+                                              ),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      height: 35.h,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(
+                                          10.r,
+                                        ),
+                                        border: Border.all(
+                                          color: Color(0xFF007AFF),
+                                          width: 1.w,
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          "View details",
+                                          style: GoogleFonts.inter(
+                                            fontSize: 11.sp,
+                                            fontWeight: FontWeight.w500,
+                                            color: AppColors.buttonBg,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
-                            SizedBox(width: 10.w),
-                            Expanded(
-                              child: Container(
-                                height: 35.h,
-                                decoration: BoxDecoration(
-                                  color: Color(0xFF007AFF),
-                                  borderRadius: BorderRadius.circular(10.r),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    "Mark Done",
-                                    style: GoogleFonts.inter(
-                                      fontSize: 11.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.white,
+                                SizedBox(width: 10.w),
+                                Expanded(
+                                  child: Container(
+                                    height: 35.h,
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFF007AFF),
+                                      borderRadius: BorderRadius.circular(10.r),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        "Mark Done",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 11.sp,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.white,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
+                      );
+                    },
+                  ),
+                );
+              },
+              error: (error, stackTrace) {
+                return Center(
+                  child: Text(
+                    "Something went wrong",
+                    style: GoogleFonts.outfit(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
                     ),
-                  );
-                },
+                  ),
+                );
+              },
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: Color(0xFF007AFF)),
               ),
             ),
           ],

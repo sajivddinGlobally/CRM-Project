@@ -1,21 +1,30 @@
+import 'dart:developer';
 import 'dart:io';
 
+import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/screen/home/homeScreen.dart';
+import 'package:dio/dio.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class CreateTicketScreen extends StatefulWidget {
+class CreateTicketScreen extends ConsumerStatefulWidget {
   const CreateTicketScreen({super.key});
 
   @override
-  State<CreateTicketScreen> createState() => _CreateTicketScreenState();
+  ConsumerState<CreateTicketScreen> createState() => _CreateTicketScreenState();
 }
 
-class _CreateTicketScreenState extends State<CreateTicketScreen> {
+class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
+  bool isLoading = false;
+  final detailsController = TextEditingController();
+  final descriptionController = TextEditingController();
+  final notesController = TextEditingController();
   String? selectCategory, selectPrity;
   final List<String> categoryList = [
     "Technical Issue",
@@ -55,6 +64,10 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     } catch (e) {
       debugPrint("File Pick Error: $e");
     }
+  }
+
+  void showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -99,6 +112,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
               sectionTitle("ISSUE DETAILS"),
               SizedBox(height: 12.h),
               TextField(
+                controller: detailsController,
                 style: GoogleFonts.inter(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w400,
@@ -136,6 +150,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
               ),
               SizedBox(height: 10.h),
               TextField(
+                controller: descriptionController,
                 style: GoogleFonts.inter(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w400,
@@ -251,6 +266,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
               sectionTitle("INTERNAL NOTES"),
               SizedBox(height: 12.h),
               TextField(
+                controller: notesController,
                 style: GoogleFonts.inter(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w400,
@@ -298,15 +314,55 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                     borderRadius: BorderRadius.circular(15.r),
                   ),
                 ),
-                onPressed: () {},
-                child: Text(
-                  "Create Ticket",
-                  style: GoogleFonts.inter(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.buttonText,
-                  ),
-                ),
+                onPressed: () async {
+                  setState(() {
+                    isLoading = true;
+                  });
+                  try {
+                    final service = ref.read(authServiceProvider);
+                    final response = await service.createTicketData(
+                      issueTitle: detailsController.text.trim(),
+                      issueDescription: descriptionController.text.trim(),
+                      issueCategory: selectCategory ?? "",
+                      priority: selectPrity ?? "",
+                      attachment: selectedFile!,
+                      internalNote: notesController.text.trim(),
+                    );
+
+                    if (response.status == true) {
+                      log("Create Ticket Successfull");
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => MyBottomNav()),
+                      );
+                    }
+                  } on DioException catch (e) {
+                    setState(() => isLoading = false);
+
+                    showError(e.response?.data.toString() ?? "Network Error");
+                  } catch (e) {
+                    setState(() => isLoading = false);
+
+                    showError("Something went wrong");
+                  }
+                },
+                child: isLoading
+                    ? SizedBox(
+                        width: 20.w,
+                        height: 20.w,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        "Create Ticket",
+                        style: GoogleFonts.inter(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.buttonText,
+                        ),
+                      ),
               ),
               SizedBox(height: 30.h),
             ],
