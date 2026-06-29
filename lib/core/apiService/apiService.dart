@@ -1,6 +1,8 @@
 import 'dart:developer' show log;
 import 'dart:io';
 import 'package:crm_app/core/network/api.stateNetwork.dart';
+import 'package:crm_app/data/Model/AddLeadBodyModel.dart';
+import 'package:crm_app/data/Model/AddLeadResModel.dart';
 // import 'package:crm_app/data/Model/AddNewClientBodyModel.dart';
 import 'package:crm_app/data/Model/AddNewClientResModel.dart';
 // import 'package:crm_app/data/Model/AddSaleBodyModel.dart';
@@ -17,6 +19,7 @@ import 'package:crm_app/data/Model/ForgotPasswordBodyModel.dart';
 import 'package:crm_app/data/Model/ForgotPasswordResModel.dart';
 import 'package:crm_app/data/Model/GetClientDetailsModel.dart';
 import 'package:crm_app/data/Model/GetClientModel.dart';
+import 'package:crm_app/data/Model/GetLeadModel.dart';
 import 'package:crm_app/data/Model/GetProductIdModel.dart';
 import 'package:crm_app/data/Model/GetProfileModel.dart';
 import 'package:crm_app/data/Model/GetSaleDetilesModel.dart';
@@ -391,6 +394,59 @@ class AuthService {
   Future<ProductIdModel> getProductIdData() async {
     try {
       final response = await api.getProductId();
+      return response;
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+  Future<AddLeadResModel> addLeadData({
+  required  String leadName,
+  required String mobileNumber,
+  String? alternateContact,
+  String? email,
+  String? businessName,
+  String? industryType,
+  String? city,
+  String? budgetRange,
+  String? leadSource,
+  String? priority,
+  DateTime? reminderDate,
+  String? reminderNote,
+  String? reminderTime,
+  }) async{
+    try{
+      final response = await api.addLead(
+        AddLeadBodyModel(
+          leadName: leadName,
+          mobileNumber: mobileNumber,
+          alternateContact: alternateContact,
+          email: email,
+          businessName: businessName,
+          industryType: industryType,
+          city: city,
+          budgetRange: budgetRange,
+          leadSource: leadSource,
+          priority: priority,
+          reminderDate: reminderDate,
+          reminderNote: reminderNote,
+          reminderTime: reminderTime
+        )
+      );
+       if (response.status == true) {
+        log(response.message ?? "Add Lead Successfull");
+        return response;
+      } else {
+        throw Exception(response.message ?? "Add Lead Not Successfull");
+      }
+    }catch (e, st) {
+      log("VERIFY ERROR => $e");
+      log("STACK TRACE => $st");
+      rethrow;
+    }
+  }
+   Future<GetLeadModel> getLeadData() async {
+    try {
+      final response = await api.getLead();
       return response;
     } catch (e) {
       throw Exception(e.toString());

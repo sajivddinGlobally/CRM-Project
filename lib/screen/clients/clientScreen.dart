@@ -228,7 +228,7 @@ class _ClientScreenState extends ConsumerState<ClientScreen> {
                                     CupertinoPageRoute(
                                       builder: (context) =>
                                           ClientDetailScreen(
-                                          
+                                        clientId:   client!.clientId??''
                                           ),
                                     ),
                                   );

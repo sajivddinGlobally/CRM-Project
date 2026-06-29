@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/screen/home/homeScreen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -467,17 +468,61 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
                     setState(() {
                       isLoading = true;
                     });
-                    
+                    try {
+                      final service = ref.read(authServiceProvider);
+                      final response = await service.addLeadData(
+                        leadName: nameController.text.trim(),
+                        mobileNumber: mobileController.text.trim(),
+                        email: emailController.text.trim(),
+                        alternateContact: contactController.text.trim(),
+                        businessName: businessController.text.trim(),
+                        industryType: selectedIndustry ?? "",
+                        city: selectedCity ?? "",
+                        budgetRange: selectedBudget ?? "",
+                        leadSource: selectedSource ?? "",
+                        priority: selectedPriority ?? "",
+                        reminderNote: reminderController.text.trim(),
+                        reminderDate:selectedDate,
+                        reminderTime: selectedTime?.format(context),
+                      );
+                      log("Token => ${response.data?.token}");
+                      // if (response.status == true) {
+                      //   log("Add New Lead Successfull");
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MyBottomNav(),
+                          ),
+                        );
+                      // }
+                    } on DioException catch (e) {
+                      setState(() => isLoading = false);
+
+                      showError(e.response?.data.toString() ?? "Network Error");
+                    } catch (e) {
+                      setState(() => isLoading = false);
+
+                      showError("Something went wrong");
+                    }
                   },
-                  child: Text(
-                    "Save Sale",
-                    style: GoogleFonts.inter(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                      letterSpacing: -0.54,
-                    ),
-                  ),
+                  child: isLoading
+                      ? SizedBox(
+                          width: 20.w,
+                          height: 20.w,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          "Save Sale",
+                          style: GoogleFonts.inter(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                            letterSpacing: -0.54,
+                          ),
+                        ),
                 ),
               ),
 
@@ -498,6 +543,7 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
     return Padding(
       padding: EdgeInsets.only(bottom: 10.h),
       child: TextFormField(
+        controller: controller,
         style: GoogleFonts.inter(
           fontSize: 15.sp,
           fontWeight: FontWeight.w400,

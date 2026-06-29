@@ -1,3 +1,5 @@
+import 'package:crm_app/data/Model/AddLeadBodyModel.dart';
+import 'package:crm_app/data/Model/AddLeadResModel.dart';
 import 'package:crm_app/data/Model/AddNewClientResModel.dart';
 import 'package:crm_app/data/Model/AddSaleResModel.dart';
 import 'package:crm_app/data/Model/ChangePasswordBodyModel.dart';
@@ -10,6 +12,7 @@ import 'package:crm_app/data/Model/ForgotPasswordBodyModel.dart';
 import 'package:crm_app/data/Model/ForgotPasswordResModel.dart';
 import 'package:crm_app/data/Model/GetClientDetailsModel.dart';
 import 'package:crm_app/data/Model/GetClientModel.dart';
+import 'package:crm_app/data/Model/GetLeadModel.dart';
 import 'package:crm_app/data/Model/GetProductIdModel.dart';
 import 'package:crm_app/data/Model/GetProfileModel.dart';
 import 'package:crm_app/data/Model/GetSaleDetilesModel.dart';
@@ -127,4 +130,10 @@ abstract class ApiStateNetwork {
 
   @GET("/api/auth/products")
   Future<ProductIdModel> getProductId();
+
+  @POST("/api/auth/leads/store")
+  Future<AddLeadResModel> addLead(@Body() AddLeadBodyModel body);
+
+  @GET("/api/auth/leads")
+  Future<GetLeadModel> getLead();
 }

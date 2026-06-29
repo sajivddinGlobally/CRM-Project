@@ -11,7 +11,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class ClientDetailScreen extends ConsumerStatefulWidget {
-  const ClientDetailScreen({super.key});
+  final String clientId;
+  const ClientDetailScreen({super.key, required this.clientId});
 
   @override
   ConsumerState<ClientDetailScreen> createState() => _ClientDetailScreenState();
