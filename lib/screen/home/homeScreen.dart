@@ -1,4 +1,7 @@
+import 'dart:developer' show log;
+
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/data/Provider/GetTicketProvider.dart';
 import 'package:crm_app/screen/activity/activityScreen.dart';
 import 'package:crm_app/screen/clients/addClientScreen.dart';
 import 'package:crm_app/screen/home/notificationScreen.dart';
@@ -9,7 +12,9 @@ import 'package:crm_app/screen/ticket/createTicketScreen.dart';
 import 'package:crm_app/screen/ticket/ticketDetailScreen.dart';
 import 'package:crm_app/screen/ticket/ticketScreen.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -138,14 +143,14 @@ class _MyBottomNavState extends State<MyBottomNav> {
   }
 }
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
+class _HomeScreenState extends ConsumerState<HomeScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
@@ -180,6 +185,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final getTicket = ref.watch(getTicketProvider);
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(toolbarHeight: 0, backgroundColor: Color(0xFF0C80FF)),
@@ -711,24 +717,45 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
             SizedBox(height: 12.h),
-            ListView.builder(
-              shrinkWrap: true,
-              padding: EdgeInsets.zero,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: 4,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: EdgeInsets.only(
-                    left: 24.w,
-                    right: 24.w,
-                    bottom: 10.h,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [tiketCard()],
+            getTicket.when(
+              data: (data) {
+                return ListView.builder(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: data.data?.length,
+                  itemBuilder: (context, index) {
+                    final item = data.data?[index];
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        left: 24.w,
+                        right: 24.w,
+                        bottom: 10.h,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [tiketCard("${item?.issueCategory?? ""}", "${item?.status ?? ""}", "${item?.ticketId}", item?.id ??0)],
+                      ),
+                    );
+                  },
+                );
+              },
+              error: (error, stackTrace) {
+                log(stackTrace.toString());
+                log(error.toString());
+                return Center(
+                  child: Text(
+                    "Something went wrong",
+                    style: GoogleFonts.outfit(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 );
               },
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: Color(0xFF007AFF)),
+              ),
             ),
             SizedBox(height: 40.h),
             Padding(
@@ -911,7 +938,7 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget tiketCard() {
+  Widget tiketCard(String status, String ticketid, String category, int id) {
     return Container(
       padding: EdgeInsets.only(
         left: 20.w,
@@ -934,7 +961,7 @@ class _HomeScreenState extends State<HomeScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Login loop on employee panel",
+                      category,
                       style: GoogleFonts.inter(
                         fontSize: 15.sp,
                         color: Color(0xFF050A14),
@@ -965,7 +992,7 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                         SizedBox(width: 10.w),
                         Text(
-                          "#TKT-2291",
+                          ticketid,
                           style: GoogleFonts.inter(
                             fontSize: 12.sp,
                             fontWeight: FontWeight.w400,
@@ -985,7 +1012,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 child: Center(
                   child: Text(
-                    "Open",
+                    status,
                     style: GoogleFonts.inter(
                       fontSize: 11.sp,
                       fontWeight: FontWeight.w400,
@@ -1001,7 +1028,9 @@ class _HomeScreenState extends State<HomeScreen>
             onTap: () {
               Navigator.push(
                 context,
-                CupertinoPageRoute(builder: (context) => TicketDetailScreen()),
+                CupertinoPageRoute(
+                  builder: (context) => TicketDetailScreen(id: id.toString()),
+                ),
               );
             },
             child: Container(

@@ -550,7 +550,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
                                 Navigator.push(
                                   context,
                                   CupertinoPageRoute(
-                                    builder: (context) => TicketDetailScreen(),
+                                    builder: (context) => TicketDetailScreen(id: widget.clientId,),
                                   ),
                                 );
                               },

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/data/Provider/GetTicketProvider.dart';
 import 'package:crm_app/screen/ticket/createTicketScreen.dart';
@@ -9,7 +11,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class TicketScreen extends ConsumerStatefulWidget {
-  const TicketScreen({super.key,});
+  const TicketScreen({super.key});
 
   @override
   ConsumerState<TicketScreen> createState() => _TicketScreenState();
@@ -233,8 +235,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                                         context,
                                         CupertinoPageRoute(
                                           builder: (context) =>
-                                              TicketDetailScreen(
-                                              ),
+                                              TicketDetailScreen(id: item!.id.toString()),
                                         ),
                                       );
                                     },
@@ -292,6 +293,8 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                 );
               },
               error: (error, stackTrace) {
+                log(stackTrace.toString());
+                log(error.toString());
                 return Center(
                   child: Text(
                     "Something went wrong",

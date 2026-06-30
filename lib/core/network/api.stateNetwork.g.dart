@@ -305,7 +305,7 @@ class _ApiStateNetwork implements ApiStateNetwork {
   }
 
   @override
-  Future<GetSaleDetilesModel> getSaleDetiles() async {
+  Future<GetSaleDetilesModel> getSaleDetiles(String id) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -314,7 +314,7 @@ class _ApiStateNetwork implements ApiStateNetwork {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/api/auth/sales/10',
+            '/api/auth/sales/${id}',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -416,7 +416,7 @@ class _ApiStateNetwork implements ApiStateNetwork {
   }
 
   @override
-  Future<GetTicketDetailsModel> getTicketDetails() async {
+  Future<GetTicketDetailsModel> getTicketDetails(String id) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -425,7 +425,7 @@ class _ApiStateNetwork implements ApiStateNetwork {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/api/auth/tickets/15',
+            '/api/auth/tickets/${id}',
             queryParameters: queryParameters,
             data: _data,
           )

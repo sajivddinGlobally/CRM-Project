@@ -328,9 +328,9 @@ class AuthService {
     }
   }
 
-  Future<GetSaleDetilesModel> getSaleDetailsData() async {
+  Future<GetSaleDetilesModel> getSaleDetailsData({required String id}) async {
     try {
-      final response = await api.getSaleDetiles();
+      final response = await api.getSaleDetiles(id);
       return response;
     } catch (e) {
       throw Exception(e.toString());
@@ -350,14 +350,15 @@ class AuthService {
     try {
       final response = await api.getTicket();
       return response;
-    } catch (e) {
+    } catch (e, st) {
+      log(st.toString());
       throw Exception(e.toString());
     }
   }
 
-  Future<GetTicketDetailsModel> getTicketDetailsData() async {
+  Future<GetTicketDetailsModel> getTicketDetailsData({required String id}) async {
     try {
-      final response = await api.getTicketDetails();
+      final response = await api.getTicketDetails(id);
       return response;
     } catch (e) {
       throw Exception(e.toString());
@@ -399,22 +400,23 @@ class AuthService {
       throw Exception(e.toString());
     }
   }
+
   Future<AddLeadResModel> addLeadData({
-  required  String leadName,
-  required String mobileNumber,
-  String? alternateContact,
-  String? email,
-  String? businessName,
-  String? industryType,
-  String? city,
-  String? budgetRange,
-  String? leadSource,
-  String? priority,
-  DateTime? reminderDate,
-  String? reminderNote,
-  String? reminderTime,
-  }) async{
-    try{
+    required String leadName,
+    required String mobileNumber,
+    String? alternateContact,
+    String? email,
+    String? businessName,
+    String? industryType,
+    String? city,
+    String? budgetRange,
+    String? leadSource,
+    String? priority,
+    DateTime? reminderDate,
+    String? reminderNote,
+    String? reminderTime,
+  }) async {
+    try {
       final response = await api.addLead(
         AddLeadBodyModel(
           leadName: leadName,
@@ -429,22 +431,23 @@ class AuthService {
           priority: priority,
           reminderDate: reminderDate,
           reminderNote: reminderNote,
-          reminderTime: reminderTime
-        )
+          reminderTime: reminderTime,
+        ),
       );
-       if (response.status == true) {
+      if (response.status == true) {
         log(response.message ?? "Add Lead Successfull");
         return response;
       } else {
         throw Exception(response.message ?? "Add Lead Not Successfull");
       }
-    }catch (e, st) {
+    } catch (e, st) {
       log("VERIFY ERROR => $e");
       log("STACK TRACE => $st");
       rethrow;
     }
   }
-   Future<GetLeadModel> getLeadData() async {
+
+  Future<GetLeadModel> getLeadData() async {
     try {
       final response = await api.getLead();
       return response;

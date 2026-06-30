@@ -10,7 +10,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class SalesDetailScreen extends ConsumerStatefulWidget {
-  const SalesDetailScreen({super.key});
+  final String id;
+  const SalesDetailScreen({super.key, required this.id});
 
   @override
   ConsumerState<SalesDetailScreen> createState() => _SalesDetailScreenState();
@@ -55,7 +56,7 @@ class _SalesDetailScreenState extends ConsumerState<SalesDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final saleDetiles = ref.watch(getSaleDetilesProvider);
+    final saleDetiles = ref.watch(getSaleDetilesProvider(widget.id));
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(

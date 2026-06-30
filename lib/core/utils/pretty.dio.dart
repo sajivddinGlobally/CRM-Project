@@ -24,16 +24,50 @@ Dio callDio() {
 
   dio.interceptors.add(
     InterceptorsWrapper(
-      onRequest: (options, handler) {
+      onRequest: (options, handler) async {
         var box = Hive.box("userdata");
         var token = box.get("token");
+
         log("Hive Form Token :- $token");
+
         options.headers.addAll({
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
         });
-        handler.next(options);
+
+        if (token != null && token.toString().isNotEmpty) {
+          options.headers["Authorization"] = "Bearer $token";
+          return handler.next(options);
+        }
+
+        // Login API ko allow karo
+        if (options.path.contains("/login")) {
+          return handler.next(options);
+        }
+
+        // Token nahi hai to Login page par bhejo
+        if (!isNavigating) {
+          isNavigating = true;
+
+          await box.clear();
+
+          Future.microtask(() {
+            navigatorKey.currentState?.pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+              (route) => false,
+            );
+
+            isNavigating = false;
+          });
+        }
+
+        return handler.reject(
+          DioException(
+            requestOptions: options,
+            error: "Token not found",
+            type: DioExceptionType.cancel,
+          ),
+        );
       },
       onResponse: (response, handler) async {
         try {

@@ -3,7 +3,7 @@ import 'package:crm_app/data/Model/GetTicketDetailsModel.dart';
 import 'package:riverpod/riverpod.dart';
 
 final getTicketDetailsProvider =
-    FutureProvider.autoDispose<GetTicketDetailsModel>((ref) async {
+    FutureProvider.autoDispose.family<GetTicketDetailsModel,String>((ref,id) async {
       final authservice = ref.read(authServiceProvider);
-      return await authservice.getTicketDetailsData();
+      return await authservice.getTicketDetailsData(id: id);
     });

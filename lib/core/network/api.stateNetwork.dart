@@ -87,8 +87,8 @@ abstract class ApiStateNetwork {
     @Part(name: "document") MultipartFile? document,
   );
 
-  @GET("/api/auth/sales/10")
-  Future<GetSaleDetilesModel> getSaleDetiles();
+  @GET("/api/auth/sales/{id}")
+  Future<GetSaleDetilesModel> getSaleDetiles(@Path('id') String id);
 
   @POST("/api/auth/change-password")
   Future<ChangePasswordResModel> changePassword(
@@ -101,8 +101,8 @@ abstract class ApiStateNetwork {
   @GET("/api/auth/tickets")
   Future<GetTicketModel> getTicket();
 
-  @GET("/api/auth/tickets/15")
-  Future<GetTicketDetailsModel> getTicketDetails();
+  @GET("/api/auth/tickets/{id}")
+  Future<GetTicketDetailsModel> getTicketDetails(@Path('id') String id);
 
   @GET("/api/auth/clients")
   Future<GetClientModel> getClient();
