@@ -1,10 +1,19 @@
+
 import 'package:crm_app/core/constant/appColors.dart';
-import 'package:crm_app/screen/setting/checkOutScreen.dart';
+import 'package:crm_app/data/Provider/get_attendence_provider.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
+import '../../core/apiService/apiServiceProvider.dart';
+import '../../data/Model/AttendenceSummaryModel.dart';
+import '../../data/Model/attendence_history_response.dart';
+import '../../data/Model/check_in_response_model.dart' hide Data;
+import '../../data/Model/check_out_respomse_model.dart' hide Data;
+import '../../data/Provider/get_attendence_summary_provider.dart';
 
 // --- DUMMY DATA MODELS ---
 class AttendanceSummary {
@@ -37,16 +46,17 @@ class AttendanceLog {
   });
 }
 
-// --- MAIN SCREEN ---
-class AttendanceScreen extends StatefulWidget {
+
+class AttendanceScreen extends ConsumerStatefulWidget {
   const AttendanceScreen({super.key});
 
   @override
-  State<AttendanceScreen> createState() => _AttendanceScreenState();
+  ConsumerState<AttendanceScreen> createState() =>
+      _AttendanceScreenState();
 }
 
-class _AttendanceScreenState extends State<AttendanceScreen> {
-  // 1. Current Selected Month State
+class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
+
   String selectedMonth = "March";
 
   // Available Months List for Dropdown
@@ -143,7 +153,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Fallback if data for selected month doesn't exist in dummy data
+    final attendanceHistoryAsync = ref.watch(getAttendenceHistoryProvider);
+    final attendanceSummaryAsync = ref.watch(getAttendenceSummaryProvider);
     final currentSummary =
         monthlySummaries[selectedMonth] ??
         AttendanceSummary(
@@ -211,7 +222,20 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 SizedBox(height: 34.h),
                 _buildSectionHeader(),
                 SizedBox(height: 20.h),
-                _buildChartAndStats(currentSummary),
+                attendanceSummaryAsync.when(
+                  data: (response) {
+                    final summary = response.data?.summary;
+
+                    return _buildChartAndStats(summary!);
+                  },
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                  error: (e, s) => Center(
+                    child: Text(e.toString()),
+                  ),
+                ),
+                // _buildChartAndStats(currentSummary),
                 SizedBox(height: 40.h),
                 Text(
                   "MONTHLY ATTENDANCE LOG",
@@ -222,13 +246,56 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   ),
                 ),
                 SizedBox(height: 12.h),
+
                 _buildLogTableHeader(),
-                _buildLogList(currentLogs),
+                attendanceHistoryAsync.when(
+                  data: (response) {
+                    final logs = response.data ?? [];
+
+                    if (logs.isEmpty) {
+                      return Padding(
+                        padding: EdgeInsets.symmetric(vertical: 30.h),
+                        child: const Center(
+                          child: Text("No attendance history found"),
+                        ),
+                      );
+                    }
+
+                    return    _buildLogList(logs);
+
+                  },
+                  loading: () => const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+                  error: (e, s) => Padding(
+                    padding: EdgeInsets.symmetric(vertical: 30.h),
+                    child: Center(
+                      child: Text(e.toString()),
+                    ),
+                  ),
+                ),
                 SizedBox(height: 80.h),
               ],
             ),
           ),
-          _buildBottomActionButton(),
+          attendanceSummaryAsync.when(
+            data: (response) {
+              final summary = response.data;
+
+              return      _buildBottomActionButton(summary);
+
+            },
+            loading: () => const Center(
+              child: CircularProgressIndicator(),
+            ),
+            error: (e, s) => Center(
+              child: Text(e.toString()),
+            ),
+          ),
+
         ],
       ),
     );
@@ -417,9 +484,15 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     );
   }
 
-  Widget _buildChartAndStats(AttendanceSummary summary) {
-    final double percent = (summary.workingDays / summary.totalDays) * 100;
-    return Row(
+  Widget _buildChartAndStats(Summary summary) {
+    final totalDays = summary?.totalDays ?? 0;
+    final working = summary?.working ?? 0;
+    final present = summary?.present ?? 0;
+    final late = summary?.late ?? 0;
+    final absent = summary?.absent ?? 0;
+
+    final double percent =
+    totalDays == 0 ? 0 : (working / totalDays) * 100;    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         /// Chart
@@ -521,13 +594,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             children: [
               _buildStatMetricRow(
                 "WORKING",
-                summary.workingDays.toString().padLeft(2, '0'),
+                summary.working.toString().padLeft(2, '0'),
                 const Color(0xff007AFF),
               ),
               SizedBox(height: 8.h),
               _buildStatMetricRow(
                 "PRESENT",
-                summary.presentDays.toString().padLeft(2, '0'),
+                summary.present.toString().padLeft(2, '0'),
                 const Color(0xff3D8BFF),
               ),
 
@@ -535,7 +608,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
               _buildStatMetricRow(
                 "LATE",
-                summary.lateDays.toString().padLeft(2, '0'),
+                summary.late.toString().padLeft(2, '0'),
                 const Color(0xff0B2C59),
               ),
 
@@ -543,7 +616,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
               _buildStatMetricRow(
                 "ABSENT",
-                summary.absentDays.toString().padLeft(2, '0'),
+                summary.absent.toString().padLeft(2, '0'),
                 Colors.red,
               ),
             ],
@@ -644,7 +717,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     );
   }
 
-  Widget _buildLogList(List<AttendanceLog> logs) {
+  Widget _buildLogList(List<AttendanceLogData> logs) {
     if (logs.isEmpty) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 30.h),
@@ -659,9 +732,19 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
           Divider(height: 1.h, color: Colors.grey.shade200),
       itemBuilder: (context, index) {
         final item = logs[index];
+
         Color statusColor = Colors.green;
-        if (item.statusType == 1) statusColor = Colors.amber;
-        if (item.statusType == 2) statusColor = Colors.red;
+
+        switch ((item.status ?? "").toLowerCase()) {
+          case "late":
+            statusColor = Colors.orange;
+            break;
+          case "absent":
+            statusColor = Colors.red;
+            break;
+          default:
+            statusColor = Colors.green;
+        }
 
         return Padding(
           padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 4.w),
@@ -680,39 +763,37 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       ),
                     ),
                     SizedBox(width: 8.w),
-                    Text(
-                      item.date,
-                      style: GoogleFonts.inter(
-                        fontSize: 14.sp,
-                        color: Color(0xFF262833),
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: -0.54,
+                    Expanded(
+                      child: Text(
+                        item.date != null
+                            ? "${item.date!.day}/${item.date!.month}/${item.date!.year}"
+                            : "-",
+                        style: GoogleFonts.inter(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
+
               Expanded(
                 flex: 3,
                 child: Text(
-                  item.checkIn,
+                  item.checkInTime ?? "-",
                   style: GoogleFonts.inter(
                     fontSize: 14.sp,
-                    color: Color(0xFF262833),
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: -0.54,
                   ),
                 ),
               ),
+
               Expanded(
                 flex: 3,
                 child: Text(
-                  item.checkOut,
+                  item.checkOutTime ?? "-",
                   style: GoogleFonts.inter(
                     fontSize: 14.sp,
-                    color: Color(0xFF262833),
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: -0.54,
                   ),
                 ),
               ),
@@ -722,8 +803,11 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       },
     );
   }
-
-  Widget _buildBottomActionButton() {
+  void showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+  bool isLoading = false;
+  Widget _buildBottomActionButton(Data? summary) {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
@@ -731,11 +815,55 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         width: double.infinity,
         color: Colors.transparent,
         child: ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              CupertinoPageRoute(builder: (context) => CheckoutScreen()),
-            );
+          onPressed: () async {
+            setState(() {
+              isLoading = true;
+            });
+
+            try {
+              final service = ref.read(authServiceProvider);
+
+              final response = summary?.checkedInToday == true
+                  ? await service.checkOut(
+                latitude: 26.9124,
+                longitude: 75.7873,
+              )
+                  : await service.checkIn(
+                latitude: 26.9124,
+                longitude: 75.7873,
+              );
+
+              String message = "Success";
+
+              if (response is CheckInResponseModel) {
+                message = response.message ?? "Success";
+              } else if (response is CheckOutResponseModel) {
+                message = response.message ?? "Success";
+              }
+
+              showError(message);
+
+              // Refresh attendance data
+              ref.invalidate(getAttendenceSummaryProvider);
+              ref.invalidate(getAttendenceHistoryProvider);
+
+            } on DioException catch (e) {
+              setState(() {
+                isLoading = false;
+              });
+
+              showError(
+                e.response?.data["message"] ??
+                    e.response?.statusMessage ??
+                    "Network Error",
+              );
+            } catch (e) {
+              setState(() {
+                isLoading = false;
+              });
+
+              showError("Something went wrong");
+            }
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.buttonBg,
@@ -745,14 +873,23 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             ),
             elevation: 0,
           ),
-          child: Text(
-            "Check In",
-            style: GoogleFonts.inter(
-              color: Colors.white,
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w500,
-            ),
+        child: isLoading
+          ? SizedBox(
+          height: 22.h,
+          width: 22.w,
+          child: const CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Colors.white,
           ),
+        )
+            : Text(
+      summary?.checkedInToday == true ? "Check Out" : "Check In",
+        style: GoogleFonts.inter(
+          color: Colors.white,
+          fontSize: 16.sp,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
         ),
       ),
     );

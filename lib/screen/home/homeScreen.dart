@@ -20,14 +20,17 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
-class MyBottomNav extends StatefulWidget {
+import '../../data/Provider/get_dashboard_provider.dart';
+
+
+class MyBottomNav extends ConsumerStatefulWidget {
   const MyBottomNav({super.key});
 
   @override
-  State<MyBottomNav> createState() => _MyBottomNavState();
+  ConsumerState<MyBottomNav> createState() => _MyBottomNavState();
 }
 
-class _MyBottomNavState extends State<MyBottomNav> {
+class _MyBottomNavState extends ConsumerState<MyBottomNav> {
   int selectedIndex = 0;
 
   final List<Map<String, dynamic>> navItems = [
@@ -48,6 +51,7 @@ class _MyBottomNavState extends State<MyBottomNav> {
 
   @override
   Widget build(BuildContext context) {
+
     return PopScope(
       canPop: selectedIndex == 0,
       onPopInvoked: (didPop) {
@@ -145,7 +149,6 @@ class _MyBottomNavState extends State<MyBottomNav> {
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
-
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
@@ -182,687 +185,768 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _pageController.dispose();
     super.dispose();
   }
+  double _progress = 0.0;
 
+  void startAnimation(double value) {
+    _controller.reset();
+
+    _animation = Tween<double>(
+      begin: 0,
+      end: value,
+    ).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    _controller.forward();
+  }
   @override
   Widget build(BuildContext context) {
+    final dashboardAsync = ref.watch(dashboardProvider);
     final getTicket = ref.watch(getTicketProvider);
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(toolbarHeight: 0, backgroundColor: Color(0xFF0C80FF)),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 24.w),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF007AFF), Color(0xFF002199)],
-                ),
-              ),
+      body:
+      dashboardAsync.when(
+          data: (dashboardData) {
+            final name = dashboardData.data?.employee?.fullName ?? "User";
+            final companyName = dashboardData.data?.employee?.companyName ?? "";
+            final employeeId = dashboardData.data?.employee?.employeeId ?? "";
+            final openTicket = dashboardData.data?.tickets?.open ?? "";
+
+            final sales = dashboardData.data?.sales;
+            final achievedValue = (sales?.totalSalesValue ?? 0).toInt();
+            final achieved = (sales?.totalSalesValue ?? 0).toDouble();
+            final targetVale = (sales?.target ?? 0).toInt();
+            final target = (sales?.target ?? 0).toDouble();
+
+            final progress = target == 0 ? 0.0 : (achieved / target);
+            final percent = (progress * 100).round();
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (_progress != progress) {
+                setState(() {
+                  _progress = progress;
+                });
+                startAnimation(progress);
+              }
+            });
+         return   SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Good Morning, Rahul",
-                            style: GoogleFonts.inter(
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFFFFFFFF),
-                            ),
-                          ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                "EMT4566",
-                                style: GoogleFonts.inter(
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color.fromARGB(178, 255, 255, 255),
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-
-                              SizedBox(width: 6.w),
-                              Container(
-                                width: 4.w,
-                                height: 4.w,
-                                decoration: BoxDecoration(
-                                  color: Colors.white70,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-
-                              SizedBox(width: 6.w),
-
-                              Text(
-                                "Joshi Retail Pvt Ltd",
-                                style: GoogleFonts.inter(
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color.fromARGB(178, 255, 255, 255),
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            CupertinoPageRoute(
-                              builder: (context) => NotificationScreen(),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          width: 44.w,
-                          height: 44.h,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15.r),
-                            color: Color(0xFF007AFF),
-                          ),
-                          child: Center(
-                            child: Icon(
-                              Icons.notifications_none_rounded,
-                              color: Colors.white,
-                              size: 20.sp,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20.h),
                   Container(
                     width: double.infinity,
                     padding: EdgeInsets.symmetric(
-                      vertical: 20.h,
-                      horizontal: 20.w,
-                    ),
+                        vertical: 24.h, horizontal: 24.w),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20.r),
-                      color: Color(0xFF007AFF),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xFF007AFF), Color(0xFF002199)],
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            AnimatedBuilder(
-                              animation: _animation,
-                              builder: (context, child) {
-                                return Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    SizedBox(
-                                      width: 58.w,
-                                      height: 58.w,
-                                      child: CircularProgressIndicator(
-                                        value: _animation.value,
-                                        strokeWidth: 6,
-                                        backgroundColor: Color(0xFF4493F3),
-                                        valueColor:
-                                            const AlwaysStoppedAnimation<Color>(
-                                              Colors.white,
-                                            ),
-                                      ),
-                                    ),
-                                    Text(
-                                      "${(_animation.value * 100).toInt()}%",
-                                      style: GoogleFonts.inter(
-                                        color: Colors.white,
-                                        fontSize: 16.sp,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                            SizedBox(width: 16.w),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+
                                 Text(
-                                  "TODAY’S TARGET",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color.fromARGB(204, 255, 255, 255),
-                                  ),
-                                ),
-                                SizedBox(height: 6.w),
-                                Text(
-                                  "₹12000/₹18000",
+                                  "Good Morning, ${name}",
                                   style: GoogleFonts.inter(
                                     fontSize: 18.sp,
                                     fontWeight: FontWeight.w500,
-                                    color: Color.fromARGB(255, 255, 255, 255),
+                                    color: Color(0xFFFFFFFF),
                                   ),
                                 ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                employeeId,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 12.sp,
+                                        fontWeight: FontWeight.w400,
+                                        color: Color.fromARGB(
+                                            178, 255, 255, 255),
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+
+                                    SizedBox(width: 6.w),
+                                    Container(
+                                      width: 4.w,
+                                      height: 4.w,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white70,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+
+                                    SizedBox(width: 6.w),
+
+                                    Text(
+                                    companyName,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 12.sp,
+                                        fontWeight: FontWeight.w400,
+                                        color: Color.fromARGB(
+                                            178, 255, 255, 255),
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ],
+                            ),
+                            InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  CupertinoPageRoute(
+                                    builder: (context) => NotificationScreen(),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: 44.w,
+                                height: 44.h,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15.r),
+                                  color: Color(0xFF007AFF),
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    Icons.notifications_none_rounded,
+                                    color: Colors.white,
+                                    size: 20.sp,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 20.h),
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.symmetric(
+                            vertical: 20.h,
+                            horizontal: 20.w,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20.r),
+                            color: Color(0xFF007AFF),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  AnimatedBuilder(
+                                    animation: _animation,
+                                    builder: (context, child) {
+                                      final percent = (_animation.value * 100).toStringAsFixed(2);
+
+                                      return Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          SizedBox(
+                                            width: 58.w,
+                                            height: 58.w,
+                                            child: CircularProgressIndicator(
+                                              value: _animation.value,
+                                              strokeWidth: 6,
+                                              backgroundColor: Color(0xFF4493F3),
+                                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                                Colors.white,
+                                              ),
+                                            ),
+                                          ),
+
+                                          Text(
+                                            "$percent%",
+                                            textAlign: TextAlign.center,
+                                            style: GoogleFonts.inter(
+                                              color: Colors.white,
+                                              fontSize: 14.sp,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                  SizedBox(width: 16.w),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment
+                                        .start,
+                                    children: [
+                                      Text(
+                                        "TODAY’S TARGET",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12.sp,
+                                          fontWeight: FontWeight.w400,
+                                          color: Color.fromARGB(
+                                              204, 255, 255, 255),
+                                        ),
+                                      ),
+                                      SizedBox(height: 6.w),
+                                      Text(
+                                        "₹${achievedValue} / ₹${targetVale}",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 18.sp,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color.fromARGB(
+                                              255, 255, 255, 255),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 10.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              width: 191.w,
+                              padding: EdgeInsets.only(
+                                left: 15.w,
+                                top: 15.h,
+                                bottom: 15.h,
+                                right: 15.w,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20.r),
+                                border: Border.all(color: Color(0xFF194DBD)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 44.w,
+                                    height: 45.h,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10.r),
+                                      // color: Color(0xFF007AFF),
+                                      color: Color(0xFF1A6ADD),
+                                    ),
+                                    child: Center(
+                                      child: SvgPicture.asset(
+                                        "assets/SvgImage/ticket.svg",
+                                        width: 24.w,
+                                        height: 24.h,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 16.w),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment
+                                        .start,
+                                    children: [
+                                      Text(
+                                        "Open Tickets",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12.sp,
+                                          fontWeight: FontWeight.w400,
+                                          color: Color.fromARGB(
+                                              204, 255, 255, 255),
+                                        ),
+                                      ),
+                                      Text(
+                                        openTicket.toString(),
+                                        style: GoogleFonts.inter(
+                                          fontSize: 18.sp,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color.fromARGB(
+                                              255, 255, 255, 255),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              width: 191.w,
+                              padding: EdgeInsets.only(
+                                left: 15.w,
+                                top: 15.h,
+                                bottom: 15.h,
+                                right: 15.w,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20.r),
+                                border: Border.all(color: Color(0xFF194DBD)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 44.w,
+                                    height: 45.h,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10.r),
+                                      color: Color(0xFF1A6ADD),
+                                    ),
+                                    child: Center(
+                                      child: SvgPicture.asset(
+                                        "assets/SvgImage/ticket.svg",
+                                        width: 24.w,
+                                        height: 24.h,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 16.w),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment
+                                        .start,
+                                    children: [
+                                      Text(
+                                        "PENDING Tasks",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12.sp,
+                                          fontWeight: FontWeight.w400,
+                                          color: Color.fromARGB(
+                                              204, 255, 255, 255),
+                                        ),
+                                      ),
+                                      Text(
+                                        "04",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 18.sp,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color.fromARGB(
+                                              255, 255, 255, 255),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 10.h),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.only(bottom: 13.h, top: 13.h),
+                    decoration: BoxDecoration(color: Color(0xFFE5F2FF)),
+                    child: Center(
+                      child: Text(
+                        "NOT CHECKED IN YET, PLEASE CHECK IN",
+                        style: GoogleFonts.inter(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF007AFF),
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24.w),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        homeMenuCard(
+                          image: "assets/SvgImage/wallet.svg",
+                          name: "Add Sale",
+                          callback: () {
+                            Navigator.push(
+                              context,
+                              CupertinoPageRoute(
+                                builder: (context) => AddSaleScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        homeMenuCard(
+                          image: "assets/SvgImage/note.svg",
+                          name: "Create Ticket",
+                          callback: () {
+                            Navigator.push(
+                              context,
+                              CupertinoPageRoute(
+                                builder: (context) => CreateTicketScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        homeMenuCard(
+                          image: "assets/SvgImage/user.svg",
+                          name: "Add Client",
+                          callback: () {
+                            Navigator.push(
+                              context,
+                              CupertinoPageRoute(
+                                builder: (context) => AddClientScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 40.h),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 191.w,
-                        padding: EdgeInsets.only(
-                          left: 15.w,
-                          top: 15.h,
-                          bottom: 15.h,
-                          right: 15.w,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20.r),
-                          border: Border.all(color: Color(0xFF194DBD)),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 44.w,
-                              height: 45.h,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10.r),
-                                // color: Color(0xFF007AFF),
-                                color: Color(0xFF1A6ADD),
-                              ),
-                              child: Center(
-                                child: SvgPicture.asset(
-                                  "assets/SvgImage/ticket.svg",
-                                  width: 24.w,
-                                  height: 24.h,
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 16.w),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Open Tickets",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color.fromARGB(204, 255, 255, 255),
-                                  ),
-                                ),
-                                Text(
-                                  "05",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 18.sp,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color.fromARGB(255, 255, 255, 255),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                      Padding(
+                        padding: EdgeInsets.only(left: 24.w),
+                        child: Text(
+                          "Your Priority Tasks",
+                          style: GoogleFonts.inter(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF1E1E1E),
+                            letterSpacing: -0.54,
+                          ),
                         ),
                       ),
                       Container(
-                        width: 191.w,
-                        padding: EdgeInsets.only(
-                          left: 15.w,
-                          top: 15.h,
-                          bottom: 15.h,
-                          right: 15.w,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20.r),
-                          border: Border.all(color: Color(0xFF194DBD)),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 44.w,
-                              height: 45.h,
+                        margin: EdgeInsets.only(top: 12.h),
+                        height: 140.h,
+                        child: PageView.builder(
+                          controller: _pageController,
+                          itemCount: 10,
+                          itemBuilder: (context, index) {
+                            return Container(
+                              margin: EdgeInsets.only(right: 15.w),
+                              padding: EdgeInsets.only(
+                                left: 20.w,
+                                right: 20.w,
+                                top: 20.h,
+                                bottom: 10.h,
+                              ),
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10.r),
-                                color: Color(0xFF1A6ADD),
-                              ),
-                              child: Center(
-                                child: SvgPicture.asset(
-                                  "assets/SvgImage/ticket.svg",
-                                  width: 24.w,
-                                  height: 24.h,
+                                borderRadius: BorderRadius.circular(20.r),
+                                color: Colors.transparent,
+                                border: Border.all(
+                                  color: Color.fromARGB(25, 0, 0, 0),
                                 ),
                               ),
-                            ),
-                            SizedBox(width: 16.w),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "PENDING Tasks",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color.fromARGB(204, 255, 255, 255),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    "Follow up with Rajesh Traders about the product",
+                                    style: GoogleFonts.inter(
+                                      fontSize: 15.sp,
+                                      color: Color(0xFF050A14),
+                                      fontWeight: FontWeight.w500,
+                                      letterSpacing: -0.54,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  "04",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 18.sp,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color.fromARGB(255, 255, 255, 255),
+                                  SizedBox(height: 8.h),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        "Urgent",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12.sp,
+                                          fontWeight: FontWeight.w400,
+                                          color: Color(0xFFFF0000),
+                                        ),
+                                      ),
+                                      SizedBox(width: 10.w),
+                                      Container(
+                                        width: 4.w,
+                                        height: 4.w,
+                                        decoration: BoxDecoration(
+                                          color: Color(0xFF263238),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      SizedBox(width: 10.w),
+                                      Text(
+                                        "Due today, 4:00 PM",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12.sp,
+                                          fontWeight: FontWeight.w400,
+                                          color: Color(0xFF263238),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
+                                  SizedBox(height: 20.h),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Container(
+                                          width: double.infinity,
+                                          height: 30.h,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                                10.r),
+                                            border: Border.all(
+                                              color: AppColors.buttonBg,
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              "Call",
+                                              style: GoogleFonts.inter(
+                                                fontSize: 11.sp,
+                                                fontWeight: FontWeight.w500,
+                                                color: AppColors.buttonBg,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 10.w),
+                                      Expanded(
+                                        child: Container(
+                                          width: double.infinity,
+                                          height: 30.h,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                                10.r),
+                                            color: AppColors.buttonBg,
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              "Mark Done",
+                                              style: GoogleFonts.inter(
+                                                fontSize: 11.sp,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      SizedBox(height: 10.h),
+                      Center(
+                        child: SmoothPageIndicator(
+                          controller: _pageController,
+                          count: 10,
+                          effect: ScrollingDotsEffect(
+                            activeDotColor: Color(0xFF063466),
+                            dotColor: Color(0xFFCDD6E0),
+                            dotHeight: 6.h,
+                            dotWidth: 6.w,
+                            spacing: 5.w,
+                            activeStrokeWidth: 2,
+                            activeDotScale: 1.4,
+                            maxVisibleDots: 5,
+                          ),
+                          onDotClicked: (index) {
+                            _pageController.animateToPage(
+                              index,
+                              duration: const Duration(milliseconds: 500),
+                              curve: Curves.easeInOut,
+                            );
+                          },
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.only(bottom: 13.h, top: 13.h),
-              decoration: BoxDecoration(color: Color(0xFFE5F2FF)),
-              child: Center(
-                child: Text(
-                  "NOT CHECKED IN YET, PLEASE CHECK IN",
-                  style: GoogleFonts.inter(
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF007AFF),
-                    letterSpacing: 1,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 20.h),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  homeMenuCard(
-                    image: "assets/SvgImage/wallet.svg",
-                    name: "Add Sale",
-                    callback: () {
-                      Navigator.push(
-                        context,
-                        CupertinoPageRoute(
-                          builder: (context) => AddSaleScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  homeMenuCard(
-                    image: "assets/SvgImage/note.svg",
-                    name: "Create Ticket",
-                    callback: () {
-                      Navigator.push(
-                        context,
-                        CupertinoPageRoute(
-                          builder: (context) => CreateTicketScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  homeMenuCard(
-                    image: "assets/SvgImage/user.svg",
-                    name: "Add Client",
-                    callback: () {
-                      Navigator.push(
-                        context,
-                        CupertinoPageRoute(
-                          builder: (context) => AddClientScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 40.h),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(left: 24.w),
-                  child: Text(
-                    "Your Priority Tasks",
-                    style: GoogleFonts.inter(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF1E1E1E),
-                      letterSpacing: -0.54,
+                  SizedBox(height: 34.h),
+                  Padding(
+                    padding: EdgeInsets.only(left: 24.w),
+                    child: Text(
+                      "Recently Assigned Tickets",
+                      style: GoogleFonts.inter(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF1E1E1E),
+                        letterSpacing: -0.54,
+                      ),
                     ),
                   ),
-                ),
-                Container(
-                  margin: EdgeInsets.only(top: 12.h),
-                  height: 140.h,
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: 10,
-                    itemBuilder: (context, index) {
-                      return Container(
-                        margin: EdgeInsets.only(right: 15.w),
-                        padding: EdgeInsets.only(
-                          left: 20.w,
-                          right: 20.w,
-                          top: 20.h,
-                          bottom: 10.h,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20.r),
-                          color: Colors.transparent,
-                          border: Border.all(
-                            color: Color.fromARGB(25, 0, 0, 0),
+                  SizedBox(height: 12.h),
+                  getTicket.when(
+                    data: (data) {
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        padding: EdgeInsets.zero,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: data.data?.length,
+                        itemBuilder: (context, index) {
+                          final item = data.data?[index];
+                          return Padding(
+                            padding: EdgeInsets.only(
+                              left: 24.w,
+                              right: 24.w,
+                              bottom: 10.h,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                tiketCard("${item?.issueCategory ?? ""}",
+                                    "${item?.status ?? ""}",
+                                    "${item?.ticketId}", item?.id ?? 0)
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    error: (error, stackTrace) {
+                      log(stackTrace.toString());
+                      log(error.toString());
+                      return Center(
+                        child: Text(
+                          "Something went wrong",
+                          style: GoogleFonts.outfit(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      );
+                    },
+                    loading: () =>
+                    const Center(
+                      child: CircularProgressIndicator(
+                          color: Color(0xFF007AFF)),
+                    ),
+                  ),
+                  SizedBox(height: 40.h),
+                  Padding(
+                    padding: EdgeInsets.only(left: 24.w),
+                    child: Text(
+                      "Sales Overview",
+                      style: GoogleFonts.inter(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF1E1E1E),
+                        letterSpacing: -0.54,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(left: 24.w, right: 24.w, top: 12.h),
+                    padding: EdgeInsets.symmetric(
+                        vertical: 20.h, horizontal: 20.w),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20.r),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xFF007AFF), Color(0xFF002199)],
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "My Target This Month",
+                          style: GoogleFonts.inter(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                            letterSpacing: -0.54,
+                          ),
+                        ),
+                        SizedBox(height: 19.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              "Follow up with Rajesh Traders about the product",
+                              "TARGET",
                               style: GoogleFonts.inter(
-                                fontSize: 15.sp,
-                                color: Color(0xFF050A14),
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w400,
+                                color: Color.fromARGB(204, 255, 255, 255),
+                              ),
+                            ),
+                            Text(
+                              "ACHIEVED",
+                              style: GoogleFonts.inter(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w400,
+                                color: Color.fromARGB(204, 255, 255, 255),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 10.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "₹1,00,000",
+                              style: GoogleFonts.inter(
+                                fontSize: 16.sp,
                                 fontWeight: FontWeight.w500,
+                                color: Color.fromARGB(255, 255, 255, 255),
                                 letterSpacing: -0.54,
                               ),
                             ),
-                            SizedBox(height: 8.h),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  "Urgent",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color(0xFFFF0000),
-                                  ),
-                                ),
-                                SizedBox(width: 10.w),
-                                Container(
-                                  width: 4.w,
-                                  height: 4.w,
-                                  decoration: BoxDecoration(
-                                    color: Color(0xFF263238),
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                SizedBox(width: 10.w),
-                                Text(
-                                  "Due today, 4:00 PM",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color(0xFF263238),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 20.h),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    width: double.infinity,
-                                    height: 30.h,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10.r),
-                                      border: Border.all(
-                                        color: AppColors.buttonBg,
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        "Call",
-                                        style: GoogleFonts.inter(
-                                          fontSize: 11.sp,
-                                          fontWeight: FontWeight.w500,
-                                          color: AppColors.buttonBg,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: 10.w),
-                                Expanded(
-                                  child: Container(
-                                    width: double.infinity,
-                                    height: 30.h,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10.r),
-                                      color: AppColors.buttonBg,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        "Mark Done",
-                                        style: GoogleFonts.inter(
-                                          fontSize: 11.sp,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            Text(
+                              "₹1,24,000",
+                              style: GoogleFonts.inter(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w500,
+                                color: Color.fromARGB(255, 255, 255, 255),
+                                letterSpacing: -0.54,
+                              ),
                             ),
                           ],
                         ),
-                      );
-                    },
-                  ),
-                ),
-                SizedBox(height: 10.h),
-                Center(
-                  child: SmoothPageIndicator(
-                    controller: _pageController,
-                    count: 10,
-                    effect: ScrollingDotsEffect(
-                      activeDotColor: Color(0xFF063466),
-                      dotColor: Color(0xFFCDD6E0),
-                      dotHeight: 6.h,
-                      dotWidth: 6.w,
-                      spacing: 5.w,
-                      activeStrokeWidth: 2,
-                      activeDotScale: 1.4,
-                      maxVisibleDots: 5,
-                    ),
-                    onDotClicked: (index) {
-                      _pageController.animateToPage(
-                        index,
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.easeInOut,
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 34.h),
-            Padding(
-              padding: EdgeInsets.only(left: 24.w),
-              child: Text(
-                "Recently Assigned Tickets",
-                style: GoogleFonts.inter(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF1E1E1E),
-                  letterSpacing: -0.54,
-                ),
-              ),
-            ),
-            SizedBox(height: 12.h),
-            getTicket.when(
-              data: (data) {
-                return ListView.builder(
-                  shrinkWrap: true,
-                  padding: EdgeInsets.zero,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: data.data?.length,
-                  itemBuilder: (context, index) {
-                    final item = data.data?[index];
-                    return Padding(
-                      padding: EdgeInsets.only(
-                        left: 24.w,
-                        right: 24.w,
-                        bottom: 10.h,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [tiketCard("${item?.issueCategory?? ""}", "${item?.status ?? ""}", "${item?.ticketId}", item?.id ??0)],
-                      ),
-                    );
-                  },
-                );
-              },
-              error: (error, stackTrace) {
-                log(stackTrace.toString());
-                log(error.toString());
-                return Center(
-                  child: Text(
-                    "Something went wrong",
-                    style: GoogleFonts.outfit(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w500,
+                        SizedBox(height: 20.h),
+                        Divider(
+                          color: Colors.white,
+                          thickness: 8.h,
+                          radius: BorderRadius.circular(40.r),
+                        ),
+                        SizedBox(height: 20.h),
+                        Text(
+                          "YOU HAVE EXCEEDED YOUR TARGET BY ₹24,000. GREAT WORK!",
+                          style: GoogleFonts.inter(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w400,
+                            color: Color.fromARGB(204, 255, 255, 255),
+                            fontStyle: FontStyle.italic,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                );
-              },
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: Color(0xFF007AFF)),
-              ),
-            ),
-            SizedBox(height: 40.h),
-            Padding(
-              padding: EdgeInsets.only(left: 24.w),
-              child: Text(
-                "Sales Overview",
-                style: GoogleFonts.inter(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF1E1E1E),
-                  letterSpacing: -0.54,
-                ),
-              ),
-            ),
-            Container(
-              margin: EdgeInsets.only(left: 24.w, right: 24.w, top: 12.h),
-              padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 20.w),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20.r),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF007AFF), Color(0xFF002199)],
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "My Target This Month",
-                    style: GoogleFonts.inter(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                      letterSpacing: -0.54,
-                    ),
-                  ),
-                  SizedBox(height: 19.h),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "TARGET",
-                        style: GoogleFonts.inter(
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w400,
-                          color: Color.fromARGB(204, 255, 255, 255),
-                        ),
-                      ),
-                      Text(
-                        "ACHIEVED",
-                        style: GoogleFonts.inter(
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w400,
-                          color: Color.fromARGB(204, 255, 255, 255),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 10.h),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "₹1,00,000",
-                        style: GoogleFonts.inter(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w500,
-                          color: Color.fromARGB(255, 255, 255, 255),
-                          letterSpacing: -0.54,
-                        ),
-                      ),
-                      Text(
-                        "₹1,24,000",
-                        style: GoogleFonts.inter(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w500,
-                          color: Color.fromARGB(255, 255, 255, 255),
-                          letterSpacing: -0.54,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20.h),
-                  Divider(
-                    color: Colors.white,
-                    thickness: 8.h,
-                    radius: BorderRadius.circular(40.r),
-                  ),
-                  SizedBox(height: 20.h),
-                  Text(
-                    "YOU HAVE EXCEEDED YOUR TARGET BY ₹24,000. GREAT WORK!",
-                    style: GoogleFonts.inter(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w400,
-                      color: Color.fromARGB(204, 255, 255, 255),
-                      fontStyle: FontStyle.italic,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
+
+                  SizedBox(height: 30.h),
                 ],
               ),
+            );
+            },
+            loading: () => Text(
+            "Good Morning, User",
+            style: GoogleFonts.inter(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
             ),
-
-            SizedBox(height: 30.h),
-          ],
-        ),
+            ),
+            error: (e, _) => Text(
+            "Good Morning, User",
+            style: GoogleFonts.inter(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+            ),
+            ),
       ),
       floatingActionButton: Container(
         width: 70.w,
@@ -900,7 +984,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ),
         ),
       ),
-    );
+      );
   }
 
   Widget homeMenuCard({

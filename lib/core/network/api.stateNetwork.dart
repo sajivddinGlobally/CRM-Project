@@ -26,6 +26,13 @@ import 'package:crm_app/data/Model/loginResModel.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
+import '../../data/Model/AttendenceSummaryModel.dart';
+import '../../data/Model/attendence_history_response.dart';
+import '../../data/Model/check_body_model.dart';
+import '../../data/Model/check_in_response_model.dart';
+import '../../data/Model/check_out_respomse_model.dart';
+import '../../data/Model/dashboard_response_model.dart';
+
 part 'api.stateNetwork.g.dart';
 
 @RestApi(baseUrl: "https://zylviontech.gwsstaging.com")
@@ -136,4 +143,28 @@ abstract class ApiStateNetwork {
 
   @GET("/api/auth/leads")
   Future<GetLeadModel> getLead();
+
+  @GET("/api/auth/dashboard")
+  Future<DashboardResponseModel> getDashboard();
+
+
+  @GET("/api/auth/attendance/history")
+  Future<AttendenceHistoryResponse> getAttendenceHistory();
+
+  @GET("/api/auth/attendance/summary")
+  Future<AttendenceSummaryResponse> getAttendenceSummary();
+
+  @POST("/api/auth/attendance/check-in")
+  Future<CheckInResponseModel> checkIn(
+      @Body() CheckBodyModel body,
+      );
+
+  @POST("/api/auth/attendance/check-out")
+  Future<CheckOutResponseModel> checkOut(
+      @Body() CheckBodyModel body,
+      );
+
+
+
+
 }

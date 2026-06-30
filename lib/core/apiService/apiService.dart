@@ -34,7 +34,14 @@ import 'package:dio/dio.dart';
 // import 'package:crm_app/screen/loginScreen.dart';
 // import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-// import 'package:retrofit/retrofit.dart';
+
+import '../../data/Model/AttendenceSummaryModel.dart';
+import '../../data/Model/attendence_history_response.dart';
+import '../../data/Model/check_body_model.dart';
+import '../../data/Model/check_in_response_model.dart';
+import '../../data/Model/check_out_respomse_model.dart';
+import '../../data/Model/dashboard_response_model.dart';
+import 'package:retrofit/retrofit.dart';
 
 class AuthService {
   final ApiStateNetwork api;
@@ -162,7 +169,6 @@ class AuthService {
         remeniderNote,
         imageFile,
       );
-
       if (response.status == true) {
         return response;
       } else {
@@ -455,4 +461,83 @@ class AuthService {
       throw Exception(e.toString());
     }
   }
+
+  Future<DashboardResponseModel> getDashboardData() async {
+    try {
+      final response = await api.getDashboard();
+      return response;
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+
+  Future<AttendenceHistoryResponse> getAttendenceHistory() async {
+    try {
+      final response = await api.getAttendenceHistory();
+      return response;
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+
+  Future<AttendenceSummaryResponse> getAttendenceSummary() async {
+    try {
+      final response = await api.getAttendenceSummary();
+      return response;
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+
+
+
+  Future<CheckInResponseModel> checkIn({
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      final response = await api.checkIn(
+        CheckBodyModel(
+          latitude: latitude,
+          longitude: longitude,
+        ),
+      );
+      if (response.status == true) {
+        return response;
+      } else {
+        throw Exception(response.message ?? "");
+      }
+    } catch (e, st) {
+
+      rethrow;
+    }
+  }
+
+
+
+  Future<CheckOutResponseModel> checkOut({
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      final response = await api.checkOut(
+        CheckBodyModel(
+          latitude: latitude,
+          longitude: longitude,
+        ),
+      );
+      if (response.status == true) {
+        return response;
+      } else {
+        throw Exception(response.message ?? "");
+      }
+    } catch (e, st) {
+
+      rethrow;
+    }
+  }
+
 }
