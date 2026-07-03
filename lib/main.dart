@@ -1,5 +1,4 @@
 import 'dart:developer' show log;
-
 import 'package:crm_app/screen/home/homeScreen.dart';
 import 'package:crm_app/screen/splashScreen.dart';
 import 'package:flutter/material.dart';
