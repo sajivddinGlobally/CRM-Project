@@ -116,17 +116,19 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         titleSpacing: -6,
         actions: [
           if (!isSelectionMode)
-            TextButton(
-              
-              onPressed: () {
-                // Mark All Read API
-              },
-              child: Text(
-                "Read All",
-                style: GoogleFonts.inter(
-                  color: AppColors.buttonBg,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16.sp,
+            Padding(
+              padding: EdgeInsets.only(right: 10.w),
+              child: TextButton(
+                onPressed: () {
+                  // Mark All Read API
+                },
+                child: Text(
+                  "Read All",
+                  style: GoogleFonts.inter(
+                    color: AppColors.buttonBg,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14.sp,
+                  ),
                 ),
               ),
             ),

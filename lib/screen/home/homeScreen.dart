@@ -1,4 +1,4 @@
-import 'dart:developer' show log;
+import 'dart:developer';
 
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/data/Provider/GetTicketProvider.dart';
@@ -32,7 +32,6 @@ class MyBottomNav extends ConsumerStatefulWidget {
 
 class _MyBottomNavState extends ConsumerState<MyBottomNav> {
   int selectedIndex = 0;
-
   final List<Map<String, dynamic>> navItems = [
     {"image": "assets/SvgImage/home.svg", "title": "HOME"},
     {"image": "assets/SvgImage/sales.svg", "title": "SALES"},
@@ -40,7 +39,6 @@ class _MyBottomNavState extends ConsumerState<MyBottomNav> {
     {"image": "assets/SvgImage/activity.svg", "title": "ACTIVITY"},
     {"image": "assets/SvgImage/settings.svg", "title": "SETTINGS"},
   ];
-
   final List<Widget> pages = [
     HomeScreen(),
     SalesTargetScreen(),
@@ -48,7 +46,6 @@ class _MyBottomNavState extends ConsumerState<MyBottomNav> {
     ActivityScreen(),
     SettingScreen(),
   ];
-
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -224,8 +221,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           final targetVale = (sales?.target ?? 0).toInt();
           final target = (sales?.target ?? 0).toDouble();
 
-          final progress = target == 0 ? 0.0 : (achieved / target);
-          final percent = (progress * 100).round();
+          final progress = target <= 0
+              ? 0.0
+              : (achieved / target).clamp(0.0, 1.0);
+
+          final actualPercent = target <= 0 ? 0.0 : (achieved / target) * 100;
+
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (_progress != progress) {
               setState(() {
@@ -290,7 +291,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                       shape: BoxShape.circle,
                                     ),
                                   ),
+
                                   SizedBox(width: 6.w),
+
                                   Text(
                                     companyName,
                                     style: GoogleFonts.inter(
@@ -380,9 +383,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 AnimatedBuilder(
                                   animation: _animation,
                                   builder: (context, child) {
-                                    final percent = (_animation.value * 100)
-                                        .toStringAsFixed(2);
-
                                     return Stack(
                                       alignment: Alignment.center,
                                       children: [
@@ -390,9 +390,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                           width: 58.w,
                                           height: 58.w,
                                           child: CircularProgressIndicator(
-                                            value: _animation.value,
+                                            value: progress,
                                             strokeWidth: 6,
-                                            backgroundColor: Color(0xFF4493F3),
+                                            backgroundColor: const Color(
+                                              0xFF4493F3,
+                                            ),
                                             valueColor:
                                                 const AlwaysStoppedAnimation<
                                                   Color
@@ -401,8 +403,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                         ),
 
                                         Text(
-                                          "$percent%",
-                                          textAlign: TextAlign.center,
+                                          "${actualPercent.toStringAsFixed(0)}%",
                                           style: GoogleFonts.inter(
                                             color: Colors.white,
                                             fontSize: 14.sp,
@@ -886,7 +887,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     child: CircularProgressIndicator(color: Color(0xFF007AFF)),
                   ),
                 ),
-                SizedBox(height: 30.h),
+                SizedBox(height: 40.h),
                 Padding(
                   padding: EdgeInsets.only(left: 24.w),
                   child: Text(
@@ -1077,7 +1078,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   Widget tiketCard(String status, String ticketid, String category, int id) {
     return Container(
-      margin: EdgeInsets.only(bottom: 10.h),
       padding: EdgeInsets.only(
         left: 20.w,
         right: 20.w,
