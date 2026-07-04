@@ -528,12 +528,12 @@ class _ApiStateNetwork implements ApiStateNetwork {
     String fullName,
     String phone,
     String? email,
-    String? date,
+    String? dob,
     String? gender,
-    String? sale,
+    String? sales,
     String? department,
     String? employeeId,
-    String? contact,
+    String? emergencyPhone,
     MultipartFile? offerLetter,
   ) async {
     final _extra = <String, dynamic>{};
@@ -546,14 +546,14 @@ class _ApiStateNetwork implements ApiStateNetwork {
     if (email != null) {
       _data.fields.add(MapEntry('email', email));
     }
-    if (date != null) {
-      _data.fields.add(MapEntry('date', date));
+    if (dob != null) {
+      _data.fields.add(MapEntry('dob', dob));
     }
     if (gender != null) {
       _data.fields.add(MapEntry('gender', gender));
     }
-    if (sale != null) {
-      _data.fields.add(MapEntry('sale', sale));
+    if (sales != null) {
+      _data.fields.add(MapEntry('sales_executive', sales));
     }
     if (department != null) {
       _data.fields.add(MapEntry('department', department));
@@ -561,8 +561,8 @@ class _ApiStateNetwork implements ApiStateNetwork {
     if (employeeId != null) {
       _data.fields.add(MapEntry('employee_id', employeeId));
     }
-    if (contact != null) {
-      _data.fields.add(MapEntry('contact', contact));
+    if (emergencyPhone != null) {
+      _data.fields.add(MapEntry('emergency_phone', emergencyPhone));
     }
     if (offerLetter != null) {
       _data.files.add(MapEntry('offer_letter', offerLetter));
@@ -886,6 +886,60 @@ class _ApiStateNetwork implements ApiStateNetwork {
     late DeleteNotificationModel _value;
     try {
       _value = DeleteNotificationModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<MarkReadResModel> markReadNorification(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<MarkReadResModel>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/api/auth/notifications/mark-read/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late MarkReadResModel _value;
+    try {
+      _value = MarkReadResModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<MarkReadResModel> markAllReadNotificaion() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<MarkReadResModel>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/api/auth/notifications/mark-all-read',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late MarkReadResModel _value;
+    try {
+      _value = MarkReadResModel.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
       rethrow;

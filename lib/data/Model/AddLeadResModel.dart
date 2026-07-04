@@ -50,8 +50,8 @@ class Data {
   String? status;
   String? createdByType;
   int? createdById;
-  DateTime? reminderDate;
-  dynamic reminderTime;
+  String? reminderDate;
+  String? reminderTime;
   dynamic reminderNote;
   DateTime? updatedAt;
   DateTime? createdAt;
@@ -103,9 +103,10 @@ class Data {
     status: json["status"],
     createdByType: json["created_by_type"],
     createdById: json["created_by_id"],
-    reminderDate: json["reminder_date"] == null
-        ? null
-        : DateTime.parse(json["remindera_date"]),
+    // reminderDate: json["reminder_date"] == null
+    //     ? null
+    //     : DateTime.parse(json["remindera_date"]),
+    reminderDate: json['reminderData'],
     reminderTime: json["reminder_time"],
     reminderNote: json["reminder_note"],
     updatedAt: json["updated_at"] == null
@@ -136,7 +137,8 @@ class Data {
     "status": status,
     "created_by_type": createdByType,
     "created_by_id": createdById,
-    "reminder_date": reminderDate?.toIso8601String(),
+    // "reminder_date": reminderDate?.toIso8601String(),
+    "reminder_date":reminderDate,
     "reminder_time": reminderTime,
     "reminder_note": reminderNote,
     "updated_at": updatedAt?.toIso8601String(),

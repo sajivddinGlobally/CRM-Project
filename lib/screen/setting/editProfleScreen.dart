@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/core/utils/showMessage.dart';
 import 'package:crm_app/data/Provider/GetProfileProvider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -28,6 +29,7 @@ class _EditProfleScreenState extends ConsumerState<EditProfleScreen> {
   final departmentController = TextEditingController();
   final empController = TextEditingController();
   final contactController = TextEditingController();
+  final dateController = TextEditingController();
 
   bool isLoading = false;
   DateTime? selectedDate;
@@ -40,6 +42,25 @@ class _EditProfleScreenState extends ConsumerState<EditProfleScreen> {
     if (pickedFile != null) {
       setState(() {
         profileImage = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<void> pickDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate ?? DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
+    );
+
+    if (picked != null) {
+      setState(() {
+        selectedDate = picked;
+        dateController.text =
+            "${picked.day.toString().padLeft(2, '0')}/"
+            "${picked.month.toString().padLeft(2, '0')}/"
+            "${picked.year}";
       });
     }
   }
@@ -77,7 +98,7 @@ class _EditProfleScreenState extends ConsumerState<EditProfleScreen> {
   }
 
   String? selectGender;
-  final List<String> genderList = ["Male", "Famale", "Other"];
+  final List<String> genderList = ["Male", "Female", "Other"];
 
   @override
   void initState() {
@@ -86,72 +107,34 @@ class _EditProfleScreenState extends ConsumerState<EditProfleScreen> {
     loadProfileData();
   }
 
-  void loadProfileData() async {
-    final profile = ref.read(getProfileProvider);
-    profile.whenData((profileData) {
-      nameController.text = profileData.data?.fullName ?? "";
-      phoneController.text = profileData.data?.phone ?? "";
-      emailController.text = profileData.data?.email ?? "";
-      empController.text = profileData.data?.employeeId ?? "";
-      image = profileData.data?.offerLetter ?? "";
-    });
-  }
+  void loadProfileData() {
+    ref.read(getProfileProvider).whenData((profileData) {
+      final data = profileData.data;
 
-  void showError(String msg) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
-          margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.h),
-          content: Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF4F4),
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: const Color(0xFFFFD6D6)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(8.w),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFFE5E5),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.error_outline_rounded,
-                    color: Color(0xFFE53935),
-                    size: 20.sp,
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Text(
-                    msg,
-                    style: GoogleFonts.inter(
-                      color: const Color(0xFF1F2937),
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w500,
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
+      nameController.text = data?.fullName ?? "";
+      phoneController.text = data?.phone ?? "";
+      emailController.text = data?.email ?? "";
+      saleController.text = data?.sale ?? "";
+      departmentController.text = data?.department ?? "";
+      empController.text = data?.employeeId ?? "";
+      contactController.text = data?.emergencyPhone ?? "";
+      image = data?.offerLetter ?? "";
+
+      // Gender
+      selectGender = data?.gender;
+
+      // Date
+      if (data?.dob != null) {
+        selectedDate = data!.dob!;
+
+        dateController.text =
+            "${selectedDate!.day.toString().padLeft(2, '0')}/"
+            "${selectedDate!.month.toString().padLeft(2, '0')}/"
+            "${selectedDate!.year}";
+      }
+
+      setState(() {});
+    });
   }
 
   @override
@@ -214,16 +197,24 @@ class _EditProfleScreenState extends ConsumerState<EditProfleScreen> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20.r),
                       child: profileImage != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(20.r),
-                              child: Image.file(
-                                profileImage!,
-                                fit: BoxFit.cover,
-                                width: 88.w,
-                                height: 90.h,
-                              ),
+                          ? Image.file(
+                              profileImage!,
+                              fit: BoxFit.cover,
+                              width: 88.w,
+                              height: 90.h,
                             )
-                          // : Image.network(
+                          : (image != null && image!.isNotEmpty)
+                          ? Image.network(
+                              image!,
+                              fit: BoxFit.cover,
+                              width: 88.w,
+                              height: 90.h,
+                              // errorBuilder: (context, error, stackTrace) {
+                              //   return const Center(
+                              //     child: Icon(Icons.person_2_outlined),
+                              //   );
+                              // },
+                            ) // : Image.network(
                           //     profileImage!.path,
                           //     fit: BoxFit.cover,
                           //     width: 88.w,
@@ -308,21 +299,21 @@ class _EditProfleScreenState extends ConsumerState<EditProfleScreen> {
                 keyboardType: TextInputType.number,
                 maxLength: 10,
                 controller: phoneController,
+                enableEdit: false,
               ),
               SizedBox(height: 10.h),
               _inputForm(
                 hintText: "Enter Email",
                 keyboardType: TextInputType.emailAddress,
                 controller: emailController,
+                enableEdit: false,
               ),
               SizedBox(height: 10.h),
               _inputForm(
                 hintText: "DD/MM/YYYY",
-                keyboardType: TextInputType.datetime,
-                maxLength: 10,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9/]')),
-                ],
+                controller: dateController,
+                onTap: pickDate,
+                readOnly: true,
               ),
               SizedBox(height: 10.h),
               customDropdown(
@@ -361,6 +352,7 @@ class _EditProfleScreenState extends ConsumerState<EditProfleScreen> {
                 hintText: "EMP-1024",
                 keyboardType: TextInputType.text,
                 controller: empController,
+                enableEdit: false,
               ),
               SizedBox(height: 30.h),
               Text(
@@ -403,7 +395,7 @@ class _EditProfleScreenState extends ConsumerState<EditProfleScreen> {
                         email: emailController.text.trim(),
                         date: selectedDate,
                         gender: selectGender,
-                        sale: saleController.text.trim(),
+                        sales: saleController.text.trim(),
                         department: departmentController.text.trim(),
                         employeeId: empController.text.trim(),
                         contact: contactController.text.trim(),
@@ -416,12 +408,11 @@ class _EditProfleScreenState extends ConsumerState<EditProfleScreen> {
                       }
                     } on DioException catch (e) {
                       setState(() => isLoading = false);
-
-                      showError(e.response?.data.toString() ?? "Network Error");
+                      showErrorSnackBar(
+                        e.response?.data.toString() ?? "Network Error",
+                      );
                     } catch (e) {
                       setState(() => isLoading = false);
-
-                      showError("Something went wrong");
                     }
                   },
                   child: isLoading
@@ -454,43 +445,54 @@ class _EditProfleScreenState extends ConsumerState<EditProfleScreen> {
 
   Widget _inputForm({
     required String hintText,
-    required TextInputType keyboardType,
+    TextInputType? keyboardType,
     int? maxLength,
     List<TextInputFormatter>? inputFormatters,
     TextEditingController? controller,
+    bool enableEdit = true,
+    VoidCallback? onTap,
+    bool readOnly = false,
   }) {
-    return TextFormField(
-      controller: controller,
-      style: GoogleFonts.inter(
-        fontSize: 15.sp,
-        fontWeight: FontWeight.w400,
-        color: Color(0xFF263238),
-        letterSpacing: -0.1,
-      ),
-      keyboardType: keyboardType,
-      maxLength: maxLength,
-      inputFormatters: inputFormatters,
-      decoration: InputDecoration(
-        counterText: "",
-        contentPadding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 18.h),
-        hint: Text(
-          hintText,
-          style: GoogleFonts.inter(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF7A7E93),
-          ),
+    return AbsorbPointer(
+      absorbing: !enableEdit,
+      child: TextFormField(
+        readOnly: readOnly,
+        controller: controller,
+        onTap: onTap,
+        style: GoogleFonts.inter(
+          fontSize: 15.sp,
+          fontWeight: FontWeight.w400,
+          color: Color(0xFF263238),
+          letterSpacing: -0.1,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20.r),
-          borderSide: BorderSide(
-            color: Color.fromARGB(25, 0, 0, 0),
-            width: 1.w,
+        keyboardType: keyboardType,
+        maxLength: maxLength,
+        inputFormatters: inputFormatters,
+        decoration: InputDecoration(
+          counterText: "",
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 18.w,
+            vertical: 18.h,
           ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20.r),
-          borderSide: BorderSide(color: AppColors.buttonBg, width: 1.w),
+          hint: Text(
+            hintText,
+            style: GoogleFonts.inter(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF7A7E93),
+            ),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20.r),
+            borderSide: BorderSide(
+              color: Color.fromARGB(25, 0, 0, 0),
+              width: 1.w,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20.r),
+            borderSide: BorderSide(color: AppColors.buttonBg, width: 1.w),
+          ),
         ),
       ),
     );

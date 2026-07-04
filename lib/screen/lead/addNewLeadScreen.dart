@@ -2,12 +2,14 @@ import 'dart:developer';
 
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/core/utils/showMessage.dart';
 import 'package:crm_app/screen/home/homeScreen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 class AddnewLeadScreen extends ConsumerStatefulWidget {
   const AddnewLeadScreen({super.key});
@@ -76,8 +78,16 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   bool isLoading = false;
-  void showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+
+  String? formatDateForApi(DateTime? date) {
+    if (date == null) return null;
+    return DateFormat("yyyy-MM-dd").format(date);
+  }
+
+  String? formatTimeForApi(TimeOfDay? time) {
+    if (time == null) return null;
+
+    return "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
   }
 
   @override
@@ -482,27 +492,17 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
                         leadSource: selectedSource ?? "",
                         priority: selectedPriority ?? "",
                         reminderNote: reminderController.text.trim(),
-                        reminderDate:selectedDate,
-                        reminderTime: selectedTime?.format(context),
+                        reminderDate: formatDateForApi(selectedDate),
+                        reminderTime: formatTimeForApi(selectedTime),
                       );
                       log("Token => ${response.data?.token}");
-                      // if (response.status == true) {
-                      //   log("Add New Lead Successfull");
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MyBottomNav(),
-                          ),
-                        );
-                      // }
-                    } on DioException catch (e) {
-                      setState(() => isLoading = false);
-
-                      showError(e.response?.data.toString() ?? "Network Error");
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => MyBottomNav()),
+                      );
                     } catch (e) {
                       setState(() => isLoading = false);
-
-                      showError("Something went wrong");
+                      showErrorSnackBar("Something went wrong");
                     }
                   },
                   child: isLoading

@@ -293,7 +293,7 @@ class AuthService {
     String? email,
     DateTime? date,
     String? gender,
-    String? sale,
+    String? sales,
     String? department,
     String? employeeId,
     String? contact,
@@ -315,7 +315,7 @@ class AuthService {
         email,
         date?.toIso8601String(),
         gender,
-        sale,
+        sales,
         department,
         employeeId,
         contact,
@@ -416,7 +416,7 @@ class AuthService {
     String? budgetRange,
     String? leadSource,
     String? priority,
-    DateTime? reminderDate,
+    String? reminderDate,
     String? reminderNote,
     String? reminderTime,
   }) async {
@@ -543,6 +543,32 @@ class AuthService {
   Future<bool> deleteNotification({required String id}) async {
     try {
       final res = await api.deleteNotification(id);
+      if (res.status == true) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      log(e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> markReadNotification({required String id}) async {
+    try {
+      final res = await api.markReadNorification(id);
+      if (res.status == true) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      log(e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> markAllReadNotification() async {
+    try {
+      final res = await api.markAllReadNotificaion();
       if (res.status == true) {
         return true;
       }

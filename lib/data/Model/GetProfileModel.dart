@@ -60,6 +60,7 @@ class Data {
     dynamic bankPassbook;
     String? designation;
     String? department;
+    String? sale;
     String? employmentType;
     String? reportingManager;
     String? workLocation;
@@ -90,6 +91,7 @@ class Data {
         this.employeeId,
         this.fullName,
         this.dob,
+        this.sale,
         this.gender,
         this.phone,
         this.alternatePhone,
@@ -144,6 +146,7 @@ class Data {
         fullName: json["full_name"],
         dob: json["dob"] == null ? null : DateTime.parse(json["dob"]),
         gender: json["gender"],
+        sale: json["sale"],
         phone: json["phone"],
         alternatePhone: json["alternate_phone"],
         email: json["email"],

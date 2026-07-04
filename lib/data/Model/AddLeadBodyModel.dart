@@ -19,7 +19,7 @@ class AddLeadBodyModel {
     String? budgetRange;
     String? leadSource;
     String? priority;
-    DateTime? reminderDate;
+    String? reminderDate;
     String? reminderNote;
     String? reminderTime;
 
@@ -50,7 +50,8 @@ class AddLeadBodyModel {
         budgetRange: json["budget_range"],
         leadSource: json["lead_source"],
         priority: json["priority"],
-        reminderDate: json["date"] == null ? null : DateTime.parse(json["date"]),
+        // reminderDate: json["date"] == null ? null : DateTime.parse(json["date"]),
+        reminderDate: json['reminderDate'],
         reminderNote: json["reminder_note"],
         reminderTime: json["reminder_time"],
     );

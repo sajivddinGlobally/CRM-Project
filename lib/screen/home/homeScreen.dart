@@ -401,9 +401,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                                 >(Colors.white),
                                           ),
                                         ),
-
                                         Text(
-                                          "${actualPercent.toStringAsFixed(0)}%",
+                                          // "${actualPercent.toStringAsFixed(0)}%",
+                                          "${actualPercent.toStringAsFixed(2)}%",
                                           style: GoogleFonts.inter(
                                             color: Colors.white,
                                             fontSize: 14.sp,
@@ -857,10 +857,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   tiketCard(
-                                    "${item?.issueCategory ?? ""}",
-                                    "${item?.status ?? ""}",
-                                    "${item?.ticketId}",
-                                    item?.id ?? 0,
+                                    category: item?.issueCategory ?? "",
+                                    ticketid: item?.ticketId ?? "",
+                                    status: item?.status ?? "",
+                                    id: item?.id ?? 0,
                                   ),
                                 ],
                               ),
@@ -1076,7 +1076,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget tiketCard(String status, String ticketid, String category, int id) {
+  Widget tiketCard({
+    required String status,
+    required String ticketid,
+    required String category,
+    required int id,
+  }) {
     return Container(
       padding: EdgeInsets.only(
         left: 20.w,

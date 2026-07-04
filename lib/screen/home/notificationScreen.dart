@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/data/Provider/getNotificationProvider.dart';
 import 'package:flutter/cupertino.dart';
@@ -70,6 +73,20 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     });
   }
 
+  Future<void> markReadNotificaion({required String id}) async {
+    try {
+      final service = ref.read(authServiceProvider);
+      final isSucess = await service.markReadNotification(id: id);
+      if (isSucess) {
+        ref.invalidate(getNotificationProvider);
+      }
+    } catch (e) {
+      log(e.toString());
+    }
+  }
+
+  bool isReadAllLoading = false;
+
   @override
   Widget build(BuildContext context) {
     final notificationState = ref.watch(getNotificationProvider);
@@ -119,11 +136,28 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
             Padding(
               padding: EdgeInsets.only(right: 10.w),
               child: TextButton(
-                onPressed: () {
-                  // Mark All Read API
+                onPressed: () async {
+                  setState(() {
+                    isReadAllLoading = true;
+                  });
+                  try {
+                    final service = ref.read(authServiceProvider);
+                    final isAcess = await service.markAllReadNotification();
+                    if (isAcess) {
+                      ref.invalidate(getNotificationProvider);
+                    }
+                  } catch (e) {
+                    setState(() {
+                      isReadAllLoading = false;
+                    });
+                  } finally {
+                    setState(() {
+                      isReadAllLoading = false;
+                    });
+                  }
                 },
                 child: Text(
-                  "Read All",
+                  isReadAllLoading ? "Marking..." : "Read All",
                   style: GoogleFonts.inter(
                     color: AppColors.buttonBg,
                     fontWeight: FontWeight.w600,
@@ -307,6 +341,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                             });
                           } else {
                             ////  Navigate notofication details screen
+                            markReadNotificaion(
+                              id: data.data![index].id.toString(),
+                            );
                           }
                         },
                         child: listCard(

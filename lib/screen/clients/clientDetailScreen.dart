@@ -1,6 +1,7 @@
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/data/Model/GetClientDetailsModel.dart';
 import 'package:crm_app/data/Provider/GetClientDetailsProvider.dart';
+import 'package:crm_app/data/Provider/GetTicketProvider.dart';
 import 'package:crm_app/screen/clients/interactionHistoryScreen.dart';
 import 'package:crm_app/screen/ticket/ticketDetailScreen.dart';
 import 'package:flutter/cupertino.dart';
@@ -68,6 +69,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final clientDetails = ref.watch(clientDetailsProvider(widget.clientId));
+    final getTicket = ref.watch(getTicketProvider);
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(
@@ -471,114 +473,136 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
                     ],
                   ),
                   SizedBox(height: 12.h),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: 3,
-                    padding: EdgeInsets.zero,
-                    itemBuilder: (context, index) {
-                      return Container(
-                        margin: EdgeInsets.only(bottom: 10.h),
-                        padding: EdgeInsets.only(
-                          left: 20.w,
-                          right: 20.w,
-                          top: 20.h,
-                          bottom: 20.h,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20.r),
-                          color: Colors.transparent,
-                          border: Border.all(
-                            color: Color.fromARGB(25, 0, 0, 0),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                  getTicket.when(
+                    data: (data) {
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: data.data?.length,
+                        padding: EdgeInsets.zero,
+                        itemBuilder: (context, index) {
+                          final ticket = data.data?[index];
+                          return Container(
+                            margin: EdgeInsets.only(bottom: 10.h),
+                            padding: EdgeInsets.only(
+                              left: 20.w,
+                              right: 20.w,
+                              top: 20.h,
+                              bottom: 20.h,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20.r),
+                              color: Colors.transparent,
+                              border: Border.all(
+                                color: Color.fromARGB(25, 0, 0, 0),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "#TKT-2291",
-                                        style: GoogleFonts.inter(
-                                          fontSize: 12.sp,
-                                          fontWeight: FontWeight.w400,
-                                          color: Color(0xFF263238),
-                                        ),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            ticket?.ticketId ?? "#TKT-2291",
+                                            style: GoogleFonts.inter(
+                                              fontSize: 12.sp,
+                                              fontWeight: FontWeight.w400,
+                                              color: Color(0xFF263238),
+                                            ),
+                                          ),
+                                          SizedBox(height: 4.h),
+                                          Text(
+                                            ticket?.issueCategory ??
+                                                "Payment issue",
+                                            style: GoogleFonts.inter(
+                                              fontSize: 15.sp,
+                                              color: Color(0xFF050A14),
+                                              fontWeight: FontWeight.w500,
+                                              letterSpacing: -0.54,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      SizedBox(height: 4.h),
-                                      Text(
-                                        "Payment issue",
+                                    ),
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 7.h,
+                                        horizontal: 10.w,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(
+                                          7.r,
+                                        ),
+                                        color: Color(0xFFF7F9E5),
+                                      ),
+                                      child: Text(
+                                        ticket?.status ?? "IN PROGRESS",
                                         style: GoogleFonts.inter(
-                                          fontSize: 15.sp,
-                                          color: Color(0xFF050A14),
+                                          fontSize: 11.sp,
                                           fontWeight: FontWeight.w500,
+                                          color: Color(0xFFB0C000),
                                           letterSpacing: -0.54,
                                         ),
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                    vertical: 7.h,
-                                    horizontal: 10.w,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(7.r),
-                                    color: Color(0xFFF7F9E5),
-                                  ),
-                                  child: Text(
-                                    "IN PROGRESS",
-                                    style: GoogleFonts.inter(
-                                      fontSize: 11.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFFB0C000),
-                                      letterSpacing: -0.54,
+                                SizedBox(height: 20.h),
+                                InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      CupertinoPageRoute(
+                                        builder: (context) =>
+                                            TicketDetailScreen(
+                                              id: data.data![index].id
+                                                  .toString(),
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 35.h,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10.r),
+                                      border: Border.all(
+                                        color: AppColors.buttonBg,
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        "View details",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 11.sp,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.buttonBg,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
-                            SizedBox(height: 20.h),
-                            InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  CupertinoPageRoute(
-                                    builder: (context) =>
-                                        TicketDetailScreen(id: widget.clientId),
-                                  ),
-                                );
-                              },
-                              child: Container(
-                                width: double.infinity,
-                                height: 35.h,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10.r),
-                                  border: Border.all(color: AppColors.buttonBg),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    "View details",
-                                    style: GoogleFonts.inter(
-                                      fontSize: 11.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.buttonBg,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          );
+                        },
                       );
                     },
+                    error: (error, stackTrace) {
+                      return Center(child: Text("Something went wrong"));
+                    },
+                    loading: () => Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.buttonBg,
+                      ),
+                    ),
                   ),
+
                   SizedBox(height: 30.h),
                   Text(
                     "DOCUMENTS",

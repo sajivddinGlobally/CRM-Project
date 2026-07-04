@@ -25,10 +25,10 @@ import 'package:crm_app/data/Model/deleteNotificationModel.dart';
 import 'package:crm_app/data/Model/getNotificationModel.dart';
 import 'package:crm_app/data/Model/loginBodyModel.dart';
 import 'package:crm_app/data/Model/loginResModel.dart';
+import 'package:crm_app/data/Model/markReadResModel.dart';
 import 'package:crm_app/data/Model/unreadCountModel.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
-
 import '../../data/Model/AttendenceSummaryModel.dart';
 import '../../data/Model/attendence_history_response.dart';
 import '../../data/Model/check_body_model.dart';
@@ -129,12 +129,12 @@ abstract class ApiStateNetwork {
     @Part(name: "full_name") String fullName,
     @Part(name: "phone") String phone,
     @Part(name: "email") String? email,
-    @Part(name: "date") String? date,
+    @Part(name: "dob") String? dob,
     @Part(name: "gender") String? gender,
-    @Part(name: "sale") String? sale,
+    @Part(name: "sales_executive") String? sales,
     @Part(name: "department") String? department,
     @Part(name: "employee_id") String? employeeId,
-    @Part(name: "contact") String? contact,
+    @Part(name: "emergency_phone") String? emergencyPhone,
     @Part(name: "offer_letter") MultipartFile? offerLetter,
   );
 
@@ -170,4 +170,10 @@ abstract class ApiStateNetwork {
 
   @DELETE("/api/auth/notifications/delete/{id}")
   Future<DeleteNotificationModel> deleteNotification(@Path('id') String id);
+
+  @POST("/api/auth/notifications/mark-read/{id}")
+  Future<MarkReadResModel> markReadNorification(@Path('id') String id);
+
+  @POST("/api/auth/notifications/mark-all-read")
+  Future<MarkReadResModel> markAllReadNotificaion();
 }
