@@ -58,9 +58,9 @@ class Datum {
     factory Datum.fromJson(Map<String, dynamic> json) => Datum(
         id: json["id"],
         ticketId: json["ticket_id"],
-        issueTitle: issueTitleValues.map[json["issue_title"]]!,
+        issueTitle: issueTitleValues.map[json["issue_title"]],
         issueCategory: json["issue_category"],
-        priority: priorityValues.map[json["priority"]]!,
+        priority: priorityValues.map[json["priority"]],
         status: json["status"],
         raisedBy: json["raised_by"],
         attachment: json["attachment"],

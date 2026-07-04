@@ -3,6 +3,7 @@ import 'dart:math' show log;
 
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/core/utils/showMessage.dart';
 import 'package:crm_app/screen/forgot/createPasswordScreen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -22,10 +23,11 @@ class OtpVerifyScreen extends ConsumerStatefulWidget {
 }
 
 class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
+  final _otpPinFieldController = GlobalKey<OtpPinFieldState>();
   int secondRemaining = 30;
   Timer? timer;
   bool isLoading = false;
-  String Otp = "";
+  String otp = "";
 
   void showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -50,6 +52,29 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
         });
       }
     });
+  }
+
+  bool isResend = false;
+
+  Future<void> resendOTP() async {
+    setState(() {
+      isResend = true;
+    });
+
+    try {
+      final service = ref.read(authServiceProvider);
+      final response = await service.forgotPasswordData(email: widget.email);
+      if (response.status = true) {
+        showSuccessSnackBar("Resend OTP Sucessfull");
+        startTimer();
+      }
+    } catch (e) {
+      setState(() => isResend = false);
+    } finally {
+      setState(() {
+        isResend = false;
+      });
+    }
   }
 
   @override
@@ -122,6 +147,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
             Padding(
               padding: EdgeInsets.only(left: 24.w, right: 24.w),
               child: OtpPinField(
+                key: _otpPinFieldController,
                 fieldWidth: 57.w,
                 fieldHeight: 56.h,
                 otpPinFieldDecoration:
@@ -135,10 +161,10 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 maxLength: 6,
                 onSubmit: (text) {
-                  Otp = text;
+                  otp = text;
                 },
                 onChange: (text) {
-                  Otp = text;
+                  otp = text;
                 },
               ),
             ),
@@ -160,28 +186,29 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                   final service = ref.read(authServiceProvider);
                   final response = await service.OtpVerifyData(
                     email: widget.email,
-                    otp: Otp,
+                    otp: otp,
                   );
                   if (response.status = true) {
-                    print("Otp Verify Successfull");
                     Navigator.push(
                       context,
                       CupertinoPageRoute(
                         builder: (context) =>
-                            CreatePasswordScreen(
-                              email: widget.email,
-                            ),
+                            CreatePasswordScreen(email: widget.email),
                       ),
                     );
+                  } else {
+                    _otpPinFieldController.currentState?.clearOtp();
+                    setState(() {
+                      otp = "";
+                      isLoading = false;
+                    });
                   }
-                } on DioException catch (e) {
-                  setState(() => isLoading = false);
-
-                  showError(e.response?.data.toString() ?? "Network Error");
                 } catch (e) {
-                  setState(() => isLoading = false);
-
-                  showError("Something went wrong");
+                  _otpPinFieldController.currentState?.clearOtp();
+                  setState(() {
+                    otp = "";
+                    isLoading = false;
+                  });
                 }
               },
               child: isLoading
@@ -206,7 +233,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
             GestureDetector(
               onTap: secondRemaining == 0
                   ? () {
-                      startTimer();
+                      resendOTP();
                     }
                   : null,
               child: Container(
@@ -217,16 +244,25 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                   borderRadius: BorderRadius.circular(15.r),
                 ),
                 child: Center(
-                  child: Text(
-                    secondRemaining == 0
-                        ? "Resend Code"
-                        : "Resend in $secondRemaining sec",
-                    style: GoogleFonts.inter(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.buttonBg,
-                    ),
-                  ),
+                  child: isResend
+                      ? SizedBox(
+                          width: 20.w,
+                          height: 20.h,
+                          child: CircularProgressIndicator(
+                            color: Colors.blueAccent,
+                            strokeWidth: 1.5,
+                          ),
+                        )
+                      : Text(
+                          secondRemaining == 0
+                              ? "Resend Code"
+                              : "Resend in $secondRemaining sec",
+                          style: GoogleFonts.inter(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.buttonBg,
+                          ),
+                        ),
                 ),
               ),
             ),

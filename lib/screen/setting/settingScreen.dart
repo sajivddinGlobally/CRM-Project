@@ -1,6 +1,7 @@
 import 'dart:developer' show log;
 
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/core/utils/showMessage.dart';
 import 'package:crm_app/data/Provider/GetProfileProvider.dart';
 import 'package:crm_app/screen/loginScreen.dart';
 import 'package:crm_app/screen/setting/attandanceScreen.dart';
@@ -15,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive/hive.dart';
 
 class SettingScreen extends ConsumerStatefulWidget {
   const SettingScreen({super.key});
@@ -24,6 +26,122 @@ class SettingScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingScreenState extends ConsumerState<SettingScreen> {
+  Future<void> showLogoutDialog(BuildContext context, VoidCallback onLogout) {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.r),
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  height: 70.w,
+                  width: 70.w,
+                  decoration: BoxDecoration(
+                    color: AppColors.buttonBg.withOpacity(.10),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.logout_rounded,
+                    color: AppColors.buttonBg,
+                    size: 34.sp,
+                  ),
+                ),
+
+                SizedBox(height: 20.h),
+
+                Text(
+                  "Logout",
+                  style: GoogleFonts.inter(
+                    fontSize: 22.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF262833),
+                  ),
+                ),
+
+                SizedBox(height: 10.h),
+
+                Text(
+                  "Are you sure you want to logout from your account?",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 14.sp,
+                    height: 1.5,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF7A7E93),
+                  ),
+                ),
+
+                SizedBox(height: 28.h),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: Size(double.infinity, 52.h),
+                          side: BorderSide(color: AppColors.buttonBg),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15.r),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          "Cancel",
+                          style: GoogleFonts.inter(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.buttonBg,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(width: 12.w),
+
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size(double.infinity, 52.h),
+                          backgroundColor: AppColors.buttonBg,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15.r),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          onLogout();
+                        },
+                        child: Text(
+                          "Logout",
+                          style: GoogleFonts.inter(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final profile = ref.watch(getProfileProvider);
@@ -320,39 +438,17 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                       SizedBox(height: 50.h),
                       InkWell(
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              elevation: 0,
-                              backgroundColor: Color(0xffB71C1C),
-                              behavior: SnackBarBehavior.floating,
-                              duration: const Duration(seconds: 3),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20.r),
+                          showLogoutDialog(context, () async {
+                            Hive.box("userdata").clear();
+                            showSuccessSnackBar("Logged out successfully.");
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              CupertinoPageRoute(
+                                builder: (_) => const LoginScreen(),
                               ),
-                              margin: EdgeInsets.only(
-                                left: 16.w,
-                                right: 16.w,
-                                bottom: 20.h,
-                              ),
-                              content: Text(
-                                "Logout Sucessfull",
-                                style: GoogleFonts.inter(
-                                  color: Colors.white,
-                                  fontSize: 15.sp,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: -0.1,
-                                  height: 1,
-                                ),
-                              ),
-                            ),
-                          );
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            CupertinoPageRoute(
-                              builder: (context) => LoginScreen(),
-                            ),
-                            (route) => false,
-                          );
+                              (route) => false,
+                            );
+                          });
                         },
                         child: Container(
                           width: double.infinity,

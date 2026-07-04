@@ -67,7 +67,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final clientDetails = ref.watch(ClientDetailsProvider);
+    final clientDetails = ref.watch(clientDetailsProvider(widget.clientId));
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(
@@ -550,7 +550,8 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
                                 Navigator.push(
                                   context,
                                   CupertinoPageRoute(
-                                    builder: (context) => TicketDetailScreen(),
+                                    builder: (context) =>
+                                        TicketDetailScreen(id: widget.clientId),
                                   ),
                                 );
                               },

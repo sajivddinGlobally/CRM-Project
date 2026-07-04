@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:crm_app/core/utils/key.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -17,19 +19,22 @@ void showSuccessSnackBar(String message) {
       content: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18.r),
-          gradient: const LinearGradient(
-            colors: [
-              Color(0xff43A047), // Green
-              Color(0xff1B5E20), // Dark Green
-            ],
-          ),
+          color: const Color(0xFFFFF5F5),
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: const Color(0xFFFECACA)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
             Icon(
               Icons.check_circle_outline_rounded,
-              color: Colors.white,
+              color: Color(0xFF007AFF),
               size: 24.sp,
             ),
             SizedBox(width: 12.w),
@@ -37,7 +42,7 @@ void showSuccessSnackBar(String message) {
               child: Text(
                 message,
                 style: GoogleFonts.inter(
-                  color: Colors.white,
+                  color: Color(0xFF007AFF),
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w500,
                 ),
@@ -50,40 +55,66 @@ void showSuccessSnackBar(String message) {
   );
 }
 
-void showErrorMessage({
-  required BuildContext context,
-  required String message,
-}) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      elevation: 0,
-      backgroundColor: Colors.transparent,
-      behavior: SnackBarBehavior.floating,
-      margin: EdgeInsets.only(left: 12.w, right: 12.w, bottom: 20.h),
-      content: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-        decoration: BoxDecoration(
-          color: const Color(0xffB40A0A),
-          borderRadius: BorderRadius.circular(14.r),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.error, color: Colors.white, size: 22.sp),
-            SizedBox(width: 10.w),
-            Expanded(
-              child: Text(
-                message,
-                style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: -0.3,
+void showErrorSnackBar(String message) {
+  final context = navigatorKey.currentContext;
+  log("CONTEXT => $context");
+
+  if (context == null) {
+    log("Context is NULL");
+    return;
+  }
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+        margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.h),
+        content: Container(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF5F5),
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: const Color(0xFFFECACA)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8.w),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFEE2E2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.error_outline_rounded,
+                  color: Color(0xFFDC2626),
+                  size: 20.sp,
                 ),
               ),
-            ),
-          ],
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Text(
+                  message,
+                  style: GoogleFonts.inter(
+                    color: const Color(0xFF262833),
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
 }

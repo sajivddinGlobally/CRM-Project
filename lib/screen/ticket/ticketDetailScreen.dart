@@ -8,7 +8,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class TicketDetailScreen extends ConsumerStatefulWidget {
-  const TicketDetailScreen({super.key});
+  final String id;
+  const TicketDetailScreen({super.key, required this.id});
 
   @override
   ConsumerState<TicketDetailScreen> createState() => _TicketDetailScreenState();
@@ -57,7 +58,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
   final List<String> statusList = ["Open", "In Progress", "Closed"];
   @override
   Widget build(BuildContext context) {
-    final ticketDetails = ref.watch(getTicketDetailsProvider);
+    final ticketDetails = ref.watch(getTicketDetailsProvider(widget.id));
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(
@@ -102,7 +103,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
       ),
       body: ticketDetails.when(
         data: (data) {
-            descriptionController.text = data.data?.issueDescription ?? "";
+          descriptionController.text = data.data?.issueDescription ?? "";
           selectStatus ??= data.data?.status;
           return SingleChildScrollView(
             child: Padding(

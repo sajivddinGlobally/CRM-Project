@@ -1,48 +1,40 @@
+import 'dart:developer';
+
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 
-class CheckoutScreen extends StatefulWidget {
+import '../../core/apiService/apiServiceProvider.dart';
+import 'attandanceScreen.dart';
+
+// class CheckoutScreen extends StatefulWidget {
+//   const CheckoutScreen({super.key});
+//
+//   @override
+//   State<CheckoutScreen> createState() => _CheckoutScreenState();
+// }
+
+
+class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
 
   @override
-  State<CheckoutScreen> createState() => _CheckoutScreenState();
+  ConsumerState<CheckoutScreen> createState() =>
+      _CheckoutScreenState();
 }
+
+class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
+
 
 // --- DUMMY DATA MODELS ---
-class AttendanceSummary {
-  final int totalDays;
-  final int workingDays;
-  final int presentDays;
-  final int lateDays;
-  final int absentDays;
 
-  AttendanceSummary({
-    required this.totalDays,
-    required this.workingDays,
-    required this.presentDays,
-    required this.lateDays,
-    required this.absentDays,
-  });
-}
 
-class AttendanceLog {
-  final String date;
-  final String checkIn;
-  final String checkOut;
-  final int statusType; // 0 = Present, 1 = Late, 2 = Absent
-
-  AttendanceLog({
-    required this.date,
-    required this.checkIn,
-    required this.checkOut,
-    required this.statusType,
-  });
-}
-
-class _CheckoutScreenState extends State<CheckoutScreen> {
+// class _CheckoutScreenState extends State<CheckoutScreen> {
   // 1. Current Selected Month State
   String selectedMonth = "March";
 
@@ -829,7 +821,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       },
     );
   }
-
+  void showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+  bool isLoading = false;
   Widget _buildBottomActionButton() {
     return Align(
       alignment: Alignment.bottomCenter,
@@ -838,7 +833,42 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         width: double.infinity,
         color: Colors.transparent,
         child: ElevatedButton(
-          onPressed: () {},
+          onPressed: () async {
+
+            setState(() {
+              isLoading = true;
+            });
+            try {
+              final service = ref.read(authServiceProvider);
+              final response = await service.checkIn(
+                latitude: 26.9124,
+                longitude: 75.7873,
+
+              );
+
+              if (response.status == true) {
+                log("Change Password Successfull");
+                await Future.delayed(const Duration(seconds: 1));
+                showError(response.message ?? "Check In Successful");
+
+                if (!mounted) return;
+
+                Navigator.push(
+                  context,
+                  CupertinoPageRoute(builder: (context) => AttendanceScreen()),
+                );
+
+              }
+            } on DioException catch (e) {
+              setState(() => isLoading = false);
+              showError(e.response?.data["message"] ?? "Network Error");
+            } catch (e) {
+              setState(() => isLoading = false);
+
+              showError("Something went wrong");
+            }
+
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.red,
             minimumSize: Size(double.infinity, 56.h),
@@ -859,4 +889,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
     );
   }
+}
+
+class AttendanceSummary {
+  final int totalDays;
+  final int workingDays;
+  final int presentDays;
+  final int lateDays;
+  final int absentDays;
+
+  AttendanceSummary({
+    required this.totalDays,
+    required this.workingDays,
+    required this.presentDays,
+    required this.lateDays,
+    required this.absentDays,
+  });
+}
+
+class AttendanceLog {
+  final String date;
+  final String checkIn;
+  final String checkOut;
+  final int statusType; // 0 = Present, 1 = Late, 2 = Absent
+
+  AttendanceLog({
+    required this.date,
+    required this.checkIn,
+    required this.checkOut,
+    required this.statusType,
+  });
 }

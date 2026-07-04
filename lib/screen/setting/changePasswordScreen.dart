@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/core/utils/showMessage.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,12 +19,9 @@ class ChangePasswordScreen extends ConsumerStatefulWidget {
 
 class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   final newPasswordController = TextEditingController();
-  final ConfirmPasswordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+  final currentPasswordController = TextEditingController();
   bool isLoading = false;
-
-  void showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +63,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
             _inputForm(
               hintText: "Enter Current Password",
               type: TextInputType.visiblePassword,
+              controller: currentPasswordController,
             ),
             _inputForm(
               hintText: "Enter New Password",
@@ -74,7 +73,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
             _inputForm(
               hintText: "Confirm New Password",
               type: TextInputType.visiblePassword,
-              controller: ConfirmPasswordController,
+              controller: confirmPasswordController,
             ),
             Expanded(child: SizedBox()),
             ElevatedButton(
@@ -86,6 +85,16 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 ),
               ),
               onPressed: () async {
+                if (newPasswordController.text.trim().isEmpty) {
+                  return;
+                }
+                if (confirmPasswordController.text.trim().isEmpty) {
+                  return;
+                }
+                if (newPasswordController.text.trim() !=
+                    confirmPasswordController.text.trim()) {
+                  showErrorSnackBar("Password do not match");
+                }
                 setState(() {
                   isLoading = true;
                 });
@@ -93,25 +102,18 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                   final service = ref.read(authServiceProvider);
                   final response = await service.ChangePasswordData(
                     newPassword: newPasswordController.text.trim(),
-                    confirmPassword: ConfirmPasswordController.text.trim(),
+                    confirmPassword: confirmPasswordController.text.trim(),
                   );
-
                   if (response.status == true) {
-                    log("Change Password Successfull");
-                    await Future.delayed(const Duration(seconds: 1));
-
-                    if (!mounted) return;
-
+                    showSuccessSnackBar(response.message ?? "");
                     Navigator.pop(context);
                   }
-                } on DioException catch (e) {
-                  setState(() => isLoading = false);
-
-                  showError(e.response?.data.toString() ?? "Network Error");
                 } catch (e) {
                   setState(() => isLoading = false);
-
-                  showError("Something went wrong");
+                } finally {
+                  setState(() {
+                    isLoading = false;
+                  });
                 }
               },
               child: isLoading
@@ -132,7 +134,6 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                       ),
                     ),
             ),
-
             SizedBox(height: 24.h),
           ],
         ),

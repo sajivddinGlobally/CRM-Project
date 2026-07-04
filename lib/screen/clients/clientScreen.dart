@@ -10,8 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class ClientScreen extends ConsumerStatefulWidget {
-  
-  const ClientScreen({super.key,});
+  const ClientScreen({super.key});
 
   @override
   ConsumerState<ClientScreen> createState() => _ClientScreenState();
@@ -226,10 +225,9 @@ class _ClientScreenState extends ConsumerState<ClientScreen> {
                                   Navigator.push(
                                     context,
                                     CupertinoPageRoute(
-                                      builder: (context) =>
-                                          ClientDetailScreen(
-                                        clientId:   client!.clientId??''
-                                          ),
+                                      builder: (context) => ClientDetailScreen(
+                                        clientId: client!.id.toString(),
+                                      ),
                                     ),
                                   );
                                 },
@@ -325,8 +323,12 @@ class _ClientScreenState extends ConsumerState<ClientScreen> {
                   ),
                 );
               },
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: Color(0xFF007AFF)),
+              loading: () => SizedBox(
+                width: double.infinity,
+                height: MediaQuery.of(context).size.height / 2,
+                child: Center(
+                  child: CircularProgressIndicator(color: Color(0xFF007AFF)),
+                ),
               ),
             ),
           ],

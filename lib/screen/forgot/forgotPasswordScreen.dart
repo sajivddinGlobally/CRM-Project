@@ -3,6 +3,8 @@ import 'dart:math' hide log;
 
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/core/utils/pretty.dio.dart';
+import 'package:crm_app/core/utils/showMessage.dart';
 import 'package:crm_app/screen/forgot/otpVerifyScreen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -23,21 +25,6 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final emailController = TextEditingController();
   bool isLoading = false;
-
-  void showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
-
-  bool validate() {
-    if (emailController.text.trim().isEmpty) {
-      showError("Enter Email");
-      return false;
-    }
-    if (!emailController.text.contains("@")) {
-      showError("Enter Valid Email");
-    }
-    return true;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -151,6 +138,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 ),
               ),
               onPressed: () async {
+                if (emailController.text.trim().isEmpty) {
+                  return;
+                }
                 setState(() {
                   isLoading = true;
                 });
@@ -162,21 +152,21 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   );
                   if (response.status = true) {
                     log("OTP Send Successfull");
+                    showSuccessSnackBar(response.message ?? "");
                     Navigator.push(
                       context,
                       CupertinoPageRoute(
-                        builder: (context) => OtpVerifyScreen(email: emailController.text.trim()),
+                        builder: (context) =>
+                            OtpVerifyScreen(email: emailController.text.trim()),
                       ),
                     );
                   }
-                } on DioException catch (e) {
-                  setState(() => isLoading = false);
-
-                  showError(e.response?.data.toString() ?? "Network Error");
                 } catch (e) {
                   setState(() => isLoading = false);
-
-                  showError("Something went wrong");
+                } finally {
+                  setState(() {
+                    isLoading = false;
+                  });
                 }
               },
               child: isLoading

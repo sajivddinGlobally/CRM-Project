@@ -1,19 +1,15 @@
-import 'dart:developer' show log;
+import 'dart:developer';
 import 'dart:io';
 import 'package:crm_app/core/network/api.stateNetwork.dart';
 import 'package:crm_app/data/Model/AddLeadBodyModel.dart';
 import 'package:crm_app/data/Model/AddLeadResModel.dart';
-// import 'package:crm_app/data/Model/AddNewClientBodyModel.dart';
 import 'package:crm_app/data/Model/AddNewClientResModel.dart';
-// import 'package:crm_app/data/Model/AddSaleBodyModel.dart';
 import 'package:crm_app/data/Model/AddSaleResModel.dart';
 import 'package:crm_app/data/Model/ChangePasswordBodyModel.dart';
 import 'package:crm_app/data/Model/ChangePasswordResModel.dart';
 import 'package:crm_app/data/Model/CreatePasswordBodyModel.dart';
 import 'package:crm_app/data/Model/CreatePasswordResModel.dart';
-// import 'package:crm_app/data/Model/CreateTicketBodyModel.dart';
 import 'package:crm_app/data/Model/CreateTicketResModel.dart';
-// import 'package:crm_app/data/Model/EditProfileBodyModel.dart';
 import 'package:crm_app/data/Model/EditProfileResModel.dart';
 import 'package:crm_app/data/Model/ForgotPasswordBodyModel.dart';
 import 'package:crm_app/data/Model/ForgotPasswordResModel.dart';
@@ -28,13 +24,17 @@ import 'package:crm_app/data/Model/GetTicketDetailsModel.dart';
 import 'package:crm_app/data/Model/GetTicketModel.dart';
 import 'package:crm_app/data/Model/OtpVerifyBodyModel.dart';
 import 'package:crm_app/data/Model/OtpVerifyResModel.dart';
+import 'package:crm_app/data/Model/getNotificationModel.dart';
 import 'package:crm_app/data/Model/loginBodyModel.dart';
 import 'package:crm_app/data/Model/loginResModel.dart';
 import 'package:dio/dio.dart';
-// import 'package:crm_app/screen/loginScreen.dart';
-// import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-// import 'package:retrofit/retrofit.dart';
+import '../../data/Model/AttendenceSummaryModel.dart';
+import '../../data/Model/attendence_history_response.dart';
+import '../../data/Model/check_body_model.dart';
+import '../../data/Model/check_in_response_model.dart';
+import '../../data/Model/check_out_respomse_model.dart';
+import '../../data/Model/dashboard_response_model.dart';
 
 class AuthService {
   final ApiStateNetwork api;
@@ -162,7 +162,6 @@ class AuthService {
         remeniderNote,
         imageFile,
       );
-
       if (response.status == true) {
         return response;
       } else {
@@ -328,9 +327,9 @@ class AuthService {
     }
   }
 
-  Future<GetSaleDetilesModel> getSaleDetailsData() async {
+  Future<GetSaleDetilesModel> getSaleDetailsData({required String id}) async {
     try {
-      final response = await api.getSaleDetiles();
+      final response = await api.getSaleDetiles(id);
       return response;
     } catch (e) {
       throw Exception(e.toString());
@@ -350,14 +349,17 @@ class AuthService {
     try {
       final response = await api.getTicket();
       return response;
-    } catch (e) {
+    } catch (e, st) {
+      log(st.toString());
       throw Exception(e.toString());
     }
   }
 
-  Future<GetTicketDetailsModel> getTicketDetailsData() async {
+  Future<GetTicketDetailsModel> getTicketDetailsData({
+    required String id,
+  }) async {
     try {
-      final response = await api.getTicketDetails();
+      final response = await api.getTicketDetails(id);
       return response;
     } catch (e) {
       throw Exception(e.toString());
@@ -373,9 +375,11 @@ class AuthService {
     }
   }
 
-  Future<GetClienDetailsModel> getClientDetailsData() async {
+  Future<GetClienDetailsModel> getClientDetailsData({
+    required String id,
+  }) async {
     try {
-      final response = await api.getClientDetails();
+      final response = await api.getClientDetails(id);
       return response;
     } catch (e) {
       throw Exception(e.toString());
@@ -399,22 +403,23 @@ class AuthService {
       throw Exception(e.toString());
     }
   }
+
   Future<AddLeadResModel> addLeadData({
-  required  String leadName,
-  required String mobileNumber,
-  String? alternateContact,
-  String? email,
-  String? businessName,
-  String? industryType,
-  String? city,
-  String? budgetRange,
-  String? leadSource,
-  String? priority,
-  DateTime? reminderDate,
-  String? reminderNote,
-  String? reminderTime,
-  }) async{
-    try{
+    required String leadName,
+    required String mobileNumber,
+    String? alternateContact,
+    String? email,
+    String? businessName,
+    String? industryType,
+    String? city,
+    String? budgetRange,
+    String? leadSource,
+    String? priority,
+    DateTime? reminderDate,
+    String? reminderNote,
+    String? reminderTime,
+  }) async {
+    try {
       final response = await api.addLead(
         AddLeadBodyModel(
           leadName: leadName,
@@ -429,27 +434,108 @@ class AuthService {
           priority: priority,
           reminderDate: reminderDate,
           reminderNote: reminderNote,
-          reminderTime: reminderTime
-        )
+          reminderTime: reminderTime,
+        ),
       );
-       if (response.status == true) {
+      if (response.status == true) {
         log(response.message ?? "Add Lead Successfull");
         return response;
       } else {
         throw Exception(response.message ?? "Add Lead Not Successfull");
       }
-    }catch (e, st) {
+    } catch (e, st) {
       log("VERIFY ERROR => $e");
       log("STACK TRACE => $st");
       rethrow;
     }
   }
-   Future<GetLeadModel> getLeadData() async {
+
+  Future<GetLeadModel> getLeadData() async {
     try {
       final response = await api.getLead();
       return response;
     } catch (e) {
       throw Exception(e.toString());
+    }
+  }
+
+  Future<DashboardResponseModel> getDashboardData() async {
+    try {
+      final response = await api.getDashboard();
+      return response;
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<AttendenceHistoryResponse> getAttendenceHistory() async {
+    try {
+      final response = await api.getAttendenceHistory();
+      return response;
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<AttendenceSummaryResponse> getAttendenceSummary() async {
+    try {
+      final response = await api.getAttendenceSummary();
+      return response;
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<CheckInResponseModel> checkIn({
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      final response = await api.checkIn(
+        CheckBodyModel(latitude: latitude, longitude: longitude),
+      );
+      if (response.status == true) {
+        return response;
+      } else {
+        throw Exception(response.message ?? "");
+      }
+    } catch (e, st) {
+      rethrow;
+    }
+  }
+
+  Future<CheckOutResponseModel> checkOut({
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      final response = await api.checkOut(
+        CheckBodyModel(latitude: latitude, longitude: longitude),
+      );
+      if (response.status == true) {
+        return response;
+      } else {
+        throw Exception(response.message ?? "");
+      }
+    } catch (e, st) {
+      rethrow;
+    }
+  }
+
+  Future<GetNotficationModel> getAllNotification() async {
+    try {
+      final res = await api.getNotification();
+
+      if (res.status == true) {
+        log(res.message ?? "Notifications fetched successfully");
+        return res;
+      } else {
+        throw Exception(res.message ?? "Failed to fetch notifications");
+      }
+    } catch (e, st) {
+      log("NOTIFICATION ERROR => $e");
+      log("STACK TRACE => $st");
+      rethrow;
     }
   }
 }

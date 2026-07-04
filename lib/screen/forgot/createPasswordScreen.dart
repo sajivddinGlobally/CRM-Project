@@ -2,8 +2,10 @@ import 'dart:developer' show log;
 
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/core/utils/showMessage.dart';
 import 'package:crm_app/screen/loginScreen.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -25,9 +27,6 @@ class _CreatePasswordScreenState extends ConsumerState<CreatePasswordScreen> {
   bool isLoading = false;
   bool isNewPasswordHide = true;
   bool isConfirmPasswordHide = true;
-  void showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,6 +125,18 @@ class _CreatePasswordScreenState extends ConsumerState<CreatePasswordScreen> {
                 ),
               ),
               onPressed: () async {
+                if (newPasswordController.text.trim().isEmpty) {
+                  return;
+                }
+                if (confirmPasswordController.text.trim().isEmpty) {
+                  return;
+                }
+
+                if (confirmPasswordController.text.trim() !=
+                    newPasswordController.text.trim()) {
+                  showErrorSnackBar("Password do not match");
+                  return;
+                }
                 setState(() {
                   isLoading = true;
                 });
@@ -138,20 +149,15 @@ class _CreatePasswordScreenState extends ConsumerState<CreatePasswordScreen> {
                     confirmNewPassword: confirmPasswordController.text.trim(),
                   );
                   if (response.status = true) {
-                    log("New Password Successfull");
-                    Navigator.pushReplacement(
+                    showSuccessSnackBar(response.message ?? "");
+                    Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (context) => LoginScreen()),
+                      CupertinoPageRoute(builder: (context) => LoginScreen()),
+                      (route) => false,
                     );
                   }
-                } on DioException catch (e) {
-                  setState(() => isLoading = false);
-
-                  showError(e.response?.data.toString() ?? "Network Error");
                 } catch (e) {
                   setState(() => isLoading = false);
-
-                  showError("Something went wrong");
                 }
               },
               child: isLoading

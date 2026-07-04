@@ -338,7 +338,7 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
                                           context,
                                           CupertinoPageRoute(
                                             builder: (context) =>
-                                                SalesDetailScreen(),
+                                                SalesDetailScreen(id: item!.id.toString(),),
                                           ),
                                         );
                                       },

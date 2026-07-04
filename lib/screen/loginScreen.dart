@@ -1,21 +1,13 @@
-import 'dart:developer';
-
-import 'package:crm_app/core/apiService/apiService.dart';
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
-import 'package:crm_app/core/network/api.stateNetwork.dart';
-import 'package:crm_app/core/utils/pretty.dio.dart';
-import 'package:crm_app/data/Model/loginBodyModel.dart';
 import 'package:crm_app/screen/forgot/forgotPasswordScreen.dart';
 import 'package:crm_app/screen/home/homeScreen.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -29,10 +21,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final password = TextEditingController();
   bool isPasswordHide = true;
   bool isLoading = false;
-
-  void showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -131,170 +119,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
                 onPressed: () async {
+                  if (employeeId.text.trim().isEmpty) {
+                    return;
+                  }
+                  if (password.text.trim().isEmpty) {
+                    return;
+                  }
                   setState(() {
                     isLoading = true;
                   });
-
                   try {
                     final service = ref.read(authServiceProvider);
-
                     final response = await service.loginData(
                       employeeId: employeeId.text.trim(),
                       password: password.text.trim(),
                     );
-
                     if (response.status == true) {
                       Navigator.pushAndRemoveUntil(
                         context,
                         CupertinoPageRoute(builder: (_) => const MyBottomNav()),
                         (route) => false,
                       );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(response.message ?? "Login Failed"),
-                        ),
-                      );
                     }
                   } catch (e) {
-                    if (e is DioException) {
-                      ScaffoldMessenger.of(context)
-                        ..hideCurrentSnackBar()
-                        ..showSnackBar(
-                          SnackBar(
-                            elevation: 0,
-                            backgroundColor: Colors.transparent,
-                            behavior: SnackBarBehavior.floating,
-                            duration: const Duration(seconds: 4),
-                            margin: EdgeInsets.only(
-                              left: 20.w,
-                              right: 20.w,
-                              bottom: 20.h,
-                            ),
-                            content: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16.w,
-                                vertical: 14.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFFF4F4),
-                                borderRadius: BorderRadius.circular(16.r),
-                                border: Border.all(
-                                  color: const Color(0xFFFFD6D6),
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.all(8.w),
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFFFFE5E5),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.error_outline_rounded,
-                                      color: Color(0xFFE53935),
-                                      size: 20.sp,
-                                    ),
-                                  ),
-                                  SizedBox(width: 12.w),
-                                  Expanded(
-                                    child: Text(
-                                      e.response?.data["message"] ??
-                                          "Something went wrong",
-                                      style: GoogleFonts.inter(
-                                        color: const Color(0xFF1F2937),
-                                        fontSize: 13.sp,
-                                        fontWeight: FontWeight.w500,
-                                        height: 1.4,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      // ScaffoldMessenger.of(context).showSnackBar(
-                      //   SnackBar(
-                      //     content: Text(
-                      //       e.response?.data["message"] ??
-                      //           "Something went wrong",
-                      //     ),
-                      //   ),
-                      // );
-                    } else {
-                      ScaffoldMessenger.of(context)
-                        ..hideCurrentSnackBar()
-                        ..showSnackBar(
-                          SnackBar(
-                            elevation: 0,
-                            backgroundColor: Colors.transparent,
-                            behavior: SnackBarBehavior.floating,
-                            duration: const Duration(seconds: 4),
-                            margin: EdgeInsets.only(
-                              left: 20.w,
-                              right: 20.w,
-                              bottom: 20.h,
-                            ),
-                            content: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16.w,
-                                vertical: 14.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFFF4F4),
-                                borderRadius: BorderRadius.circular(16.r),
-                                border: Border.all(
-                                  color: const Color(0xFFFFD6D6),
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.all(8.w),
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFFFFE5E5),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.error_outline_rounded,
-                                      color: Color(0xFFE53935),
-                                      size: 20.sp,
-                                    ),
-                                  ),
-                                  SizedBox(width: 12.w),
-                                  Expanded(
-                                    child: Text(
-                                      "Somthing is Went Wrong",
-                                      style: GoogleFonts.inter(
-                                        color: const Color(0xFF1F2937),
-                                        fontSize: 13.sp,
-                                        fontWeight: FontWeight.w500,
-                                        height: 1.4,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                    }
+                    setState(() {
+                      isLoading = false;
+                    });
                   } finally {
                     setState(() {
                       isLoading = false;

@@ -18,7 +18,7 @@ class LeadScreen extends ConsumerStatefulWidget {
 class _LeadScreenState extends ConsumerState<LeadScreen> {
   @override
   Widget build(BuildContext context) {
-    final leadDate = ref.read(leadProvider);
+    final leadDate = ref.watch(leadProvider);
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(

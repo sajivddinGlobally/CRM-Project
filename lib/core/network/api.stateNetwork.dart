@@ -21,10 +21,18 @@ import 'package:crm_app/data/Model/GetTicketDetailsModel.dart';
 import 'package:crm_app/data/Model/GetTicketModel.dart';
 import 'package:crm_app/data/Model/OtpVerifyBodyModel.dart';
 import 'package:crm_app/data/Model/OtpVerifyResModel.dart';
+import 'package:crm_app/data/Model/getNotificationModel.dart';
 import 'package:crm_app/data/Model/loginBodyModel.dart';
 import 'package:crm_app/data/Model/loginResModel.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
+
+import '../../data/Model/AttendenceSummaryModel.dart';
+import '../../data/Model/attendence_history_response.dart';
+import '../../data/Model/check_body_model.dart';
+import '../../data/Model/check_in_response_model.dart';
+import '../../data/Model/check_out_respomse_model.dart';
+import '../../data/Model/dashboard_response_model.dart';
 
 part 'api.stateNetwork.g.dart';
 
@@ -87,8 +95,8 @@ abstract class ApiStateNetwork {
     @Part(name: "document") MultipartFile? document,
   );
 
-  @GET("/api/auth/sales/10")
-  Future<GetSaleDetilesModel> getSaleDetiles();
+  @GET("/api/auth/sales/{id}")
+  Future<GetSaleDetilesModel> getSaleDetiles(@Path('id') String id);
 
   @POST("/api/auth/change-password")
   Future<ChangePasswordResModel> changePassword(
@@ -101,14 +109,14 @@ abstract class ApiStateNetwork {
   @GET("/api/auth/tickets")
   Future<GetTicketModel> getTicket();
 
-  @GET("/api/auth/tickets/15")
-  Future<GetTicketDetailsModel> getTicketDetails();
+  @GET("/api/auth/tickets/{id}")
+  Future<GetTicketDetailsModel> getTicketDetails(@Path('id') String id);
 
   @GET("/api/auth/clients")
   Future<GetClientModel> getClient();
 
-  @GET("/api/auth/clients/7")
-  Future<GetClienDetailsModel> getClientDetails();
+  @GET("/api/auth/clients/{id}")
+  Future<GetClienDetailsModel> getClientDetails(@Path('id') String id);
 
   @GET("/api/auth/profile")
   Future<GetProfileModel> getProfile();
@@ -136,4 +144,22 @@ abstract class ApiStateNetwork {
 
   @GET("/api/auth/leads")
   Future<GetLeadModel> getLead();
+
+  @GET("/api/auth/dashboard")
+  Future<DashboardResponseModel> getDashboard();
+
+  @GET("/api/auth/attendance/history")
+  Future<AttendenceHistoryResponse> getAttendenceHistory();
+
+  @GET("/api/auth/attendance/summary")
+  Future<AttendenceSummaryResponse> getAttendenceSummary();
+
+  @POST("/api/auth/attendance/check-in")
+  Future<CheckInResponseModel> checkIn(@Body() CheckBodyModel body);
+
+  @POST("/api/auth/attendance/check-out")
+  Future<CheckOutResponseModel> checkOut(@Body() CheckBodyModel body);
+
+  @GET("/api/auth/notifications")
+  Future<GetNotficationModel> getNotification();
 }
