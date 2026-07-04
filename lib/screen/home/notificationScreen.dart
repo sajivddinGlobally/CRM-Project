@@ -42,7 +42,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   ];
 
   bool isSelectionMode = false;
-
+  bool isAllSelected = false;
   List<int> selectedItems = [];
 
   void deleteSelected() {
@@ -56,9 +56,27 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     });
   }
 
+  void selectAll(int totalItems) {
+    setState(() {
+      if (selectedItems.length == totalItems) {
+        // Unselect All
+        selectedItems.clear();
+        isAllSelected = false;
+      } else {
+        // Select All
+        selectedItems = List.generate(totalItems, (index) => index);
+        isAllSelected = true;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final notificationState = ref.watch(getNotificationProvider);
+    final totalNotifications = notificationState.maybeWhen(
+      data: (data) => data.data?.length ?? 0,
+      orElse: () => 0,
+    );
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(
@@ -97,11 +115,40 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         ),
         titleSpacing: -6,
         actions: [
-          if (isSelectionMode)
+          if (!isSelectionMode)
+            TextButton(
+              
+              onPressed: () {
+                // Mark All Read API
+              },
+              child: Text(
+                "Read All",
+                style: GoogleFonts.inter(
+                  color: AppColors.buttonBg,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16.sp,
+                ),
+              ),
+            ),
+          if (isSelectionMode) ...[
+            TextButton(
+              onPressed: () {
+                selectAll(totalNotifications);
+              },
+              child: Text(
+                isAllSelected ? "Unselect" : "Select All",
+                style: GoogleFonts.inter(
+                  color: AppColors.buttonBg,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16.sp,
+                ),
+              ),
+            ),
             IconButton(
               onPressed: deleteSelected,
               icon: Icon(Icons.delete_outline, color: Colors.red, size: 24.sp),
             ),
+          ],
         ],
       ),
       body: notificationState.when(
@@ -234,6 +281,10 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                             if (!selectedItems.contains(index)) {
                               selectedItems.add(index);
                             }
+
+                            isAllSelected =
+                                selectedItems.length ==
+                                (data.data?.length ?? 0);
                           });
                         },
                         onTap: () {
@@ -248,6 +299,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                               } else {
                                 selectedItems.add(index);
                               }
+                              isAllSelected =
+                                  selectedItems.length ==
+                                  (data.data?.length ?? 0);
                             });
                           } else {
                             ////  Navigate notofication details screen
@@ -255,7 +309,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                         },
                         child: listCard(
                           title: data.data?[index].title ?? "",
-                          subtitle: data.data?[index].title ?? "",
+                          subtitle: data.data?[index].message ?? "",
                           time: data.data?[index].createdAt != null
                               ? timeago.format(
                                   DateTime.parse(
@@ -265,6 +319,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                               : "",
                           index: index,
                           isSelected: isSelected,
+                          isRead: data.data?[index].isRead ?? false,
                         ),
                       );
                     },
@@ -370,6 +425,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -415,13 +471,18 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     required String title,
     required String subtitle,
     required String time,
+    required bool isRead,
   }) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
       decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFFE8F2FF) : Colors.white,
+        color: isSelected
+            ? const Color(0xFFE8F2FF)
+            : !isRead
+            ? const Color(0xFFF5FAFF)
+            : Colors.white,
         borderRadius: BorderRadius.circular(15.r),
         border: Border.all(
           color: isSelected ? AppColors.buttonBg : const Color(0xFFE5E5E5),

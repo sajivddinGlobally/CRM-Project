@@ -24,6 +24,7 @@ import 'package:crm_app/data/Model/GetTicketDetailsModel.dart';
 import 'package:crm_app/data/Model/GetTicketModel.dart';
 import 'package:crm_app/data/Model/OtpVerifyBodyModel.dart';
 import 'package:crm_app/data/Model/OtpVerifyResModel.dart';
+import 'package:crm_app/data/Model/deleteNotificationModel.dart';
 import 'package:crm_app/data/Model/getNotificationModel.dart';
 import 'package:crm_app/data/Model/loginBodyModel.dart';
 import 'package:crm_app/data/Model/loginResModel.dart';
@@ -536,6 +537,19 @@ class AuthService {
       log("NOTIFICATION ERROR => $e");
       log("STACK TRACE => $st");
       rethrow;
+    }
+  }
+
+  Future<bool> deleteNotification({required String id}) async {
+    try {
+      final res = await api.deleteNotification(id);
+      if (res.status == true) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      log(e.toString());
+      return false;
     }
   }
 }

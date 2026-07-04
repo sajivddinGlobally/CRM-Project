@@ -2,6 +2,7 @@ import 'dart:developer' show log;
 
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/data/Provider/GetTicketProvider.dart';
+import 'package:crm_app/data/Provider/getNotificationProvider.dart';
 import 'package:crm_app/screen/activity/activityScreen.dart';
 import 'package:crm_app/screen/clients/addClientScreen.dart';
 import 'package:crm_app/screen/home/notificationScreen.dart';
@@ -201,6 +202,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget build(BuildContext context) {
     final dashboardAsync = ref.watch(dashboardProvider);
     final getTicket = ref.watch(getTicketProvider);
+    final notificationState = ref.watch(getNotificationProvider);
+    final unreadCount = notificationState.maybeWhen(
+      data: (data) =>
+          data.data?.where((item) => item.isRead == false).length ?? 0,
+      orElse: () => 0,
+    );
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(toolbarHeight: 0, backgroundColor: Color(0xFF0C80FF)),
@@ -283,9 +290,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                       shape: BoxShape.circle,
                                     ),
                                   ),
-
                                   SizedBox(width: 6.w),
-
                                   Text(
                                     companyName,
                                     style: GoogleFonts.inter(
@@ -306,22 +311,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 CupertinoPageRoute(
                                   builder: (context) => NotificationScreen(),
                                 ),
-                              );
+                              ).then((value) {
+                                ref.invalidate(getNotificationProvider);
+                              });
                             },
-                            child: Container(
-                              width: 44.w,
-                              height: 44.h,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15.r),
-                                color: Color(0xFF007AFF),
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  Icons.notifications_none_rounded,
-                                  color: Colors.white,
-                                  size: 20.sp,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Container(
+                                  width: 44.w,
+                                  height: 44.h,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(15.r),
+                                    color: Color(0xFF007AFF),
+                                  ),
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.notifications_none_rounded,
+                                      color: Colors.white,
+                                      size: 20.sp,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                if (unreadCount > 0)
+                                  Positioned(
+                                    right: -2,
+                                    top: -5,
+                                    child: Container(
+                                      padding: EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.red,
+                                      ),
+                                      child: Text(
+                                        unreadCount > 99
+                                            ? "99+"
+                                            : unreadCount.toString(),
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10.sp,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                         ],

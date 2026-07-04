@@ -21,9 +21,11 @@ import 'package:crm_app/data/Model/GetTicketDetailsModel.dart';
 import 'package:crm_app/data/Model/GetTicketModel.dart';
 import 'package:crm_app/data/Model/OtpVerifyBodyModel.dart';
 import 'package:crm_app/data/Model/OtpVerifyResModel.dart';
+import 'package:crm_app/data/Model/deleteNotificationModel.dart';
 import 'package:crm_app/data/Model/getNotificationModel.dart';
 import 'package:crm_app/data/Model/loginBodyModel.dart';
 import 'package:crm_app/data/Model/loginResModel.dart';
+import 'package:crm_app/data/Model/unreadCountModel.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
@@ -162,4 +164,10 @@ abstract class ApiStateNetwork {
 
   @GET("/api/auth/notifications")
   Future<GetNotficationModel> getNotification();
+
+  @GET("/api/auth/notifications/unread-count")
+  Future<UnreadCountModel> unreadCount();
+
+  @DELETE("/api/auth/notifications/delete/{id}")
+  Future<DeleteNotificationModel> deleteNotification(@Path('id') String id);
 }
