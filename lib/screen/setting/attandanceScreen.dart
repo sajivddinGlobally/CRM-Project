@@ -821,7 +821,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                 message = response.message ?? "Success";
               }
 
-              showErrorSnackBar(message);
+              showSuccessSnackBar(message);
 
               // Refresh attendance data
               ref.invalidate(getAttendenceSummaryProvider);
