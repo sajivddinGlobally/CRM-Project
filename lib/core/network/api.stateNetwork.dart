@@ -23,6 +23,9 @@ import 'package:crm_app/data/Model/OtpVerifyBodyModel.dart';
 import 'package:crm_app/data/Model/OtpVerifyResModel.dart';
 import 'package:crm_app/data/Model/deleteNotificationModel.dart';
 import 'package:crm_app/data/Model/getNotificationModel.dart';
+import 'package:crm_app/data/Model/leadDetailsModel.dart';
+import 'package:crm_app/data/Model/leadUpdateBodyModel.dart';
+import 'package:crm_app/data/Model/leadUpdateResModel.dart';
 import 'package:crm_app/data/Model/loginBodyModel.dart';
 import 'package:crm_app/data/Model/loginResModel.dart';
 import 'package:crm_app/data/Model/markReadResModel.dart';
@@ -182,4 +185,16 @@ abstract class ApiStateNetwork {
   Future<DeleteNotificationModel> multipleDeleteNotification(
     @Body() MultipleDeleteNotificationBodyModel body,
   );
+
+  @GET("/api/auth/leads/{id}")
+  Future<LeadDetailsModel> leadDetails(@Path('id') String id);
+
+  @POST("/api/auth/leads/update/{id}")
+  Future<LeadUpdateResModel> leadUpdate(
+    @Path('id') String id,
+    @Body() LeadUpdateBodyModel body,
+  );
+
+  @DELETE("/api/auth/leads/delete/{id}")
+  Future<DeleteNotificationModel> leadDelete(@Path('id') String id);
 }

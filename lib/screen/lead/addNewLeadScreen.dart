@@ -1,8 +1,9 @@
 import 'dart:developer';
-
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/core/utils/showMessage.dart';
+import 'package:crm_app/data/Provider/GetLeadProvider.dart';
+import 'package:crm_app/data/Provider/leadDetailsProvider.dart';
 import 'package:crm_app/screen/home/homeScreen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -12,13 +13,15 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class AddnewLeadScreen extends ConsumerStatefulWidget {
-  const AddnewLeadScreen({super.key});
+  final String? leadId;
+  const AddnewLeadScreen({super.key, this.leadId});
 
   @override
   ConsumerState<AddnewLeadScreen> createState() => _AddnewLeadScreenState();
 }
 
 class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
+  final _addLeadFormKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   final mobileController = TextEditingController();
   final contactController = TextEditingController();
@@ -34,6 +37,7 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
   String? selectedPriority;
 
   final List<String> industryList = [
+    "Technology",
     "IT Services",
     "Real Estate",
     "Healthcare",
@@ -44,6 +48,7 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
   ];
 
   final List<String> cityList = [
+    "Jaipur",
     "Surat",
     "Ahmedabad",
     "Mumbai",
@@ -59,6 +64,7 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
   ];
 
   final List<String> budgetList = [
+    "100,000 - 150,000",
     "Below ₹10,000",
     "₹10,000 - ₹50,000",
     "₹50,000 - ₹1 Lakh",
@@ -66,6 +72,7 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
   ];
 
   final List<String> sourceList = [
+    "Direct Traffic",
     "Website",
     "Facebook",
     "Instagram",
@@ -78,6 +85,7 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   bool isLoading = false;
+  bool isUpdate = false;
 
   String? formatDateForApi(DateTime? date) {
     if (date == null) return null;
@@ -91,7 +99,64 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.leadId != null && widget.leadId!.isNotEmpty) {
+      _loadLead();
+    }
+  }
+
+  String? oldReminderDate;
+  String? oldReminderTime;
+
+  Future<void> _loadLead() async {
+    try {
+      final value = await ref.read(leadDetailsProvider(widget.leadId!).future);
+
+      final item = value.data;
+
+      if (item == null) return;
+
+      setState(() {
+        nameController.text = item.leadName ?? "";
+        mobileController.text = item.mobileNumber ?? "";
+        contactController.text = item.alternateContact ?? "";
+        emailController.text = item.email ?? "";
+        businessController.text = item.businessName ?? "";
+        selectedIndustry = item.industryType;
+        selectedCity = item.city;
+        selectedBudget = item.budgetRange;
+        selectedSource = item.leadSource;
+        selectedPriority = item.priority;
+
+        /// Reminder
+        isReminder = item.issetFollow == 1;
+
+        if (item.reminderDate != null && item.reminderDate!.isNotEmpty) {
+          selectedDate = DateTime.parse(item.reminderDate!);
+        }
+
+        if (item.reminderTime != null && item.reminderTime!.isNotEmpty) {
+          final time = item.reminderTime!.split(":");
+
+          selectedTime = TimeOfDay(
+            hour: int.parse(time[0]),
+            minute: int.parse(time[1]),
+          );
+        }
+        oldReminderDate = item.reminderDate;
+        oldReminderTime = item.reminderTime;
+
+        reminderController.text = item.reminderNote ?? "";
+      });
+    } catch (e) {
+      log("Lead Details Error : $e");
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    log("lead Id ${widget.leadId}");
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(
@@ -121,413 +186,593 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
         ),
         titleSpacing: 0,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 10.h),
-              Text(
-                "BASIC INFORMATION",
-                style: GoogleFonts.inter(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF69818C),
-                ),
-              ),
-              SizedBox(height: 12.h),
-              formField(
-                hintText: 'Enter lead name',
-                keyboardType: TextInputType.name,
-                controller: nameController,
-              ),
-              formField(
-                hintText: 'Enter mobile number',
-                keyboardType: TextInputType.number,
-                controller: mobileController,
-                maxLength: 10,
-              ),
-              formField(
-                hintText: 'Enter alternate contact',
-                keyboardType: TextInputType.number,
-                maxLength: 10,
-                controller: contactController,
-              ),
-              formField(
-                hintText: 'Enter email address',
-                keyboardType: TextInputType.emailAddress,
-                controller: emailController,
-              ),
-              SizedBox(height: 30.h),
-              Text(
-                "BUSINESS INFORMATION",
-                style: GoogleFonts.inter(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF69818C),
-                ),
-              ),
-              SizedBox(height: 12.h),
-              formField(
-                hintText: 'Enter business/company name',
-                keyboardType: TextInputType.name,
-                controller: businessController,
-              ),
-              customDropdown(
-                hint: "Select Industry Type",
-                items: industryList,
-                value: selectedIndustry,
-                onChanged: (v) {
-                  setState(() {
-                    selectedIndustry = v;
-                  });
-                },
-              ),
-              customDropdown(
-                hint: "Select City",
-                items: cityList,
-                value: selectedCity,
-                onChanged: (v) {
-                  setState(() {
-                    selectedCity = v;
-                  });
-                },
-              ),
-              SizedBox(height: 20.h),
-              Text(
-                "REQUIREMENT DETAILS",
-                style: GoogleFonts.inter(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF69818C),
-                ),
-              ),
-              SizedBox(height: 12.h),
-              customDropdown(
-                hint: "Select Budget Range",
-                items: budgetList,
-                value: selectedBudget,
-                onChanged: (v) {
-                  setState(() {
-                    selectedBudget = v;
-                  });
-                },
-              ),
-              customDropdown(
-                hint: "Select Lead Source",
-                items: sourceList,
-                value: selectedSource,
-                onChanged: (v) {
-                  setState(() {
-                    selectedSource = v;
-                  });
-                },
-              ),
-              SizedBox(height: 20.h),
-              Text(
-                "LEAD PRIORITY",
-                style: GoogleFonts.inter(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF69818C),
-                ),
-              ),
-              SizedBox(height: 12.h),
-              customDropdown(
-                hint: "Select Priority",
-                items: priorityList,
-                value: selectedPriority,
-                onChanged: (v) {
-                  setState(() {
-                    selectedPriority = v;
-                  });
-                },
-              ),
-              SizedBox(height: 30.h),
-              Divider(color: Color(0xFFE5E5E5), thickness: 1.w),
-              SizedBox(height: 20.h),
-              Row(
-                children: [
-                  SizedBox(
-                    width: 20.w,
-                    height: 20.w,
-                    child: Transform.scale(
-                      scale: 0.9,
-                      child: Checkbox(
-                        value: isReminder,
-                        onChanged: (value) {
-                          setState(() {
-                            isReminder = value!;
-                          });
-                        },
-                        activeColor: const Color(0xFF007AFF),
-                        side: BorderSide(color: Color(0xFF69818C)),
-                      ),
-                    ),
+      body: Form(
+        key: _addLeadFormKey,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 10.h),
+                Text(
+                  "BASIC INFORMATION",
+                  style: GoogleFonts.inter(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF69818C),
                   ),
-                  SizedBox(width: 10.w),
-                  Text(
-                    "SET FOLLOW-UP REMINDER",
-                    style: GoogleFonts.inter(
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF69818C),
-                    ),
+                ),
+                SizedBox(height: 12.h),
+                formField(
+                  hintText: 'Enter lead name',
+                  keyboardType: TextInputType.name,
+                  controller: nameController,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return "Please enter name";
+                    }
+                    return null;
+                  },
+                ),
+                formField(
+                  hintText: 'Enter mobile number',
+                  keyboardType: TextInputType.number,
+                  controller: mobileController,
+                  maxLength: 10,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return "Please enter mobile number";
+                    }
+
+                    if (!RegExp(r'^[6-9]\d{9}$').hasMatch(value.trim())) {
+                      return "Please enter a valid mobile number";
+                    }
+
+                    return null;
+                  },
+                ),
+                formField(
+                  hintText: 'Enter alternate contact',
+                  keyboardType: TextInputType.number,
+                  maxLength: 10,
+                  controller: contactController,
+                ),
+                formField(
+                  hintText: 'Enter email address',
+                  keyboardType: TextInputType.emailAddress,
+                  controller: emailController,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return "Please enter email";
+                    }
+                    if (!RegExp(
+                      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                    ).hasMatch(value.trim())) {
+                      return "Please enter a valid email";
+                    }
+
+                    return null;
+                  },
+                ),
+                SizedBox(height: 30.h),
+                Text(
+                  "BUSINESS INFORMATION",
+                  style: GoogleFonts.inter(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF69818C),
                   ),
-                ],
-              ),
-              SizedBox(height: 16.h),
-              if (isReminder)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+                SizedBox(height: 12.h),
+                formField(
+                  hintText: 'Enter business/company name',
+                  keyboardType: TextInputType.name,
+                  controller: businessController,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return "Please enter business/company name";
+                    }
+                    return null;
+                  },
+                ),
+                customDropdown(
+                  hint: "Select Industry Type",
+                  items: industryList,
+                  value: selectedIndustry,
+                  onChanged: (v) {
+                    setState(() {
+                      selectedIndustry = v;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return "Please select industry type";
+                    }
+                    return null;
+                  },
+                ),
+                customDropdown(
+                  hint: "Select City",
+                  items: cityList,
+                  value: selectedCity,
+                  onChanged: (v) {
+                    setState(() {
+                      selectedCity = v;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return "Please select city";
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 20.h),
+                Text(
+                  "REQUIREMENT DETAILS",
+                  style: GoogleFonts.inter(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF69818C),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                customDropdown(
+                  hint: "Select Budget Range",
+                  items: budgetList,
+                  value: selectedBudget,
+                  onChanged: (v) {
+                    setState(() {
+                      selectedBudget = v;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return "Please select budget range";
+                    }
+                    return null;
+                  },
+                ),
+                customDropdown(
+                  hint: "Select Lead Source",
+                  items: sourceList,
+                  value: selectedSource,
+                  onChanged: (v) {
+                    setState(() {
+                      selectedSource = v;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return "Please select lead source";
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 20.h),
+                Text(
+                  "LEAD PRIORITY",
+                  style: GoogleFonts.inter(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF69818C),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                customDropdown(
+                  hint: "Select Priority",
+                  items: priorityList,
+                  value: selectedPriority,
+                  onChanged: (v) {
+                    setState(() {
+                      selectedPriority = v;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return "Please select priority";
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 20.h),
+                Divider(color: Color(0xFFE5E5E5), thickness: 1.w),
+                SizedBox(height: 20.h),
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: InkWell(
-                            onTap: () async {
-                              final pickedDate = await showDatePicker(
-                                context: context,
-                                initialDate: DateTime.now(),
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime(2100),
-                              );
-
-                              if (pickedDate != null) {
-                                setState(() {
-                                  selectedDate = pickedDate;
-                                });
-                              }
-                            },
-                            child: Container(
-                              height: 50.h,
-                              padding: EdgeInsets.only(
-                                left: 18.w,
-                                right: 15.w,
-                                bottom: 12.h,
-                                top: 12.h,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15.r),
-                                border: Border.all(
-                                  color: Color.fromARGB(25, 0, 0, 0),
-                                  width: 1.w,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    selectedDate == null
-                                        ? "Select Date"
-                                        : "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}",
-                                    style: GoogleFonts.inter(
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.w400,
-                                      color: Color(0xFF7A7E93),
-                                    ),
-                                  ),
-                                  Spacer(),
-                                  VerticalDivider(
-                                    color: Color.fromARGB(25, 0, 0, 0),
-                                  ),
-                                  Icon(
-                                    Icons.date_range,
-                                    size: 20.sp,
-                                    color: const Color(0xFF7A7E93),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                    SizedBox(
+                      width: 20.w,
+                      height: 20.w,
+                      child: Transform.scale(
+                        scale: 0.9,
+                        child: Checkbox(
+                          value: isReminder,
+                          onChanged: (value) {
+                            setState(() {
+                              isReminder = value!;
+                            });
+                            _addLeadFormKey.currentState?.validate();
+                          },
+                          activeColor: const Color(0xFF007AFF),
+                          side: BorderSide(color: Color(0xFF69818C)),
                         ),
-                        SizedBox(width: 10.w),
-                        Expanded(
-                          child: InkWell(
-                            onTap: () async {
-                              final pickedTime = await showTimePicker(
-                                context: context,
-                                initialTime: TimeOfDay.now(),
-                              );
-
-                              if (pickedTime != null) {
-                                setState(() {
-                                  selectedTime = pickedTime;
-                                });
-                              }
-                            },
-                            child: Container(
-                              height: 50.h,
-                              padding: EdgeInsets.only(
-                                left: 18.w,
-                                right: 15.w,
-                                bottom: 12.h,
-                                top: 12.h,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15.r),
-                                border: Border.all(
-                                  color: Color.fromARGB(25, 0, 0, 0),
-                                  width: 1.w,
-                                ),
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    selectedTime == null
-                                        ? "Select Time"
-                                        : selectedTime!.format(context),
-                                    style: GoogleFonts.inter(
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.w400,
-                                      color: Color(0xFF7A7E93),
-                                    ),
-                                  ),
-                                  Spacer(),
-                                  VerticalDivider(
-                                    color: Color.fromARGB(25, 0, 0, 0),
-                                  ),
-                                  Icon(
-                                    Icons.access_time_outlined,
-                                    size: 20.sp,
-                                    color: const Color(0xFF7A7E93),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                    SizedBox(height: 10.h),
-                    TextField(
-                      maxLines: 4,
-                      controller: reminderController,
+                    SizedBox(width: 10.w),
+                    Text(
+                      "SET FOLLOW-UP REMINDER",
                       style: GoogleFonts.inter(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFF263238),
-                        letterSpacing: -0.1,
-                      ),
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.only(
-                          left: 16.w,
-                          right: 16.w,
-                          top: 12.h,
-                          bottom: 12.h,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15.r),
-                          borderSide: BorderSide(
-                            color: Color.fromARGB(25, 0, 0, 0),
-                            width: 1.w,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15.r),
-                          borderSide: BorderSide(
-                            color: AppColors.buttonBg,
-                            width: 1.w,
-                          ),
-                        ),
-                        hint: Text(
-                          "Reminder Note",
-                          style: GoogleFonts.inter(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF7A7E93),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20.h),
-                    Container(
-                      width: double.infinity,
-                      height: 40.h,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFE5F2FF),
-                        borderRadius: BorderRadius.circular(10.r),
-                      ),
-                      child: Center(
-                        child: Text(
-                          "SAVE REMINDER",
-                          style: GoogleFonts.inter(
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF007AFF),
-                          ),
-                        ),
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF69818C),
                       ),
                     ),
                   ],
                 ),
-              SizedBox(height: 30.h),
-              SizedBox(
-                width: double.infinity,
-                height: 56.h,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF007AFF),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15.r),
-                    ),
-                    elevation: 0,
-                  ),
-                  onPressed: () async {
-                    setState(() {
-                      isLoading = true;
-                    });
-                    try {
-                      final service = ref.read(authServiceProvider);
-                      final response = await service.addLeadData(
-                        leadName: nameController.text.trim(),
-                        mobileNumber: mobileController.text.trim(),
-                        email: emailController.text.trim(),
-                        alternateContact: contactController.text.trim(),
-                        businessName: businessController.text.trim(),
-                        industryType: selectedIndustry ?? "",
-                        city: selectedCity ?? "",
-                        budgetRange: selectedBudget ?? "",
-                        leadSource: selectedSource ?? "",
-                        priority: selectedPriority ?? "",
-                        reminderNote: reminderController.text.trim(),
-                        reminderDate: formatDateForApi(selectedDate),
-                        reminderTime: formatTimeForApi(selectedTime),
-                      );
-                      log("Token => ${response.data?.token}");
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => MyBottomNav()),
-                      );
-                    } catch (e) {
-                      setState(() => isLoading = false);
-                      showErrorSnackBar("Something went wrong");
-                    }
-                  },
-                  child: isLoading
-                      ? SizedBox(
-                          width: 20.w,
-                          height: 20.w,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
+                SizedBox(height: 16.h),
+                if (isReminder)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () async {
+                                final pickedDate = await showDatePicker(
+                                  context: context,
+                                  initialDate: DateTime.now(),
+                                  firstDate: DateTime(2000),
+                                  lastDate: DateTime(2100),
+                                );
+
+                                if (pickedDate != null) {
+                                  setState(() {
+                                    selectedDate = pickedDate;
+                                  });
+                                }
+                              },
+                              child: Container(
+                                height: 50.h,
+                                padding: EdgeInsets.only(
+                                  left: 18.w,
+                                  right: 15.w,
+                                  bottom: 12.h,
+                                  top: 12.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15.r),
+                                  border: Border.all(
+                                    color: Color.fromARGB(25, 0, 0, 0),
+                                    width: 1.w,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      selectedDate == null
+                                          ? "Select Date"
+                                          : "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}",
+                                      style: GoogleFonts.inter(
+                                        fontSize: 14.sp,
+                                        fontWeight: FontWeight.w400,
+                                        color: Color(0xFF7A7E93),
+                                      ),
+                                    ),
+                                    Spacer(),
+                                    VerticalDivider(
+                                      color: Color.fromARGB(25, 0, 0, 0),
+                                    ),
+                                    Icon(
+                                      Icons.date_range,
+                                      size: 20.sp,
+                                      color: const Color(0xFF7A7E93),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
-                        )
-                      : Text(
-                          "Save Sale",
-                          style: GoogleFonts.inter(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                            letterSpacing: -0.54,
+                          SizedBox(width: 10.w),
+                          Expanded(
+                            child: InkWell(
+                              onTap: () async {
+                                final pickedTime = await showTimePicker(
+                                  context: context,
+                                  initialTime: TimeOfDay.now(),
+                                );
+
+                                if (pickedTime != null) {
+                                  setState(() {
+                                    selectedTime = pickedTime;
+                                  });
+                                }
+                              },
+                              child: Container(
+                                height: 50.h,
+                                padding: EdgeInsets.only(
+                                  left: 18.w,
+                                  right: 15.w,
+                                  bottom: 12.h,
+                                  top: 12.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15.r),
+                                  border: Border.all(
+                                    color: Color.fromARGB(25, 0, 0, 0),
+                                    width: 1.w,
+                                  ),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      selectedTime == null
+                                          ? "Select Time"
+                                          : selectedTime!.format(context),
+                                      style: GoogleFonts.inter(
+                                        fontSize: 14.sp,
+                                        fontWeight: FontWeight.w400,
+                                        color: Color(0xFF7A7E93),
+                                      ),
+                                    ),
+                                    Spacer(),
+                                    VerticalDivider(
+                                      color: Color.fromARGB(25, 0, 0, 0),
+                                    ),
+                                    Icon(
+                                      Icons.access_time_outlined,
+                                      size: 20.sp,
+                                      color: const Color(0xFF7A7E93),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10.h),
+                      TextFormField(
+                        maxLines: 4,
+                        controller: reminderController,
+                        validator: (value) {
+                          if (isReminder &&
+                              (value == null || value.trim().isEmpty)) {
+                            return "Please enter reminder note";
+                          }
+                          return null;
+                        },
+                        style: GoogleFonts.inter(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFF263238),
+                          letterSpacing: -0.1,
+                        ),
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        decoration: InputDecoration(
+                          contentPadding: EdgeInsets.only(
+                            left: 16.w,
+                            right: 16.w,
+                            top: 12.h,
+                            bottom: 12.h,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15.r),
+                            borderSide: BorderSide(
+                              color: Color.fromARGB(25, 0, 0, 0),
+                              width: 1.w,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15.r),
+                            borderSide: BorderSide(
+                              color: AppColors.buttonBg,
+                              width: 1.w,
+                            ),
+                          ),
+                          hint: Text(
+                            "Reminder Note",
+                            style: GoogleFonts.inter(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF7A7E93),
+                            ),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20.r),
+                            borderSide: BorderSide(
+                              color: Colors.red,
+                              width: 1.w,
+                            ),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20.r),
+                            borderSide: BorderSide(
+                              color: Colors.red,
+                              width: 1.w,
+                            ),
                           ),
                         ),
-                ),
-              ),
+                      ),
+                      SizedBox(height: 20.h),
+                      Container(
+                        width: double.infinity,
+                        height: 40.h,
+                        decoration: BoxDecoration(
+                          color: Color(0xFFE5F2FF),
+                          borderRadius: BorderRadius.circular(10.r),
+                        ),
+                        child: Center(
+                          child: Text(
+                            "SAVE REMINDER",
+                            style: GoogleFonts.inter(
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF007AFF),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                SizedBox(height: 30.h),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56.h,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF007AFF),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.r),
+                      ),
+                      elevation: 0,
+                    ),
+                    onPressed: () async {
+                      if (widget.leadId == null) {
+                        if (!_addLeadFormKey.currentState!.validate()) {
+                          return;
+                        }
 
-              SizedBox(height: 30.h),
-            ],
+                        if (isReminder) {
+                          if (selectedDate == null) {
+                            showErrorSnackBar("Please select reminder date");
+                            return;
+                          }
+
+                          if (selectedTime == null) {
+                            showErrorSnackBar("Please select reminder time");
+                            return;
+                          }
+                        }
+                        setState(() {
+                          isLoading = true;
+                        });
+                        try {
+                          final service = ref.read(authServiceProvider);
+                          final response = await service.addLeadData(
+                            leadName: nameController.text.trim(),
+                            mobileNumber: mobileController.text.trim(),
+                            email: emailController.text.trim(),
+                            alternateContact: contactController.text.trim(),
+                            businessName: businessController.text.trim(),
+                            industryType: selectedIndustry ?? "",
+                            city: selectedCity ?? "",
+                            budgetRange: selectedBudget ?? "",
+                            leadSource: selectedSource ?? "",
+                            priority: selectedPriority ?? "",
+                            reminderNote: reminderController.text.trim(),
+                            isetFollow: isReminder ? 1 : 0,
+                            reminderDate: formatDateForApi(selectedDate),
+                            reminderTime: formatTimeForApi(selectedTime),
+                          );
+                          if (response.status == true) {
+                            ref.invalidate(leadProvider);
+                            setState(() {
+                              isLoading = false;
+                            });
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MyBottomNav(),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          setState(() {
+                            isLoading = false;
+                          });
+                        }
+                      } else {
+                        if (!_addLeadFormKey.currentState!.validate()) {
+                          return;
+                        }
+
+                        if (isReminder) {
+                          if (selectedDate == null && oldReminderDate == null) {
+                            showErrorSnackBar("Please select reminder date");
+                            return;
+                          }
+
+                          if (selectedTime == null && oldReminderTime == null) {
+                            showErrorSnackBar("Please select reminder time");
+                            return;
+                          }
+                        }
+                        setState(() {
+                          isUpdate = true;
+                        });
+                        try {
+                          final service = ref.read(authServiceProvider);
+                          final res = await service.updateLead(
+                            leadId: widget.leadId,
+                            leadName: nameController.text.trim(),
+                            mobileNumber: mobileController.text.trim(),
+                            email: emailController.text.trim(),
+                            alternateContact: contactController.text.trim(),
+                            businessName: businessController.text.trim(),
+                            industryType: selectedIndustry ?? "",
+                            city: selectedCity ?? "",
+                            budgetRange: selectedBudget ?? "",
+                            leadSource: selectedSource ?? "",
+                            priority: selectedPriority ?? "",
+                            issetFollow: isReminder ? 1 : 0,
+                            reminderDate: isReminder
+                                ? (selectedDate != null
+                                      ? formatDateForApi(selectedDate)
+                                      : oldReminderDate)
+                                : null,
+
+                            reminderTime: isReminder
+                                ? (selectedTime != null
+                                      ? formatTimeForApi(selectedTime)
+                                      : oldReminderTime)
+                                : null,
+
+                            reminderNote: isReminder
+                                ? reminderController.text.trim()
+                                : null,
+                          );
+                          if (res.status == true) {
+                            setState(() {
+                              isUpdate = false;
+                            });
+                            ref.invalidate(leadProvider);
+                            ref.invalidate(leadDetailsProvider(widget.leadId!));
+                            Navigator.pop(context, true);
+                          }
+                        } catch (e) {
+                          setState(() {
+                            isUpdate = false;
+                          });
+                        }
+                      }
+                    },
+                    child: isLoading || isUpdate
+                        ? SizedBox(
+                            width: 20.w,
+                            height: 20.w,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            widget.leadId == null ? "Save Lead" : "Update Lead",
+                            style: GoogleFonts.inter(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                              letterSpacing: -0.54,
+                            ),
+                          ),
+                  ),
+                ),
+
+                SizedBox(height: 30.h),
+              ],
+            ),
           ),
         ),
       ),
@@ -539,10 +784,12 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
     required TextInputType keyboardType,
     int? maxLength,
     TextEditingController? controller,
+    String? Function(String?)? validator,
   }) {
     return Padding(
       padding: EdgeInsets.only(bottom: 10.h),
       child: TextFormField(
+        validator: validator,
         controller: controller,
         style: GoogleFonts.inter(
           fontSize: 15.sp,
@@ -552,6 +799,7 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
         ),
         keyboardType: keyboardType,
         maxLength: maxLength,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         decoration: InputDecoration(
           counterText: "",
           isDense: true,
@@ -579,6 +827,14 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
               letterSpacing: -0.54,
             ),
           ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20.r),
+            borderSide: BorderSide(color: Colors.red, width: 1.w),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20.r),
+            borderSide: BorderSide(color: Colors.red, width: 1.w),
+          ),
         ),
       ),
     );
@@ -589,51 +845,71 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
     required List<T> items,
     required T? value,
     required void Function(T?) onChanged,
+    String? Function(T?)? validator,
   }) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 10.h),
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 14.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: Color.fromARGB(25, 0, 0, 0), width: 1.w),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<T>(
-          borderRadius: BorderRadius.circular(20.r),
-          value: value,
-          hint: Text(
-            hint,
-            style: GoogleFonts.inter(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF063466),
-              letterSpacing: -0.54,
+    return Padding(
+      padding: EdgeInsets.only(bottom: 10.h),
+      child: DropdownButtonFormField<T>(
+        value: value,
+        validator: validator,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        decoration: InputDecoration(
+          isDense: true,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 14.w,
+            vertical: 16.h,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20.r),
+            borderSide: BorderSide(
+              color: const Color.fromARGB(25, 0, 0, 0),
+              width: 1.w,
             ),
           ),
-          icon: Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: const Color(0xFF063466),
-            size: 22.sp,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20.r),
+            borderSide: BorderSide(color: AppColors.buttonBg, width: 1.w),
           ),
-          isExpanded: true,
-          items: items.map((item) {
-            return DropdownMenuItem<T>(
-              value: item,
-              child: Text(
-                item.toString(),
-                style: GoogleFonts.inter(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF063466),
-                  letterSpacing: -0.54,
-                ),
-              ),
-            );
-          }).toList(),
-          onChanged: onChanged,
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20.r),
+            borderSide: BorderSide(color: Colors.red, width: 1.w),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20.r),
+            borderSide: BorderSide(color: Colors.red, width: 1.w),
+          ),
         ),
+        borderRadius: BorderRadius.circular(20.r),
+        hint: Text(
+          hint,
+          style: GoogleFonts.inter(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF063466),
+            letterSpacing: -0.54,
+          ),
+        ),
+        icon: Icon(
+          Icons.keyboard_arrow_down_rounded,
+          color: const Color(0xFF063466),
+          size: 22.sp,
+        ),
+        isExpanded: true,
+        items: items.map((item) {
+          return DropdownMenuItem<T>(
+            value: item,
+            child: Text(
+              item.toString(),
+              style: GoogleFonts.inter(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF063466),
+                letterSpacing: -0.54,
+              ),
+            ),
+          );
+        }).toList(),
+        onChanged: onChanged,
       ),
     );
   }

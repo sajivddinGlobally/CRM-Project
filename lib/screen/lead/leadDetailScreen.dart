@@ -1,17 +1,27 @@
+import 'dart:developer';
+
+import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/data/Provider/GetLeadProvider.dart';
+import 'package:crm_app/data/Provider/leadDetailsProvider.dart';
+import 'package:crm_app/screen/lead/addNewLeadScreen.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
-class LeadDetailScreen extends StatefulWidget {
-  const LeadDetailScreen({super.key});
+class LeadDetailScreen extends ConsumerStatefulWidget {
+  final String id;
+  const LeadDetailScreen({super.key, required this.id});
 
   @override
-  State<LeadDetailScreen> createState() => _LeadDetailScreenState();
+  ConsumerState<LeadDetailScreen> createState() => _LeadDetailScreenState();
 }
 
-class _LeadDetailScreenState extends State<LeadDetailScreen> {
-  void _showActionMenu(BuildContext context) {
+class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
+  void _showActionMenu() {
     final RenderBox button = context.findRenderObject() as RenderBox;
     showMenu(
       context: context,
@@ -19,16 +29,56 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       color: Colors.white,
       items: [
-        _menuItem(Icons.edit, "Edit Lead"),
-        _menuItem(Icons.cancel_outlined, "Mark Lost"),
-        _menuItem(Icons.delete, "Delete"),
+        _menuItem(Icons.edit, "Edit Lead", () {
+          Navigator.push(
+            context,
+            CupertinoPageRoute(
+              builder: (context) => AddnewLeadScreen(leadId: leadId),
+            ),
+          );
+          log("Lead Id $leadId");
+        }),
+        _menuItem(Icons.cancel_outlined, "Mark Lost", () {}),
+        _menuItem(Icons.delete, "Delete", () async {
+          try {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) {
+                return Dialog(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.buttonBg),
+                  ),
+                );
+              },
+            );
+            final res = ref.read(authServiceProvider);
+            final isScuess = await res.leadDelete(id: leadId!);
+            if (isScuess) {
+              ref.invalidate(leadProvider);
+              Navigator.pop(context, true);
+            }
+          } catch (e) {
+            if (mounted && Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+            log(e.toString());
+          } finally {
+            if (mounted && Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          }
+        }),
       ],
     );
   }
 
-  PopupMenuItem _menuItem(IconData icon, String title) {
+  PopupMenuItem _menuItem(IconData icon, String title, VoidCallback callback) {
     return PopupMenuItem(
       value: title,
+      onTap: callback,
       child: Row(
         children: [
           Icon(icon, color: const Color(0xFF063466), size: 20.sp),
@@ -46,8 +96,11 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
     );
   }
 
+  String? leadId;
+
   @override
   Widget build(BuildContext context) {
+    final leadDetailState = ref.watch(leadDetailsProvider(widget.id));
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(
@@ -80,7 +133,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
         actions: [
           IconButton(
             onPressed: () {
-              _showActionMenu(context);
+              _showActionMenu();
             },
             icon: Icon(
               Icons.more_horiz,
@@ -90,253 +143,305 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 10),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15.r),
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomLeft,
-                    end: Alignment.topRight,
-                    colors: [Color(0xFFE6EEF8), Color(0xFFE6F2FF)],
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+      body: leadDetailState.when(
+        data: (data) {
+          leadId = data.data?.id.toString();
+          final preferredDate = data.data?.reminderDate != null
+              ? DateFormat(
+                  "dd MMM yyyy",
+                ).format(DateTime.parse(data.data!.reminderDate.toString()))
+              : "";
+
+          final preferredTime = data.data?.preferredTime != null
+              ? DateFormat(
+                  "hh:mm a",
+                ).format(DateFormat("HH:mm").parse(data.data!.preferredTime!))
+              : "";
+
+          return SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20.w,
+                      vertical: 20.h,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15.r),
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomLeft,
+                        end: Alignment.topRight,
+                        colors: [Color(0xFFE6EEF8), Color(0xFFE6F2FF)],
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            vertical: 10.h,
-                            horizontal: 15.w,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(7.r),
-                            color: Color(0xFFFFE6E6),
-                          ),
-                          child: Text(
-                            "HOT LEAD",
-                            style: GoogleFonts.inter(
-                              fontSize: 11.sp,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFFFF0000),
-                              letterSpacing: -0.54,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            vertical: 11.h,
-                            horizontal: 14.w,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10.r),
-                            color: Color(0xFFE5F8ED),
-                          ),
-                          child: Center(
-                            child: Text(
-                              "CONTACTED",
-                              style: GoogleFonts.inter(
-                                fontSize: 11.sp,
-                                fontWeight: FontWeight.w400,
-                                color: Color(0xFF00B94A),
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 10.h,
+                                horizontal: 15.w,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(7.r),
+                                color: Color(0xFFFFE6E6),
+                              ),
+                              child: Text(
+                                "HOT LEAD",
+                                style: GoogleFonts.inter(
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFFFF0000),
+                                  letterSpacing: -0.54,
+                                ),
                               ),
                             ),
+                            SizedBox(width: 10.w),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 11.h,
+                                horizontal: 14.w,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10.r),
+                                color: Color(0xFFE5F8ED),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  "CONTACTED",
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11.sp,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xFF00B94A),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 12.h),
+                        Text(
+                          // "#SAL-1024 Rajesh Electronics",
+                          data.data?.assignedTo ?? "N/A",
+                          style: GoogleFonts.inter(
+                            fontSize: 15.sp,
+                            color: Color(0xFF050A14),
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: -0.54,
                           ),
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              // "RAJESH SHARMA",
+                              data.data?.leadName ?? "N/A",
+                              style: GoogleFonts.inter(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w400,
+                                color: Color(0xFF263238),
+                                letterSpacing: -0.54,
+                              ),
+                            ),
+                            SizedBox(width: 10.w),
+                            Container(
+                              width: 4.w,
+                              height: 4.w,
+                              decoration: BoxDecoration(
+                                color: Color(0xFF263238),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            SizedBox(width: 10.w),
+                            Text(
+                              // "28 Apr 2026",
+                              preferredDate,
+                              style: GoogleFonts.inter(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w400,
+                                color: Color(0xFF263238),
+                                letterSpacing: -0.54,
+                              ),
+                            ),
+                            SizedBox(width: 10.w),
+                            Container(
+                              width: 4.w,
+                              height: 4.w,
+                              decoration: BoxDecoration(
+                                color: Color(0xFF263238),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            SizedBox(width: 10.w),
+                            Text(
+                              "ADMIN ASSIGNED",
+                              style: GoogleFonts.inter(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w400,
+                                color: Color(0xFF263238),
+                                letterSpacing: -0.54,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    SizedBox(height: 12.h),
-                    Text(
-                      "#SAL-1024 Rajesh Electronics",
-                      style: GoogleFonts.inter(
-                        fontSize: 15.sp,
-                        color: Color(0xFF050A14),
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: -0.54,
-                      ),
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          "RAJESH SHARMA",
-                          style: GoogleFonts.inter(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF263238),
-                            letterSpacing: -0.54,
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
-                        Container(
-                          width: 4.w,
-                          height: 4.w,
-                          decoration: BoxDecoration(
-                            color: Color(0xFF263238),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
-                        Text(
-                          "28 Apr 2026",
-                          style: GoogleFonts.inter(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF263238),
-                            letterSpacing: -0.54,
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
-                        Container(
-                          width: 4.w,
-                          height: 4.w,
-                          decoration: BoxDecoration(
-                            color: Color(0xFF263238),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
-                        Text(
-                          "ADMIN ASSIGNED",
-                          style: GoogleFonts.inter(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF263238),
-                            letterSpacing: -0.54,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 30.h),
-              Text(
-                "CONTACT INFORMATION",
-                style: GoogleFonts.inter(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF69818C),
-                ),
-              ),
-              SizedBox(height: 12.h),
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(0),
-                  border: Border(
-                    bottom: BorderSide(color: Color(0xFFE5E5E5), width: 1.w),
                   ),
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      height: 42.h,
-                      decoration: BoxDecoration(
-                        color: const Color(0xffEEF2F5),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Row(
-                        children: [
-                          _headerText("FIELD"),
-                          _headerText("DETAILS"),
-                        ],
-                      ),
+                  SizedBox(height: 30.h),
+                  Text(
+                    "CONTACT INFORMATION",
+                    style: GoogleFonts.inter(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF69818C),
                     ),
-                    _row(title: "Phone Number", value: "+91 XXXXXXX45"),
-                    _row(title: "Alternate Number", value: "+91 XXXXXXX98"),
-                    _row(title: "Email", value: "rajesh@email.com"),
-                    _row(title: "Location", value: "Jaipur, Rajasthan"),
-                    _row(title: "Preferred Contact Time", value: "4 PM – 6 PM"),
-                    _row(
-                      title: "Final Amount",
-                      value: "₹12,000",
-                      isLast: true,
-                      highlight: true,
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 30.h),
-              Text(
-                "INTEREST DETAILS",
-                style: GoogleFonts.inter(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF69818C),
-                ),
-              ),
-              SizedBox(height: 10.h),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(vertical: 21.h, horizontal: 21.w),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15.r),
-                  border: Border.all(color: Color.fromARGB(25, 0, 0, 0)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Premium Plan",
-                      style: GoogleFonts.inter(
-                        fontSize: 15.sp,
-                        color: Color(0xFF050A14),
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: -0.54,
+                  ),
+                  SizedBox(height: 12.h),
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(0),
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Color(0xFFE5E5E5),
+                          width: 1.w,
+                        ),
                       ),
                     ),
-                    SizedBox(height: 4.h),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                    child: Column(
                       children: [
-                        Text(
-                          "₹15,000",
-                          style: GoogleFonts.inter(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF063466),
-                            letterSpacing: -0.54,
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
                         Container(
-                          width: 4.w,
-                          height: 4.w,
+                          height: 42.h,
                           decoration: BoxDecoration(
-                            color: Color(0xFF263238),
-                            shape: BoxShape.circle,
+                            color: const Color(0xffEEF2F5),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Row(
+                            children: [
+                              _headerText("FIELD"),
+                              _headerText("DETAILS"),
+                            ],
                           ),
                         ),
-                        SizedBox(width: 10.w),
-                        Text(
-                          "01 May 2026",
-                          style: GoogleFonts.inter(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF263238),
-                            letterSpacing: -0.54,
+                        _row(
+                          title: "Phone Number",
+                          value: "${data.data?.mobileNumber ?? ""}",
+                        ),
+                        if (data.data!.alternateContact!.isNotEmpty)
+                          _row(
+                            title: "Alternate Number",
+                            value: "${data.data?.alternateContact ?? ""}",
                           ),
+                        _row(
+                          title: "Email",
+                          value: "${data.data?.email ?? ""}",
+                        ),
+                        _row(
+                          title: "Location",
+                          value:
+                              "${data.data?.address ?? ""} ${data.data?.city ?? ""}",
+                        ),
+                        if (preferredTime.isNotEmpty)
+                          _row(
+                            title: "Preferred Contact Time",
+                            value: "$preferredTime",
+                          ),
+                        _row(
+                          title: "Final Amount",
+                          value: "₹${data.data?.budgetRange ?? ""}",
+                          isLast: true,
+                          highlight: true,
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  SizedBox(height: 30.h),
+                  Text(
+                    "INTEREST DETAILS",
+                    style: GoogleFonts.inter(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF69818C),
+                    ),
+                  ),
+                  SizedBox(height: 10.h),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.symmetric(
+                      vertical: 21.h,
+                      horizontal: 21.w,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15.r),
+                      border: Border.all(color: Color.fromARGB(25, 0, 0, 0)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Premium Plan",
+                          style: GoogleFonts.inter(
+                            fontSize: 15.sp,
+                            color: Color(0xFF050A14),
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: -0.54,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              "₹15,000",
+                              style: GoogleFonts.inter(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF063466),
+                                letterSpacing: -0.54,
+                              ),
+                            ),
+                            SizedBox(width: 10.w),
+                            Container(
+                              width: 4.w,
+                              height: 4.w,
+                              decoration: BoxDecoration(
+                                color: Color(0xFF263238),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            SizedBox(width: 10.w),
+                            Text(
+                              "01 May 2026",
+                              style: GoogleFonts.inter(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w400,
+                                color: Color(0xFF263238),
+                                letterSpacing: -0.54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
+        error: (error, stackTrace) {
+          return Center(child: Text("Something went wrong"));
+        },
+        loading: () =>
+            Center(child: CircularProgressIndicator(color: AppColors.buttonBg)),
       ),
       bottomSheet: Container(
         width: double.infinity,

@@ -26,6 +26,9 @@ import 'package:crm_app/data/Model/OtpVerifyBodyModel.dart';
 import 'package:crm_app/data/Model/OtpVerifyResModel.dart';
 import 'package:crm_app/data/Model/deleteNotificationModel.dart';
 import 'package:crm_app/data/Model/getNotificationModel.dart';
+import 'package:crm_app/data/Model/leadDetailsModel.dart';
+import 'package:crm_app/data/Model/leadUpdateBodyModel.dart';
+import 'package:crm_app/data/Model/leadUpdateResModel.dart';
 import 'package:crm_app/data/Model/loginBodyModel.dart';
 import 'package:crm_app/data/Model/loginResModel.dart';
 import 'package:crm_app/data/Model/multipleDeleteNotificaionBodyModel.dart';
@@ -274,7 +277,7 @@ class AuthService {
         ChangePasswordBodyModel(
           newPassword: newPassword,
           confirmPassword: confirmPassword,
-          oldPassword: oldPassword
+          oldPassword: oldPassword,
         ),
       );
       if (response.status == true) {
@@ -422,6 +425,7 @@ class AuthService {
     String? reminderDate,
     String? reminderNote,
     String? reminderTime,
+    int? isetFollow,
   }) async {
     try {
       final response = await api.addLead(
@@ -439,6 +443,7 @@ class AuthService {
           reminderDate: reminderDate,
           reminderNote: reminderNote,
           reminderTime: reminderTime,
+          issetFollow: isetFollow,
         ),
       );
       if (response.status == true) {
@@ -586,6 +591,84 @@ class AuthService {
     try {
       final body = MultipleDeleteNotificationBodyModel(ids: ids);
       final res = await api.multipleDeleteNotification(body);
+      if (res.status == true) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      log(e.toString());
+      return false;
+    }
+  }
+
+  Future<LeadDetailsModel> leadDetailsData({required String id}) async {
+    try {
+      final res = await api.leadDetails(id);
+
+      if (res.status == true) {
+        log(res.message ?? "Notifications fetched successfully");
+        return res;
+      } else {
+        throw Exception(res.message ?? "Failed to fetch notifications");
+      }
+    } catch (e, st) {
+      log("NOTIFICATION ERROR => $e");
+      log("STACK TRACE => $st");
+      rethrow;
+    }
+  }
+
+  Future<LeadUpdateResModel> updateLead({
+    String? leadId,
+    String? leadName,
+    String? mobileNumber,
+    String? alternateContact,
+    String? email,
+    String? businessName,
+    String? industryType,
+    String? city,
+    String? budgetRange,
+    String? leadSource,
+    String? priority,
+    String? reminderDate,
+    String? reminderNote,
+    String? reminderTime,
+    int? issetFollow,
+  }) async {
+    try {
+      final body = LeadUpdateBodyModel(
+        leadName: leadName,
+        mobileNumber: mobileNumber,
+        alternateContact: alternateContact,
+        email: email,
+        businessName: businessName,
+        industryType: industryType,
+        city: city,
+        budgetRange: budgetRange,
+        leadSource: leadSource,
+        priority: priority,
+        reminderDate: reminderDate,
+        reminderNote: reminderNote,
+        reminderTime: reminderTime,
+        issetFollow: issetFollow,
+      );
+      final response = await api.leadUpdate(leadId!, body);
+      if (response.status == true) {
+        log(response.message ?? "Add Lead Successfull");
+        return response;
+      } else {
+        throw Exception(response.message ?? "Add Lead Not Successfull");
+      }
+    } catch (e, st) {
+      log("VERIFY ERROR => $e");
+      log("STACK TRACE => $st");
+      rethrow;
+    }
+  }
+
+  Future<bool> leadDelete({required String id}) async {
+    try {
+      final res = await api.leadDelete(id);
       if (res.status == true) {
         return true;
       }

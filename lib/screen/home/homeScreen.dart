@@ -883,8 +883,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       ),
                     );
                   },
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF007AFF)),
+                  loading: () => Container(
+                    margin: EdgeInsets.only(top: 15.h),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF007AFF),
+                      ),
+                    ),
                   ),
                 ),
                 SizedBox(height: 40.h),

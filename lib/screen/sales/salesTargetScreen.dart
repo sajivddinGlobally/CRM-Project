@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/data/Provider/GetLeadProvider.dart';
 import 'package:crm_app/data/Provider/GetSaleProvider.dart';
 import 'package:crm_app/screen/lead/leadDetailScreen.dart';
 import 'package:crm_app/screen/lead/leadScreen.dart';
@@ -59,6 +60,7 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
   @override
   Widget build(BuildContext context) {
     final getSale = ref.watch(getSaleProvider);
+    final leadState = ref.watch(leadProvider);
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(toolbarHeight: 0, backgroundColor: Color(0xFFE6EEFA)),
@@ -175,27 +177,33 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
                 ],
               ),
             ),
-            SizedBox(height: 30.h),
+
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: EdgeInsets.only(left: 24.w),
-                  child: Text(
-                    "Recent Sales",
-                    style: GoogleFonts.inter(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF1E1E1E),
-                      letterSpacing: -0.54,
-                    ),
-                  ),
-                ),
                 getSale.when(
                   data: (data) {
+                    final salesList = data.data ?? [];
+
+                    if (salesList.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        SizedBox(height: 30.h),
+                        Padding(
+                          padding: EdgeInsets.only(left: 24.w),
+                          child: Text(
+                            "Recent Sales",
+                            style: GoogleFonts.inter(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF1E1E1E),
+                              letterSpacing: -0.54,
+                            ),
+                          ),
+                        ),
                         Container(
                           margin: EdgeInsets.only(top: 12.h),
                           height: 200.h,
@@ -374,30 +382,32 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
                             },
                           ),
                         ),
-                        SizedBox(height: 10.h),
-                        Center(
-                          child: SmoothPageIndicator(
-                            controller: _pageController,
-                            count: data.data?.length ?? 0,
-                            effect: ScrollingDotsEffect(
-                              activeDotColor: Color(0xFF063466),
-                              dotColor: Color(0xFFCDD6E0),
-                              dotHeight: 6.h,
-                              dotWidth: 6.w,
-                              spacing: 5.w,
-                              activeStrokeWidth: 2,
-                              activeDotScale: 1.4,
-                              maxVisibleDots: 5,
+                        if (salesList.length > 1) ...[
+                          SizedBox(height: 10.h),
+                          Center(
+                            child: SmoothPageIndicator(
+                              controller: _pageController,
+                              count: data.data?.length ?? 0,
+                              effect: ScrollingDotsEffect(
+                                activeDotColor: Color(0xFF063466),
+                                dotColor: Color(0xFFCDD6E0),
+                                dotHeight: 6.h,
+                                dotWidth: 6.w,
+                                spacing: 5.w,
+                                activeStrokeWidth: 2,
+                                activeDotScale: 1.4,
+                                maxVisibleDots: 5,
+                              ),
+                              onDotClicked: (index) {
+                                _pageController.animateToPage(
+                                  index,
+                                  duration: const Duration(milliseconds: 500),
+                                  curve: Curves.easeInOut,
+                                );
+                              },
                             ),
-                            onDotClicked: (index) {
-                              _pageController.animateToPage(
-                                index,
-                                duration: const Duration(milliseconds: 500),
-                                curve: Curves.easeInOut,
-                              );
-                            },
                           ),
-                        ),
+                        ],
                       ],
                     );
                   },
@@ -472,177 +482,201 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
                   ),
                 ),
                 SizedBox(height: 15.h),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  padding: EdgeInsets.zero,
-                  itemCount: 3,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: EdgeInsets.only(
-                        top: 10.w,
-                        left: 24.w,
-                        right: 24.w,
-                      ),
-                      padding: EdgeInsets.only(
-                        left: 20.w,
-                        right: 20.w,
-                        top: 20.h,
-                        bottom: 20.h,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20.r),
-                        color: Colors.transparent,
-                        border: Border.all(color: Color.fromARGB(25, 0, 0, 0)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                CupertinoPageRoute(
-                                  builder: (context) => LeadDetailScreen(),
-                                ),
-                              );
-                            },
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                    vertical: 10.h,
-                                    horizontal: 15.w,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(7.r),
-                                    color: Color(0xFFE5F8ED),
-                                  ),
-                                  child: Text(
-                                    "NEW LEAD",
-                                    style: GoogleFonts.inter(
-                                      fontSize: 11.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFF00B94A),
-                                      letterSpacing: -0.54,
+                leadState.when(
+                  data: (data) {
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      padding: EdgeInsets.zero,
+                      itemCount: data.data?.length,
+                      itemBuilder: (context, index) {
+                        return Container(
+                          margin: EdgeInsets.only(
+                            top: 10.w,
+                            left: 24.w,
+                            right: 24.w,
+                          ),
+                          padding: EdgeInsets.only(
+                            left: 20.w,
+                            right: 20.w,
+                            top: 20.h,
+                            bottom: 20.h,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20.r),
+                            color: Colors.transparent,
+                            border: Border.all(
+                              color: Color.fromARGB(25, 0, 0, 0),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    CupertinoPageRoute(
+                                      builder: (context) => LeadDetailScreen(
+                                        id: data.data![index].id.toString(),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                                SizedBox(height: 20.h),
-                                Text(
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  "RK Enterprises Private Limited",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 15.sp,
-                                    color: Color(0xFF050A14),
-                                    fontWeight: FontWeight.w500,
-                                    letterSpacing: -0.54,
-                                  ),
-                                ),
-                                SizedBox(height: 4.h),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
+                                  );
+                                },
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      "Rajesh Kumar",
-                                      style: GoogleFonts.inter(
-                                        fontSize: 12.sp,
-                                        fontWeight: FontWeight.w400,
-                                        color: Color(0xFF263238),
-                                        height: 0,
-                                      ),
-                                    ),
-                                    SizedBox(width: 10.w),
                                     Container(
-                                      width: 4.w,
-                                      height: 4.w,
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 10.h,
+                                        horizontal: 15.w,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: Color(0xFF263238),
-                                        shape: BoxShape.circle,
+                                        borderRadius: BorderRadius.circular(
+                                          7.r,
+                                        ),
+                                        color: Color(0xFFE5F8ED),
+                                      ),
+                                      child: Text(
+                                        "NEW LEAD",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 11.sp,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF00B94A),
+                                          letterSpacing: -0.54,
+                                        ),
                                       ),
                                     ),
-                                    SizedBox(width: 10.w),
+                                    SizedBox(height: 20.h),
                                     Text(
-                                      "+91 XXXXXXX",
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      // "RK Enterprises Private Limited",
+                                      data.data?[index].businessName ?? "N/A",
                                       style: GoogleFonts.inter(
-                                        fontSize: 12.sp,
-                                        fontWeight: FontWeight.w400,
-                                        color: Color(0xFF263238),
-                                        height: 0,
+                                        fontSize: 15.sp,
+                                        color: Color(0xFF050A14),
+                                        fontWeight: FontWeight.w500,
+                                        letterSpacing: -0.54,
                                       ),
+                                    ),
+                                    SizedBox(height: 4.h),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          // "Rajesh Kumar",
+                                          data.data?[index].leadName ?? "N/A",
+                                          style: GoogleFonts.inter(
+                                            fontSize: 12.sp,
+                                            fontWeight: FontWeight.w400,
+                                            color: Color(0xFF263238),
+                                            height: 0,
+                                          ),
+                                        ),
+                                        SizedBox(width: 10.w),
+                                        Container(
+                                          width: 4.w,
+                                          height: 4.w,
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFF263238),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        SizedBox(width: 10.w),
+                                        Text(
+                                          // "+91 XXXXXXX",
+                                          data.data?[index].mobileNumber ??
+                                              "N/A",
+                                          style: GoogleFonts.inter(
+                                            fontSize: 12.sp,
+                                            fontWeight: FontWeight.w400,
+                                            color: Color(0xFF263238),
+                                            height: 0,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 20.h),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  height: 35.h,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10.r),
-                                    color: Color(0xFFE5F2FF),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      "ADD NOTE",
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11.sp,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppColors.buttonBg,
+                              ),
+                              SizedBox(height: 20.h),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      height: 35.h,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(
+                                          10.r,
+                                        ),
+                                        color: Color(0xFFE5F2FF),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          "ADD NOTE",
+                                          style: GoogleFonts.inter(
+                                            fontSize: 11.sp,
+                                            fontWeight: FontWeight.w500,
+                                            color: AppColors.buttonBg,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ),
-                              SizedBox(width: 10.w),
-                              Expanded(
-                                child: Container(
-                                  height: 35.h,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10.r),
-                                    border: Border.all(
-                                      color: AppColors.buttonBg,
-                                    ),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      "MARK CONVETED",
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11.sp,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppColors.buttonBg,
+                                  SizedBox(width: 10.w),
+                                  Expanded(
+                                    child: Container(
+                                      height: 35.h,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(
+                                          10.r,
+                                        ),
+                                        border: Border.all(
+                                          color: AppColors.buttonBg,
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          "MARK CONVETED",
+                                          style: GoogleFonts.inter(
+                                            fontSize: 11.sp,
+                                            fontWeight: FontWeight.w500,
+                                            color: AppColors.buttonBg,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ),
-                              SizedBox(width: 10.w),
-                              Container(
-                                width: 35.w,
-                                height: 35.h,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF007AFF),
-                                  borderRadius: BorderRadius.circular(10.r),
-                                ),
-                                child: Icon(
-                                  Icons.call_outlined,
-                                  color: Colors.white,
-                                  size: 20.sp,
-                                ),
+                                  SizedBox(width: 10.w),
+                                  Container(
+                                    width: 35.w,
+                                    height: 35.h,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF007AFF),
+                                      borderRadius: BorderRadius.circular(10.r),
+                                    ),
+                                    child: Icon(
+                                      Icons.call_outlined,
+                                      color: Colors.white,
+                                      size: 20.sp,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     );
                   },
+                  error: (error, stackTrace) {
+                    return Center(child: Text("Somwthing went wrong"));
+                  },
+                  loading: () => Center(
+                    child: CircularProgressIndicator(color: AppColors.buttonBg),
+                  ),
                 ),
               ],
             ),

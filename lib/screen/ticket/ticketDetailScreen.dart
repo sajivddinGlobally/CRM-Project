@@ -177,7 +177,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                           TextSpan(
                             children: [
                               TextSpan(
-                                text: data.data?.ticketId ?? "#TK-1024 ",
+                                text: data.data?.ticketId ?? "",
                                 style: GoogleFonts.inter(
                                   fontSize: 15.sp,
                                   color: Color(0xFF050A14),
@@ -186,9 +186,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                                 ),
                               ),
                               TextSpan(
-                                text:
-                                    data.data?.issueCategory ??
-                                    "Payment not reflecting",
+                                text: " ${data.data?.issueCategory ?? ""}",
                                 style: GoogleFonts.inter(
                                   fontSize: 15.sp,
                                   color: Color(0xFF050A14),

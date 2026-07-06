@@ -163,7 +163,9 @@ class _LeadScreenState extends ConsumerState<LeadScreen> {
                                 Navigator.push(
                                   context,
                                   CupertinoPageRoute(
-                                    builder: (context) => LeadDetailScreen(),
+                                    builder: (context) => LeadDetailScreen(
+                                      id: data.data![index].id.toString(),
+                                    ),
                                   ),
                                 );
                               },
@@ -187,7 +189,9 @@ class _LeadScreenState extends ConsumerState<LeadScreen> {
                                             Text(
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              "Rajesh Enterprises",
+                                              // "Rajesh Enterprises",
+                                              data.data?[index].businessName ??
+                                                  "",
                                               style: GoogleFonts.inter(
                                                 fontSize: 15.sp,
                                                 color: Color(0xFF050A14),
@@ -245,7 +249,8 @@ class _LeadScreenState extends ConsumerState<LeadScreen> {
                                             color: Color(0xFFFFE6E6),
                                           ),
                                           child: Text(
-                                            "NEW LEAD",
+                                            // "NEW LEAD",
+                                            data.data?[index].status ?? "N/A",
                                             style: GoogleFonts.inter(
                                               fontSize: 11.sp,
                                               fontWeight: FontWeight.w500,

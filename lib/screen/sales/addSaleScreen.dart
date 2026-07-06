@@ -637,7 +637,6 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
                         time: selectedTime?.format(context),
                         remeniderNote: reminderNoteController.text.trim(),
                       );
-
                       if (response.status == true) {
                         log("Add Sale SuccessFull");
 
