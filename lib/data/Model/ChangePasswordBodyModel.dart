@@ -11,19 +11,23 @@ String changePasswordBodyModelToJson(ChangePasswordBodyModel data) => json.encod
 class ChangePasswordBodyModel {
     String? newPassword;
     String? confirmPassword;
+    String? oldPassword;
 
     ChangePasswordBodyModel({
         this.newPassword,
         this.confirmPassword,
+        this.oldPassword,
     });
 
     factory ChangePasswordBodyModel.fromJson(Map<String, dynamic> json) => ChangePasswordBodyModel(
         newPassword: json["new_password"],
         confirmPassword: json["confirm_password"],
+        oldPassword: json["old_password"],
     );
 
     Map<String, dynamic> toJson() => {
         "new_password": newPassword,
         "confirm_password": confirmPassword,
+        "old_password": oldPassword,
     };
 }

@@ -1,5 +1,5 @@
-
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/core/utils/showMessage.dart';
 import 'package:crm_app/data/Provider/get_attendence_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -46,17 +46,14 @@ class AttendanceLog {
   });
 }
 
-
 class AttendanceScreen extends ConsumerStatefulWidget {
   const AttendanceScreen({super.key});
 
   @override
-  ConsumerState<AttendanceScreen> createState() =>
-      _AttendanceScreenState();
+  ConsumerState<AttendanceScreen> createState() => _AttendanceScreenState();
 }
 
 class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
-
   String selectedMonth = "March";
 
   // Available Months List for Dropdown
@@ -225,15 +222,18 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                 attendanceSummaryAsync.when(
                   data: (response) {
                     final summary = response.data?.summary;
-
                     return _buildChartAndStats(summary!);
                   },
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(),
+                  loading: () => SizedBox(
+                    width: double.infinity,
+                    height: MediaQuery.of(context).size.height / 2,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.buttonBg,
+                      ),
+                    ),
                   ),
-                  error: (e, s) => Center(
-                    child: Text(e.toString()),
-                  ),
+                  error: (e, s) => Center(child: Text(e.toString())),
                 ),
                 // _buildChartAndStats(currentSummary),
                 SizedBox(height: 40.h),
@@ -261,20 +261,12 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                       );
                     }
 
-                    return    _buildLogList(logs);
-
+                    return _buildLogList(logs);
                   },
-                  loading: () => const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: CircularProgressIndicator(),
-                    ),
-                  ),
+                  loading: () => SizedBox.shrink(),
                   error: (e, s) => Padding(
                     padding: EdgeInsets.symmetric(vertical: 30.h),
-                    child: Center(
-                      child: Text(e.toString()),
-                    ),
+                    child: Center(child: Text(e.toString())),
                   ),
                 ),
                 SizedBox(height: 80.h),
@@ -285,17 +277,11 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
             data: (response) {
               final summary = response.data;
 
-              return      _buildBottomActionButton(summary);
-
+              return _buildBottomActionButton(summary);
             },
-            loading: () => const Center(
-              child: CircularProgressIndicator(),
-            ),
-            error: (e, s) => Center(
-              child: Text(e.toString()),
-            ),
+            loading: () => SizedBox.shrink(),
+            error: (e, s) => Center(child: Text(e.toString())),
           ),
-
         ],
       ),
     );
@@ -488,11 +474,11 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     final totalDays = summary?.totalDays ?? 0;
     final working = summary?.working ?? 0;
     final present = summary?.present ?? 0;
-    final late = summary?.late ?? 0;
+    final late = summary.late ?? 0;
     final absent = summary?.absent ?? 0;
 
-    final double percent =
-    totalDays == 0 ? 0 : (working / totalDays) * 100;    return Row(
+    final double percent = totalDays == 0 ? 0 : (working / totalDays) * 100;
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         /// Chart
@@ -594,13 +580,13 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
             children: [
               _buildStatMetricRow(
                 "WORKING",
-                summary.working.toString().padLeft(2, '0'),
+                summary.working.toString(),
                 const Color(0xff007AFF),
               ),
               SizedBox(height: 8.h),
               _buildStatMetricRow(
                 "PRESENT",
-                summary.present.toString().padLeft(2, '0'),
+                summary.present.toString(),
                 const Color(0xff3D8BFF),
               ),
 
@@ -608,7 +594,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
               _buildStatMetricRow(
                 "LATE",
-                summary.late.toString().padLeft(2, '0'),
+                summary.late.toString(),
                 const Color(0xff0B2C59),
               ),
 
@@ -616,7 +602,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
               _buildStatMetricRow(
                 "ABSENT",
-                summary.absent.toString().padLeft(2, '0'),
+                summary.absent.toString(),
                 Colors.red,
               ),
             ],
@@ -782,9 +768,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                 flex: 3,
                 child: Text(
                   item.checkInTime ?? "-",
-                  style: GoogleFonts.inter(
-                    fontSize: 14.sp,
-                  ),
+                  style: GoogleFonts.inter(fontSize: 14.sp),
                 ),
               ),
 
@@ -792,9 +776,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                 flex: 3,
                 child: Text(
                   item.checkOutTime ?? "-",
-                  style: GoogleFonts.inter(
-                    fontSize: 14.sp,
-                  ),
+                  style: GoogleFonts.inter(fontSize: 14.sp),
                 ),
               ),
             ],
@@ -803,9 +785,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       },
     );
   }
-  void showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
+
   bool isLoading = false;
   Widget _buildBottomActionButton(Data? summary) {
     return Align(
@@ -825,13 +805,13 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
               final response = summary?.checkedInToday == true
                   ? await service.checkOut(
-                latitude: 26.9124,
-                longitude: 75.7873,
-              )
+                      latitude: 26.9124,
+                      longitude: 75.7873,
+                    )
                   : await service.checkIn(
-                latitude: 26.9124,
-                longitude: 75.7873,
-              );
+                      latitude: 26.9124,
+                      longitude: 75.7873,
+                    );
 
               String message = "Success";
 
@@ -841,18 +821,17 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                 message = response.message ?? "Success";
               }
 
-              showError(message);
+              showErrorSnackBar(message);
 
               // Refresh attendance data
               ref.invalidate(getAttendenceSummaryProvider);
               ref.invalidate(getAttendenceHistoryProvider);
-
             } on DioException catch (e) {
               setState(() {
                 isLoading = false;
               });
 
-              showError(
+              showErrorSnackBar(
                 e.response?.data["message"] ??
                     e.response?.statusMessage ??
                     "Network Error",
@@ -862,7 +841,11 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                 isLoading = false;
               });
 
-              showError("Something went wrong");
+              showErrorSnackBar("Something went wrong");
+            } finally {
+              setState(() {
+                isLoading = false;
+              });
             }
           },
           style: ElevatedButton.styleFrom(
@@ -873,23 +856,23 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
             ),
             elevation: 0,
           ),
-        child: isLoading
-          ? SizedBox(
-          height: 22.h,
-          width: 22.w,
-          child: const CircularProgressIndicator(
-            strokeWidth: 2,
-            color: Colors.white,
-          ),
-        )
-            : Text(
-      summary?.checkedInToday == true ? "Check Out" : "Check In",
-        style: GoogleFonts.inter(
-          color: Colors.white,
-          fontSize: 16.sp,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
+          child: isLoading
+              ? SizedBox(
+                  height: 22.h,
+                  width: 22.w,
+                  child: const CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Text(
+                  summary?.checkedInToday == true ? "Check Out" : "Check In",
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
         ),
       ),
     );

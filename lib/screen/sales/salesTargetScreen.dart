@@ -194,6 +194,7 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
                 getSale.when(
                   data: (data) {
                     return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
                           margin: EdgeInsets.only(top: 12.h),
@@ -338,7 +339,9 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
                                           context,
                                           CupertinoPageRoute(
                                             builder: (context) =>
-                                                SalesDetailScreen(id: item!.id.toString(),),
+                                                SalesDetailScreen(
+                                                  id: item!.id.toString(),
+                                                ),
                                           ),
                                         );
                                       },

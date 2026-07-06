@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/data/Provider/getNotificationProvider.dart';
@@ -48,15 +47,16 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   bool isAllSelected = false;
   List<int> selectedItems = [];
 
-  void deleteSelected() {
-    setState(() {
-      notifications.removeWhere(
-        (item) => selectedItems.contains(notifications.indexOf(item)),
-      );
+  void deleteSelected() async {
+    // setState(() {
+    //   notifications.removeWhere(
+    //     (item) => selectedItems.contains(notifications.indexOf(item)),
+    //   );
 
-      selectedItems.clear();
-      isSelectionMode = false;
-    });
+    //   selectedItems.clear();
+    //   isSelectionMode = false;
+    // });
+    await multipleDeleteNotificaion();
   }
 
   void selectAll(int totalItems) {
@@ -71,6 +71,55 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         isAllSelected = true;
       }
     });
+  }
+
+  Future<void> multipleDeleteNotificaion() async {
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) {
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            child: Center(
+              child: CircularProgressIndicator(color: AppColors.buttonBg),
+            ),
+          );
+        },
+      );
+
+      final notificationState = ref.read(getNotificationProvider);
+
+      await notificationState.whenData((data) async {
+        final ids = selectedItems
+            .map((index) => data.data![index].id!)
+            .toList();
+
+        final service = ref.read(authServiceProvider);
+
+        final isSuccess = await service.multipleDeleteNotificaion(ids: ids);
+
+        if (mounted) {
+          Navigator.pop(context);
+        }
+
+        if (isSuccess) {
+          ref.invalidate(getNotificationProvider);
+
+          setState(() {
+            selectedItems.clear();
+            isSelectionMode = false;
+            isAllSelected = false;
+          });
+        }
+      });
+    } catch (e) {
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+      log(e.toString());
+    }
   }
 
   Future<void> markReadNotificaion({required String id}) async {

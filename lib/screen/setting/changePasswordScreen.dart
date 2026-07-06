@@ -20,7 +20,7 @@ class ChangePasswordScreen extends ConsumerStatefulWidget {
 class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   final newPasswordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
-  final currentPasswordController = TextEditingController();
+  final oldPasswordController = TextEditingController();
   bool isLoading = false;
 
   @override
@@ -63,7 +63,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
             _inputForm(
               hintText: "Enter Current Password",
               type: TextInputType.visiblePassword,
-              controller: currentPasswordController,
+              controller: oldPasswordController,
             ),
             _inputForm(
               hintText: "Enter New Password",
@@ -91,6 +91,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 if (confirmPasswordController.text.trim().isEmpty) {
                   return;
                 }
+
+                if (oldPasswordController.text.trim().isEmpty) {
+                  return;
+                }
                 if (newPasswordController.text.trim() !=
                     confirmPasswordController.text.trim()) {
                   showErrorSnackBar("Password do not match");
@@ -103,6 +107,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                   final response = await service.ChangePasswordData(
                     newPassword: newPasswordController.text.trim(),
                     confirmPassword: confirmPasswordController.text.trim(),
+                    oldPassword: oldPasswordController.text.trim(),
                   );
                   if (response.status == true) {
                     showSuccessSnackBar(response.message ?? "");

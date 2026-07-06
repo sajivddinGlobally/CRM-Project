@@ -26,6 +26,7 @@ import 'package:crm_app/data/Model/getNotificationModel.dart';
 import 'package:crm_app/data/Model/loginBodyModel.dart';
 import 'package:crm_app/data/Model/loginResModel.dart';
 import 'package:crm_app/data/Model/markReadResModel.dart';
+import 'package:crm_app/data/Model/multipleDeleteNotificaionBodyModel.dart';
 import 'package:crm_app/data/Model/unreadCountModel.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
@@ -176,4 +177,9 @@ abstract class ApiStateNetwork {
 
   @POST("/api/auth/notifications/mark-all-read")
   Future<MarkReadResModel> markAllReadNotificaion();
+
+  @DELETE("/api/auth/notifications/clear-all")
+  Future<DeleteNotificationModel> multipleDeleteNotification(
+    @Body() MultipleDeleteNotificationBodyModel body,
+  );
 }

@@ -28,6 +28,7 @@ import 'package:crm_app/data/Model/deleteNotificationModel.dart';
 import 'package:crm_app/data/Model/getNotificationModel.dart';
 import 'package:crm_app/data/Model/loginBodyModel.dart';
 import 'package:crm_app/data/Model/loginResModel.dart';
+import 'package:crm_app/data/Model/multipleDeleteNotificaionBodyModel.dart';
 import 'package:dio/dio.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../data/Model/AttendenceSummaryModel.dart';
@@ -266,12 +267,14 @@ class AuthService {
   Future<ChangePasswordResModel> ChangePasswordData({
     required String newPassword,
     required String confirmPassword,
+    required String oldPassword,
   }) async {
     try {
       final response = await api.changePassword(
         ChangePasswordBodyModel(
           newPassword: newPassword,
           confirmPassword: confirmPassword,
+          oldPassword: oldPassword
         ),
       );
       if (response.status == true) {
@@ -569,6 +572,20 @@ class AuthService {
   Future<bool> markAllReadNotification() async {
     try {
       final res = await api.markAllReadNotificaion();
+      if (res.status == true) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      log(e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> multipleDeleteNotificaion({required List<int> ids}) async {
+    try {
+      final body = MultipleDeleteNotificationBodyModel(ids: ids);
+      final res = await api.multipleDeleteNotification(body);
       if (res.status == true) {
         return true;
       }
