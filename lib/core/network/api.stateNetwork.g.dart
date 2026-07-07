@@ -180,7 +180,7 @@ class _ApiStateNetwork implements ApiStateNetwork {
           )
           .compose(
             _dio.options,
-            '/api/add-sales',
+            '/api/auth/add-sales',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -225,7 +225,7 @@ class _ApiStateNetwork implements ApiStateNetwork {
           )
           .compose(
             _dio.options,
-            '/api/add-ticket',
+            '/api/auth/add-ticket',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -287,7 +287,7 @@ class _ApiStateNetwork implements ApiStateNetwork {
           )
           .compose(
             _dio.options,
-            '/api/add-client',
+            '/api/auth/add-client',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1046,6 +1046,60 @@ class _ApiStateNetwork implements ApiStateNetwork {
           .compose(
             _dio.options,
             '/api/auth/leads/delete/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late DeleteNotificationModel _value;
+    try {
+      _value = DeleteNotificationModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<DeleteNotificationModel> clientDelete(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<DeleteNotificationModel>(
+      Options(method: 'DELETE', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/api/auth/clients/delete/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late DeleteNotificationModel _value;
+    try {
+      _value = DeleteNotificationModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<DeleteNotificationModel> ticketDelete(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<DeleteNotificationModel>(
+      Options(method: 'DELETE', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/api/auth/tickets/delete/${id}}',
             queryParameters: queryParameters,
             data: _data,
           )

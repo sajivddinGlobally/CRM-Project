@@ -2,6 +2,8 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/core/utils/showMessage.dart';
+import 'package:crm_app/data/Provider/GetClientProvider.dart';
 import 'package:crm_app/screen/home/homeScreen.dart';
 import 'package:dio/dio.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -94,10 +96,6 @@ class _AddClientScreenState extends ConsumerState<AddClientScreen> {
     } catch (e) {
       debugPrint("File Pick Error: $e");
     }
-  }
-
-  void showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -381,6 +379,9 @@ class _AddClientScreenState extends ConsumerState<AddClientScreen> {
                     elevation: 0,
                   ),
                   onPressed: () async {
+                    if (selectedFile == null) {
+                      showErrorSnackBar("Please Select Document");
+                    }
                     setState(() {
                       isLoading = false;
                     });
@@ -400,8 +401,8 @@ class _AddClientScreenState extends ConsumerState<AddClientScreen> {
                         assignedTo: selectedEmployee ?? "",
                         document: selectedFile!,
                       );
-                      log("Token => ${response.data?.token}");
                       if (response.status = true) {
+                        ref.invalidate(getClientProvider);
                         log("Add New Client Successfull");
                         Navigator.push(
                           context,
@@ -410,14 +411,8 @@ class _AddClientScreenState extends ConsumerState<AddClientScreen> {
                           ),
                         );
                       }
-                    } on DioException catch (e) {
-                      setState(() => isLoading = false);
-
-                      showError(e.response?.data.toString() ?? "Network Error");
                     } catch (e) {
                       setState(() => isLoading = false);
-
-                      showError("Something went wrong");
                     }
                   },
                   child: isLoading

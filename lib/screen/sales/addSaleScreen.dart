@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/data/Model/GetProductIdModel.dart';
+import 'package:crm_app/data/Provider/GetSaleProvider.dart';
 import 'package:crm_app/screen/home/homeScreen.dart';
 import 'package:dio/dio.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -638,6 +639,7 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
                         remeniderNote: reminderNoteController.text.trim(),
                       );
                       if (response.status == true) {
+                        ref.invalidate(getSaleProvider);
                         log("Add Sale SuccessFull");
 
                         Navigator.push(

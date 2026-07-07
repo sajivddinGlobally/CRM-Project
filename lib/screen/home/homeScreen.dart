@@ -291,9 +291,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                       shape: BoxShape.circle,
                                     ),
                                   ),
-
                                   SizedBox(width: 6.w),
-
                                   Text(
                                     companyName,
                                     style: GoogleFonts.inter(

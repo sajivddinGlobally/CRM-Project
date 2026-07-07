@@ -1,5 +1,9 @@
+import 'dart:developer';
+
+import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/data/Provider/GetTicketDetailsProvider.dart';
+import 'package:crm_app/data/Provider/GetTicketProvider.dart';
 import 'package:crm_app/screen/clients/clientScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -26,17 +30,49 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       color: Colors.white,
       items: [
-        _menuItem(Icons.edit_outlined, "Edit Ticket"),
-        _menuItem(Icons.person_add_alt_outlined, "Reassign Ticket"),
-        _menuItem(Icons.priority_high_outlined, "Escalate"),
-        _menuItem(Icons.cancel_outlined, "Close Ticket"),
+        _menuItem(Icons.edit_outlined, "Edit Ticket", () {}),
+        _menuItem(Icons.person_add_alt_outlined, "Reassign Ticket", () {}),
+        _menuItem(Icons.priority_high_outlined, "Escalate", () {}),
+        _menuItem(Icons.cancel_outlined, "Close Ticket", () async {
+          try {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) {
+                return Dialog(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.buttonBg),
+                  ),
+                );
+              },
+            );
+            final res = ref.read(authServiceProvider);
+            final isScuess = await res.ticketDelete(id: ticketId!);
+            if (isScuess) {
+              ref.invalidate(getTicketProvider);
+              Navigator.pop(context, true);
+            }
+          } catch (e) {
+            if (mounted && Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+            log(e.toString());
+          } finally {
+            if (mounted && Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          }
+        }),
       ],
     );
   }
 
-  PopupMenuItem _menuItem(IconData icon, String title) {
+  PopupMenuItem _menuItem(IconData icon, String title, VoidCallback callback) {
     return PopupMenuItem(
       value: title,
+      onTap: callback,
       child: Row(
         children: [
           Icon(icon, color: const Color(0xFF063466), size: 20.sp),
@@ -53,6 +89,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
       ),
     );
   }
+
+  String? ticketId;
 
   String? selectStatus;
   final List<String> statusList = ["Open", "In Progress", "Closed"];
@@ -103,6 +141,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
       ),
       body: ticketDetails.when(
         data: (data) {
+          ticketId = data.data?.id.toString();
           descriptionController.text = data.data?.issueDescription ?? "";
           selectStatus ??= data.data?.status;
           return SingleChildScrollView(

@@ -678,4 +678,30 @@ class AuthService {
       return false;
     }
   }
+
+   Future<bool> clientDelete({required String id}) async {
+    try {
+      final res = await api.clientDelete(id);
+      if (res.status == true) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      log(e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> ticketDelete({required String id}) async {
+    try {
+      final res = await api.clientDelete(id);
+      if (res.status == true) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      log(e.toString());
+      return false;
+    }
+  }
 }

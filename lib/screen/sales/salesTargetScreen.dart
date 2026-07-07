@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/data/Provider/GetLeadProvider.dart';
 import 'package:crm_app/data/Provider/GetSaleProvider.dart';
+import 'package:crm_app/data/Provider/get_dashboard_provider.dart';
 import 'package:crm_app/screen/lead/leadDetailScreen.dart';
 import 'package:crm_app/screen/lead/leadScreen.dart';
 import 'package:crm_app/screen/sales/addSaleScreen.dart';
@@ -61,6 +62,7 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
   Widget build(BuildContext context) {
     final getSale = ref.watch(getSaleProvider);
     final leadState = ref.watch(leadProvider);
+    final dashboardAsync = ref.watch(dashboardProvider);
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(toolbarHeight: 0, backgroundColor: Color(0xFFE6EEFA)),
@@ -68,113 +70,136 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 25.h, horizontal: 24.w),
-              decoration: BoxDecoration(color: Color(0xFFECECF9)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Sales & Targets",
-                    style: GoogleFonts.inter(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF063466),
-                      letterSpacing: -0.54,
-                    ),
+            dashboardAsync.when(
+              data: (data) {
+                return Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(
+                    vertical: 25.h,
+                    horizontal: 24.w,
                   ),
-                  SizedBox(height: 24.h),
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(
-                      vertical: 20.h,
-                      horizontal: 20.w,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20.r),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF007AFF), Color(0xFF002199)],
+                  decoration: BoxDecoration(color: Color(0xFFECECF9)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Sales & Targets",
+                        style: GoogleFonts.inter(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF063466),
+                          letterSpacing: -0.54,
+                        ),
                       ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+                      SizedBox(height: 24.h),
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(
+                          vertical: 20.h,
+                          horizontal: 20.w,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20.r),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFF007AFF), Color(0xFF002199)],
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            AnimatedBuilder(
-                              animation: _animation,
-                              builder: (context, child) {
-                                return Stack(
-                                  alignment: Alignment.center,
+                            Row(
+                              children: [
+                                AnimatedBuilder(
+                                  animation: _animation,
+                                  builder: (context, child) {
+                                    return Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        SizedBox(
+                                          width: 58.w,
+                                          height: 58.w,
+                                          child: CircularProgressIndicator(
+                                            value: _animation.value,
+                                            strokeWidth: 6,
+                                            backgroundColor: Color(0xFF4493F3),
+                                            valueColor:
+                                                const AlwaysStoppedAnimation<
+                                                  Color
+                                                >(Colors.white),
+                                          ),
+                                        ),
+                                        Text(
+                                          "${(_animation.value * 100).toInt()}%",
+                                          style: GoogleFonts.inter(
+                                            color: Colors.white,
+                                            fontSize: 16.sp,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                                SizedBox(width: 16.w),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    SizedBox(
-                                      width: 58.w,
-                                      height: 58.w,
-                                      child: CircularProgressIndicator(
-                                        value: _animation.value,
-                                        strokeWidth: 6,
-                                        backgroundColor: Color(0xFF4493F3),
-                                        valueColor:
-                                            const AlwaysStoppedAnimation<Color>(
-                                              Colors.white,
-                                            ),
+                                    Text(
+                                      "Monthly Target",
+                                      style: GoogleFonts.inter(
+                                        fontSize: 12.sp,
+                                        fontWeight: FontWeight.w400,
+                                        color: Color.fromARGB(
+                                          204,
+                                          255,
+                                          255,
+                                          255,
+                                        ),
                                       ),
                                     ),
+                                    SizedBox(height: 6.w),
                                     Text(
-                                      "${(_animation.value * 100).toInt()}%",
+                                      "₹1,45,000 / ₹2,00,000",
                                       style: GoogleFonts.inter(
-                                        color: Colors.white,
-                                        fontSize: 16.sp,
-                                        fontWeight: FontWeight.w600,
+                                        fontSize: 18.sp,
+                                        fontWeight: FontWeight.w500,
+                                        color: Color.fromARGB(
+                                          255,
+                                          255,
+                                          255,
+                                          255,
+                                        ),
                                       ),
                                     ),
                                   ],
-                                );
-                              },
-                            ),
-                            SizedBox(width: 16.w),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Monthly Target",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color.fromARGB(204, 255, 255, 255),
-                                  ),
-                                ),
-                                SizedBox(height: 6.w),
-                                Text(
-                                  "₹1,45,000 / ₹2,00,000",
-                                  style: GoogleFonts.inter(
-                                    fontSize: 18.sp,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color.fromARGB(255, 255, 255, 255),
-                                  ),
                                 ),
                               ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 15.h),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      salesCard("Today’s Sales", "₹12,000"),
-                      SizedBox(width: 10.w),
-                      salesCard("Avg Daily", "₹8,500"),
-                      SizedBox(width: 10.w),
-                      salesCard("Required Daily", "₹9,200"),
+                      ),
+                      SizedBox(height: 15.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          salesCard("Today’s Sales", "₹12,000"),
+                          SizedBox(width: 10.w),
+                          salesCard("Avg Daily", "₹8,500"),
+                          SizedBox(width: 10.w),
+                          salesCard("Required Daily", "₹9,200"),
+                        ],
+                      ),
                     ],
                   ),
-                ],
+                );
+              },
+              error: (error, stackTrace) {
+                return Center(child: Text("Something went wrong"));
+              },
+              loading: () => Center(
+                child: CircularProgressIndicator(color: AppColors.buttonBg),
               ),
             ),
 

@@ -62,7 +62,7 @@ abstract class ApiStateNetwork {
     @Body() CreatePasswordBodyModel body,
   );
   @MultiPart()
-  @POST("/api/add-sales")
+  @POST("/api/auth/add-sales")
   Future<AddSaleResModel> addSale(
     @Part(name: "product_id") String productId,
     @Part(name: "quantity") String quantity,
@@ -75,7 +75,7 @@ abstract class ApiStateNetwork {
     @Part(name: "image") MultipartFile? image,
   );
   @MultiPart()
-  @POST("/api/add-ticket")
+  @POST("/api/auth/add-ticket")
   Future<CreateTicketResModel> createTicket(
     @Part(name: "issue_title") String issueTitle,
     @Part(name: "issue_description") String issueDescription,
@@ -85,7 +85,7 @@ abstract class ApiStateNetwork {
     @Part(name: "internal_note") String internalNote,
   );
   @MultiPart()
-  @POST("/api/add-client")
+  @POST("/api/auth/add-client")
   Future<AddNewClientResModel> addNewClient(
     @Part(name: "client_name") String clientName,
     @Part(name: "primary_phone") String primaryPhone,
@@ -197,4 +197,10 @@ abstract class ApiStateNetwork {
 
   @DELETE("/api/auth/leads/delete/{id}")
   Future<DeleteNotificationModel> leadDelete(@Path('id') String id);
+
+  @DELETE("/api/auth/clients/delete/{id}")
+  Future<DeleteNotificationModel> clientDelete(@Path('id') String id);
+
+  @DELETE("/api/auth/tickets/delete/{id}}")
+  Future<DeleteNotificationModel> ticketDelete(@Path('id') String id);
 }

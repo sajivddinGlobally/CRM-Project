@@ -235,7 +235,9 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                                         context,
                                         CupertinoPageRoute(
                                           builder: (context) =>
-                                              TicketDetailScreen(id: item!.id.toString()),
+                                              TicketDetailScreen(
+                                                id: item!.id.toString(),
+                                              ),
                                         ),
                                       );
                                     },
@@ -305,8 +307,12 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                   ),
                 );
               },
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: Color(0xFF007AFF)),
+              loading: () => SizedBox(
+                width: double.infinity,
+                height: MediaQuery.of(context).size.height / 2,
+                child: Center(
+                  child: CircularProgressIndicator(color: Color(0xFF007AFF)),
+                ),
               ),
             ),
           ],

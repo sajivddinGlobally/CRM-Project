@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/data/Provider/GetTicketProvider.dart';
 import 'package:crm_app/screen/home/homeScreen.dart';
 import 'package:dio/dio.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -64,10 +65,6 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
     } catch (e) {
       debugPrint("File Pick Error: $e");
     }
-  }
-
-  void showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -328,22 +325,16 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                       attachment: selectedFile!,
                       internalNote: notesController.text.trim(),
                     );
-
                     if (response.status == true) {
+                      ref.invalidate(getTicketProvider);
                       log("Create Ticket Successfull");
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => MyBottomNav()),
                       );
                     }
-                  } on DioException catch (e) {
-                    setState(() => isLoading = false);
-
-                    showError(e.response?.data.toString() ?? "Network Error");
                   } catch (e) {
                     setState(() => isLoading = false);
-
-                    showError("Something went wrong");
                   }
                 },
                 child: isLoading

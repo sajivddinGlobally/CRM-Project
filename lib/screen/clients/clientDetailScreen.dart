@@ -1,6 +1,10 @@
+import 'dart:developer';
+
+import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/data/Model/GetClientDetailsModel.dart';
 import 'package:crm_app/data/Provider/GetClientDetailsProvider.dart';
+import 'package:crm_app/data/Provider/GetClientProvider.dart';
 import 'package:crm_app/data/Provider/GetTicketProvider.dart';
 import 'package:crm_app/screen/clients/interactionHistoryScreen.dart';
 import 'package:crm_app/screen/ticket/ticketDetailScreen.dart';
@@ -30,7 +34,38 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
       items: [
         _menuItem(Icons.edit_outlined, "Edit Client", () {}),
         _menuItem(Icons.description_outlined, "View Documents", () {}),
-        _menuItem(Icons.delete_outline, "Delete", () {}),
+        _menuItem(Icons.delete_outline, "Delete", () async {
+          try {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) {
+                return Dialog(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.buttonBg),
+                  ),
+                );
+              },
+            );
+            final res = ref.read(authServiceProvider);
+            final isScuess = await res.clientDelete(id: clientId!);
+            if (isScuess) {
+              ref.invalidate(getClientProvider);
+              Navigator.pop(context, true);
+            }
+          } catch (e) {
+            if (mounted && Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+            log(e.toString());
+          } finally {
+            if (mounted && Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          }
+        }),
         _menuItem(Icons.history, "Interaction Hisotry", () {
           Navigator.push(
             context,
@@ -65,6 +100,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
   }
 
   int tabIndex = 0;
+  String? clientId;
 
   @override
   Widget build(BuildContext context) {
@@ -114,6 +150,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
       ),
       body: clientDetails.when(
         data: (data) {
+          clientId = data.data!.id.toString();
           return SingleChildScrollView(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 24.w),
