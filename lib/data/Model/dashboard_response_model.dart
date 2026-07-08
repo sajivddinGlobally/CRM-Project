@@ -156,7 +156,7 @@ class Sales {
   int? totalSalesCount;
   int? totalSalesValue;
   int? target;
-  double? achievementPercentage;
+  num? achievementPercentage;
 
   Sales({
     this.totalSalesCount,

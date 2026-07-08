@@ -148,6 +148,7 @@ class _ApiStateNetwork implements ApiStateNetwork {
     String? time,
     String? remeniderNote,
     MultipartFile? image,
+    int? isSetFollow,
   ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
@@ -170,6 +171,9 @@ class _ApiStateNetwork implements ApiStateNetwork {
     }
     if (image != null) {
       _data.files.add(MapEntry('image', image));
+    }
+    if (isSetFollow != null) {
+      _data.fields.add(MapEntry('is_setFollow', isSetFollow.toString()));
     }
     final _options = _setStreamType<AddSaleResModel>(
       Options(
@@ -1109,6 +1113,55 @@ class _ApiStateNetwork implements ApiStateNetwork {
     late DeleteNotificationModel _value;
     try {
       _value = DeleteNotificationModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<CreateTicketResModel> updateTicket(
+    String id,
+    String issueTitle,
+    String issueDescription,
+    String issueCategory,
+    String priority,
+    MultipartFile? attachment,
+    String internalNote,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
+    final _data = FormData();
+    _data.fields.add(MapEntry('issue_title', issueTitle));
+    _data.fields.add(MapEntry('issue_description', issueDescription));
+    _data.fields.add(MapEntry('issue_category', issueCategory));
+    _data.fields.add(MapEntry('priority', priority));
+    if (attachment != null) {
+      _data.files.add(MapEntry('attachment', attachment));
+    }
+    _data.fields.add(MapEntry('internal_note', internalNote));
+    final _options = _setStreamType<CreateTicketResModel>(
+      Options(
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
+          .compose(
+            _dio.options,
+            '/api/auth/tickets/update/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late CreateTicketResModel _value;
+    try {
+      _value = CreateTicketResModel.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
       rethrow;

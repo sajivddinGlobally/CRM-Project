@@ -1,8 +1,9 @@
 import 'dart:developer';
 import 'dart:io';
-
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/core/utils/showMessage.dart';
+import 'package:crm_app/data/Provider/GetTicketDetailsProvider.dart';
 import 'package:crm_app/data/Provider/GetTicketProvider.dart';
 import 'package:crm_app/screen/home/homeScreen.dart';
 import 'package:dio/dio.dart';
@@ -15,7 +16,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CreateTicketScreen extends ConsumerStatefulWidget {
-  const CreateTicketScreen({super.key});
+  final String? ticketId;
+  const CreateTicketScreen({super.key, this.ticketId});
 
   @override
   ConsumerState<CreateTicketScreen> createState() => _CreateTicketScreenState();
@@ -23,7 +25,7 @@ class CreateTicketScreen extends ConsumerStatefulWidget {
 
 class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
   bool isLoading = false;
-  final detailsController = TextEditingController();
+  final titleController = TextEditingController();
   final descriptionController = TextEditingController();
   final notesController = TextEditingController();
   String? selectCategory, selectPrity;
@@ -68,6 +70,32 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _loadTicketData();
+  }
+
+  bool isUpdate = false;
+
+  void _loadTicketData() async {
+    final ticketData = await ref.read(
+      getTicketDetailsProvider(widget.ticketId!).future,
+    );
+    final item = ticketData.data;
+    if (item == null) return;
+
+    setState(() {
+      titleController.text = item.issueTitle ?? "";
+      descriptionController.text = item.issueDescription ?? "";
+      selectCategory = item.issueCategory ?? "";
+      selectPrity = item.priority ?? "";
+      selectedFileName = item.attachment ?? "";
+      notesController.text = item.internalNote ?? "";
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
@@ -109,7 +137,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
               sectionTitle("ISSUE DETAILS"),
               SizedBox(height: 12.h),
               TextField(
-                controller: detailsController,
+                controller: titleController,
                 style: GoogleFonts.inter(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w400,
@@ -312,32 +340,63 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                   ),
                 ),
                 onPressed: () async {
-                  setState(() {
-                    isLoading = true;
-                  });
-                  try {
-                    final service = ref.read(authServiceProvider);
-                    final response = await service.createTicketData(
-                      issueTitle: detailsController.text.trim(),
-                      issueDescription: descriptionController.text.trim(),
-                      issueCategory: selectCategory ?? "",
-                      priority: selectPrity ?? "",
-                      attachment: selectedFile!,
-                      internalNote: notesController.text.trim(),
-                    );
-                    if (response.status == true) {
-                      ref.invalidate(getTicketProvider);
-                      log("Create Ticket Successfull");
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => MyBottomNav()),
+                  if (widget.ticketId == null) {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    try {
+                      final service = ref.read(authServiceProvider);
+                      final response = await service.createTicketData(
+                        issueTitle: titleController.text.trim(),
+                        issueDescription: descriptionController.text.trim(),
+                        issueCategory: selectCategory ?? "",
+                        priority: selectPrity ?? "",
+                        attachment: selectedFile!,
+                        internalNote: notesController.text.trim(),
                       );
+                      if (response.status == true) {
+                        ref.invalidate(getTicketProvider);
+                        log("Create Ticket Successfull");
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MyBottomNav(),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      setState(() => isLoading = false);
                     }
-                  } catch (e) {
-                    setState(() => isLoading = false);
+                  } else {
+                    setState(() {
+                      isUpdate = true;
+                    });
+                    try {
+                      final service = ref.read(authServiceProvider);
+                      final response = await service.updateTicketData(
+                        ticketId: widget.ticketId ?? "",
+                        issueTitle: titleController.text.trim(),
+                        issueDescription: descriptionController.text.trim(),
+                        issueCategory: selectCategory ?? "",
+                        priority: selectPrity ?? "",
+                        attachment: selectedFile,
+                        internalNote: notesController.text.trim(),
+                      );
+                      if (response.status == true) {
+                        ref.invalidate(getTicketProvider);
+                        log("Create Ticket Successfull");
+                        Navigator.pop(context);
+                      }
+                    } catch (e) {
+                      setState(() => isUpdate = false);
+                    } finally {
+                      setState(() {
+                        isUpdate = false;
+                      });
+                    }
                   }
                 },
-                child: isLoading
+                child: isLoading || isUpdate
                     ? SizedBox(
                         width: 20.w,
                         height: 20.w,
@@ -347,7 +406,9 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                         ),
                       )
                     : Text(
-                        "Create Ticket",
+                        widget.ticketId == null
+                            ? "Create Ticket"
+                            : "Update Ticket",
                         style: GoogleFonts.inter(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w500,

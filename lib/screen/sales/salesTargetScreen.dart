@@ -125,13 +125,14 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
                                             strokeWidth: 6,
                                             backgroundColor: Color(0xFF4493F3),
                                             valueColor:
-                                                const AlwaysStoppedAnimation<
-                                                  Color
-                                                >(Colors.white),
+                                                AlwaysStoppedAnimation<Color>(
+                                                  Colors.white,
+                                                ),
                                           ),
                                         ),
                                         Text(
                                           "${(_animation.value * 100).toInt()}%",
+                                          // "${data.data?.sales?.achievementPercentage ?? "0"}%",
                                           style: GoogleFonts.inter(
                                             color: Colors.white,
                                             fontSize: 16.sp,

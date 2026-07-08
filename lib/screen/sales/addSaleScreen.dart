@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 class AddSaleScreen extends ConsumerStatefulWidget {
   const AddSaleScreen({super.key});
@@ -89,8 +90,15 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
     }
   }
 
-  void showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  String? formatDateForApi(DateTime? date) {
+    if (date == null) return null;
+    return DateFormat("yyyy-MM-dd").format(date);
+  }
+
+  String? formatTimeForApi(TimeOfDay? time) {
+    if (time == null) return null;
+
+    return "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
   }
 
   @override
@@ -627,21 +635,21 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
                     });
                     try {
                       final service = ref.read(authServiceProvider);
-                      final response = await service.AddSaleData(
+                      final response = await service.addSaleData(
                         productName: selectedProductId.toString(),
                         quantity: selectedQty ?? "",
                         paymentStatus: selectedPaymentStatus ?? "",
                         paymentMethod: selectedPaymentMethod ?? "",
                         note: noteContoller.text.trim(),
                         image: selectedFile!,
-                        date: selectedDate,
-                        time: selectedTime?.format(context),
+                        date: formatDateForApi(selectedDate),
+                        time: formatTimeForApi(selectedTime),
                         remeniderNote: reminderNoteController.text.trim(),
+                        isSetFollow: isReminder ? 1 : 0,
                       );
                       if (response.status == true) {
-                        ref.invalidate(getSaleProvider);
                         log("Add Sale SuccessFull");
-
+                        ref.invalidate(getSaleProvider);
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -649,14 +657,8 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
                           ),
                         );
                       }
-                    } on DioException catch (e) {
-                      setState(() => isLoading = false);
-
-                      showError(e.response?.data.toString() ?? "Network Error");
                     } catch (e) {
                       setState(() => isLoading = false);
-
-                      showError("Something went wrong");
                     }
                   },
                   child: isLoading

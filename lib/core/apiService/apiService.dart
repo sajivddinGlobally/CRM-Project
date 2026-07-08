@@ -139,16 +139,17 @@ class AuthService {
     }
   }
 
-  Future<AddSaleResModel> AddSaleData({
+  Future<AddSaleResModel> addSaleData({
     required String productName,
     required String quantity,
     required String paymentStatus,
     required String paymentMethod,
     required String note,
     required File image,
-    DateTime? date,
+    String? date,
     String? time,
     String? remeniderNote,
+    int? isSetFollow,
   }) async {
     try {
       final imageFile = await MultipartFile.fromFile(
@@ -162,10 +163,11 @@ class AuthService {
         paymentStatus,
         paymentMethod,
         note,
-        date?.toIso8601String(),
+        date,
         time,
         remeniderNote,
         imageFile,
+        isSetFollow,
       );
       if (response.status == true) {
         return response;
@@ -194,6 +196,47 @@ class AuthService {
       );
 
       final response = await api.createTicket(
+        issueTitle,
+        issueDescription,
+        issueCategory,
+        priority,
+        multipartFile,
+        internalNote,
+      );
+
+      if (response.status == true) {
+        log(response.message ?? "Create Ticket Successful");
+        return response;
+      } else {
+        throw Exception(response.message ?? "Ticket Not Created");
+      }
+    } catch (e, st) {
+      log("CREATE TICKET ERROR => $e");
+      log("STACK TRACE => $st");
+      rethrow;
+    }
+  }
+
+  Future<CreateTicketResModel> updateTicketData({
+    required String ticketId,
+    required String issueTitle,
+    required String issueDescription,
+    required String issueCategory,
+    required String priority,
+    File? attachment,
+    required String internalNote,
+  }) async {
+    try {
+      MultipartFile? multipartFile;
+
+      if (attachment != null) {
+        multipartFile = await MultipartFile.fromFile(
+          attachment.path,
+          filename: attachment.path.split('/').last,
+        );
+      }
+      final response = await api.updateTicket(
+        ticketId,
         issueTitle,
         issueDescription,
         issueCategory,
@@ -679,7 +722,7 @@ class AuthService {
     }
   }
 
-   Future<bool> clientDelete({required String id}) async {
+  Future<bool> clientDelete({required String id}) async {
     try {
       final res = await api.clientDelete(id);
       if (res.status == true) {
