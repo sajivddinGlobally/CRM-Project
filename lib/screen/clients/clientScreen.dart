@@ -58,7 +58,10 @@ class _ClientScreenState extends ConsumerState<ClientScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                leadStatusCard(title: 'TOTAL CLIENTS', count: '86'),
+                leadStatusCard(
+                  title: 'TOTAL CLIENTS',
+                  count: (client.value!.data?.length ?? 0).toString(),
+                ),
                 SizedBox(width: 10.w),
                 leadStatusCard(title: 'ACTIVE CLIENTS', count: '74'),
                 SizedBox(width: 10.w),
@@ -141,7 +144,7 @@ class _ClientScreenState extends ConsumerState<ClientScreen> {
             client.when(
               data: (data) {
                 return Expanded(
-                  child: ListView.builder(
+                  child: ListView.builder(     
                     padding: EdgeInsets.only(bottom: 100.h),
                     itemCount: data.data?.length,
                     itemBuilder: (context, index) {

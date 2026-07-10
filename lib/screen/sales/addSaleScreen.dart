@@ -88,11 +88,6 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
       debugPrint("File Pick Error: $e");
     }
   }
-
-  void showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -649,14 +644,8 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
                           ),
                         );
                       }
-                    } on DioException catch (e) {
-                      setState(() => isLoading = false);
-
-                      showError(e.response?.data.toString() ?? "Network Error");
                     } catch (e) {
                       setState(() => isLoading = false);
-
-                      showError("Something went wrong");
                     }
                   },
                   child: isLoading

@@ -57,7 +57,10 @@ class _LeadScreenState extends ConsumerState<LeadScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                leadStatusCard(title: 'NEW LEADS', count: '8'),
+                leadStatusCard(
+                  title: 'NEW LEADS',
+                  count: (leadDate.value?.data?.length ?? 0).toString(),
+                ),
                 SizedBox(width: 10.w),
                 leadStatusCard(title: 'TODAY’ FOLLOW-UP', count: '6'),
                 SizedBox(width: 10.w),

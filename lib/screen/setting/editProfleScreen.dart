@@ -102,7 +102,6 @@ class _EditProfleScreenState extends ConsumerState<EditProfleScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     loadProfileData();
   }
@@ -142,7 +141,7 @@ class _EditProfleScreenState extends ConsumerState<EditProfleScreen> {
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(
-        backgroundColor: AppColors.scaffBg,
+        backgroundColor: AppColors.scaffBg, 
         automaticallyImplyLeading: false,
         leading: Padding(
           padding: EdgeInsets.only(left: 6.w),
