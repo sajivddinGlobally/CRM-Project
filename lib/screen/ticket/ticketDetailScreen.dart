@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/data/Provider/GetTicketDetailsProvider.dart';
@@ -23,6 +22,7 @@ class TicketDetailScreen extends ConsumerStatefulWidget {
 class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
   final descriptionController = TextEditingController();
   bool isDescriptionSet = false;
+
   void _showActionMenu(BuildContext context) {
     final RenderBox button = context.findRenderObject() as RenderBox;
     showMenu(
@@ -102,6 +102,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
 
   String? selectStatus;
   final List<String> statusList = ["Open", "In Progress", "Closed"];
+  
   @override
   Widget build(BuildContext context) {
     final ticketDetails = ref.watch(getTicketDetailsProvider(widget.id));
