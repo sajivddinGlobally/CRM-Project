@@ -42,7 +42,7 @@ class _MyBottomNavState extends ConsumerState<MyBottomNav> {
   final List<Widget> pages = [
     HomeScreen(),
     SalesTargetScreen(),
-    TicketScreen(),
+    TicketScreen(), 
     ActivityScreen(),
     SettingScreen(),
   ];

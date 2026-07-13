@@ -1,10 +1,10 @@
 import 'dart:developer';
-
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/data/Provider/GetTicketDetailsProvider.dart';
 import 'package:crm_app/data/Provider/GetTicketProvider.dart';
 import 'package:crm_app/screen/clients/clientScreen.dart';
+import 'package:crm_app/screen/ticket/createTicketScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,6 +22,7 @@ class TicketDetailScreen extends ConsumerStatefulWidget {
 class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
   final descriptionController = TextEditingController();
   bool isDescriptionSet = false;
+
   void _showActionMenu(BuildContext context) {
     final RenderBox button = context.findRenderObject() as RenderBox;
     showMenu(
@@ -30,7 +31,14 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       color: Colors.white,
       items: [
-        _menuItem(Icons.edit_outlined, "Edit Ticket", () {}),
+        _menuItem(Icons.edit_outlined, "Edit Ticket", () {
+          Navigator.push(
+            context,
+            CupertinoPageRoute(
+              builder: (context) => CreateTicketScreen(ticketId: ticketId),
+            ),
+          );
+        }),
         _menuItem(Icons.person_add_alt_outlined, "Reassign Ticket", () {}),
         _menuItem(Icons.priority_high_outlined, "Escalate", () {}),
         _menuItem(Icons.cancel_outlined, "Close Ticket", () async {
@@ -94,6 +102,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
 
   String? selectStatus;
   final List<String> statusList = ["Open", "In Progress", "Closed"];
+  
   @override
   Widget build(BuildContext context) {
     final ticketDetails = ref.watch(getTicketDetailsProvider(widget.id));
@@ -490,6 +499,12 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                   TextField(
                     controller: descriptionController,
                     maxLines: 4,
+                    style: GoogleFonts.inter(
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF263238),
+                      letterSpacing: -0.54,
+                    ),
                     decoration: InputDecoration(
                       hint: Text(
                         "Client made payment but it’s not reflecting in dashboard.",

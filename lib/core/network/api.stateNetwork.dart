@@ -73,7 +73,9 @@ abstract class ApiStateNetwork {
     @Part(name: "time") String? time,
     @Part(name: "remenider_note") String? remeniderNote,
     @Part(name: "image") MultipartFile? image,
+    @Part(name: "is_setFollow") int? isSetFollow,
   );
+
   @MultiPart()
   @POST("/api/auth/add-ticket")
   Future<CreateTicketResModel> createTicket(
@@ -84,6 +86,7 @@ abstract class ApiStateNetwork {
     @Part(name: "attachment") MultipartFile attachment,
     @Part(name: "internal_note") String internalNote,
   );
+
   @MultiPart()
   @POST("/api/auth/add-client")
   Future<AddNewClientResModel> addNewClient(
@@ -201,6 +204,33 @@ abstract class ApiStateNetwork {
   @DELETE("/api/auth/clients/delete/{id}")
   Future<DeleteNotificationModel> clientDelete(@Path('id') String id);
 
-  @DELETE("/api/auth/tickets/delete/{id}}")
+  @DELETE("/api/auth/tickets/delete/{id}")
   Future<DeleteNotificationModel> ticketDelete(@Path('id') String id);
+
+  @MultiPart()
+  @POST("/api/auth/tickets/update/{id}")
+  Future<CreateTicketResModel> updateTicket(
+    @Path('id') String id,
+    @Part(name: "issue_title") String issueTitle,
+    @Part(name: "issue_description") String issueDescription,
+    @Part(name: "issue_category") String issueCategory,
+    @Part(name: "priority") String priority,
+    @Part(name: "attachment") MultipartFile? attachment,
+    @Part(name: "internal_note") String internalNote,
+  );
+
+  @DELETE("/api/auth/sales/delete/{id}")
+  Future<DeleteNotificationModel> saleDelete(@Path('id') String id);
+
+  @MultiPart()
+  @POST("/api/auth/sales/update/{id}")
+  Future<AddSaleResModel> updateSale(
+    @Path("id") String id,
+    @Part( name: "product_name") String issuetitle,
+    @Part( name: "quantity") String quantity,
+    @Part( name: "payment_status") String paymentstatus,
+    @Part( name: "payment_method") String paymentmethod,
+    @Part( name: "note") String note,
+    @Part( name: "image") MultipartFile? image,
+  );
 }

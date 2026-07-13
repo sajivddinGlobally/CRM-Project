@@ -1,7 +1,10 @@
 import 'dart:developer' show log;
 
+import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/data/Provider/GetSaleDetilesProvider.dart';
+import 'package:crm_app/data/Provider/GetSaleProvider.dart';
+import 'package:crm_app/screen/sales/addSaleScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,17 +29,51 @@ class _SalesDetailScreenState extends ConsumerState<SalesDetailScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       color: Colors.white,
       items: [
-        _menuItem(Icons.edit, "Edit Sale"),
-        _menuItem(Icons.download, "Download Invoice"),
-        _menuItem(Icons.share, "Share Receipt"),
-        _menuItem(Icons.delete, "Delete Sale"),
+        _menuItem(Icons.edit, "Edit Sale",(){
+          Navigator.push(context, MaterialPageRoute(builder: (context)=>AddSaleScreen(saleId: saleId,)));
+        }),
+        _menuItem(Icons.download, "Download Invoice",(){}),
+        _menuItem(Icons.share, "Share Receipt", (){}),
+        _menuItem(Icons.delete, "Delete Sale", ()async{
+          try {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) {
+                return Dialog(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.buttonBg),
+                  ),
+                );
+              },
+            );
+            final res = ref.read(authServiceProvider);
+            final isScuess = await res.saleDeleteData(id: saleId!);
+            if (isScuess) {
+              ref.invalidate(getSaleProvider);
+              Navigator.pop(context, true);
+            }
+          } catch (e) {
+            if (mounted && Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+            log(e.toString());
+          } finally {
+            if (mounted && Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          }
+        }),
       ],
     );
   }
 
-  PopupMenuItem _menuItem(IconData icon, String title) {
+  PopupMenuItem _menuItem(IconData icon, String title,VoidCallback callback) {
     return PopupMenuItem(
       value: title,
+      onTap: callback,
       child: Row(
         children: [
           Icon(icon, color: const Color(0xFF063466), size: 20.sp),
@@ -53,6 +90,8 @@ class _SalesDetailScreenState extends ConsumerState<SalesDetailScreen> {
       ),
     );
   }
+
+  String? saleId;
 
   @override
   Widget build(BuildContext context) {
@@ -101,6 +140,7 @@ class _SalesDetailScreenState extends ConsumerState<SalesDetailScreen> {
       ),
       body: saleDetiles.when(
         data: (data) {
+          saleId = data.data!.id.toString();
           return SingleChildScrollView(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 24.w),

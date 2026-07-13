@@ -12,9 +12,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 class AddSaleScreen extends ConsumerStatefulWidget {
-  const AddSaleScreen({super.key});
+  final String? saleId;
+  const AddSaleScreen({super.key, this.saleId});
 
   @override
   ConsumerState<AddSaleScreen> createState() => _AddSaleScreenState();
@@ -58,6 +60,8 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
 
   bool isLoading = false;
 
+  bool isUpdate = false;
+
   bool isReminder = false;
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
@@ -88,6 +92,18 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
       debugPrint("File Pick Error: $e");
     }
   }
+
+  String? formatDateForApi(DateTime? date) {
+    if (date == null) return null;
+    return DateFormat("yyyy-MM-dd").format(date);
+  }
+
+  String? formatTimeForApi(TimeOfDay? time) {
+    if (time == null) return null;
+
+    return "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -617,38 +633,66 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
                     elevation: 0,
                   ),
                   onPressed: () async {
-                    setState(() {
-                      isLoading = true;
-                    });
-                    try {
-                      final service = ref.read(authServiceProvider);
-                      final response = await service.AddSaleData(
-                        productName: selectedProductId.toString(),
-                        quantity: selectedQty ?? "",
-                        paymentStatus: selectedPaymentStatus ?? "",
-                        paymentMethod: selectedPaymentMethod ?? "",
-                        note: noteContoller.text.trim(),
-                        image: selectedFile!,
-                        date: selectedDate,
-                        time: selectedTime?.format(context),
-                        remeniderNote: reminderNoteController.text.trim(),
-                      );
-                      if (response.status == true) {
-                        ref.invalidate(getSaleProvider);
-                        log("Add Sale SuccessFull");
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const MyBottomNav(),
-                          ),
+                    if (widget.saleId == null) {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      try {
+                        final service = ref.read(authServiceProvider);
+                        final response = await service.addSaleData(
+                          productName: selectedProductId.toString(),
+                          quantity: selectedQty ?? "",
+                          paymentStatus: selectedPaymentStatus ?? "",
+                          paymentMethod: selectedPaymentMethod ?? "",
+                          note: noteContoller.text.trim(),
+                          image: selectedFile!,
+                          date: formatDateForApi(selectedDate),
+                          time: formatTimeForApi(selectedTime),
+                          remeniderNote: reminderNoteController.text.trim(),
+                          isSetFollow: isReminder ? 1 : 0,
                         );
+                        if (response.status == true) {
+                          log("Add Sale SuccessFull");
+                          ref.invalidate(getSaleProvider);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MyBottomNav(),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        setState(() => isLoading = false);
                       }
-                    } catch (e) {
-                      setState(() => isLoading = false);
+                    } else {
+                      setState(() {
+                        isUpdate = true;
+                      });
+                      try {
+                        final service = ref.read(authServiceProvider);
+                        final response = await service.updateSaleData(
+                          saleId: widget.saleId ?? "",
+                          productName: selectedProductId.toString(),
+                          quantity: selectedQty ?? "",
+                          paymentStatus: selectedPaymentStatus ?? "",
+                          paymentMethod: selectedPaymentMethod ?? "",
+                          note: noteContoller.text.trim(),
+                          image: selectedFile!,
+                        );
+                        if (response.status == true) {
+                          ref.invalidate(getSaleProvider);
+                          Navigator.pop(context);
+                        }
+                      } catch (e) {
+                        setState(() => isUpdate = false);
+                      } finally {
+                        setState(() {
+                          isUpdate = false;
+                        });
+                      }
                     }
                   },
-                  child: isLoading
+                  child: isLoading || isUpdate
                       ? SizedBox(
                           width: 20.w,
                           height: 20.w,
@@ -658,7 +702,9 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
                           ),
                         )
                       : Text(
-                          "Save Sale",
+                        widget.saleId == null ?
+                          "Save Sale" : 
+                          "Update Sale",
                           style: GoogleFonts.inter(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w500,

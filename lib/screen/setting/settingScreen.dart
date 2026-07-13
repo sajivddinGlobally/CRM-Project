@@ -1,5 +1,4 @@
 import 'dart:developer' show log;
-
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/core/utils/showMessage.dart';
 import 'package:crm_app/data/Provider/GetProfileProvider.dart';
@@ -26,6 +25,7 @@ class SettingScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingScreenState extends ConsumerState<SettingScreen> {
+  
   Future<void> showLogoutDialog(BuildContext context, VoidCallback onLogout) {
     return showDialog(
       context: context,

@@ -1,10 +1,12 @@
 import 'dart:developer';
 import 'package:crm_app/core/utils/key.dart';
 import 'package:crm_app/core/utils/showMessage.dart';
+import 'package:crm_app/data/Model/check_in_response_model.dart';
 import 'package:crm_app/screen/loginScreen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:hive/hive.dart';
+import 'package:hive_flutter/adapters.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 bool isNavigating = false;
@@ -27,8 +29,7 @@ Dio callDio() {
         var token = box.get("token");
 
         log("Hive Form Token :- $token");
-
-        options.headers.addAll({ 
+        options.headers.addAll({
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         });
@@ -117,14 +118,6 @@ Dio callDio() {
   );
   return dio;
 }
-
-
-
-
-
-
-
-
 
 // import 'dart:developer';
 // import 'package:crm_app/core/utils/key.dart';
@@ -336,4 +329,5 @@ Dio callDio() {
 //         ),
 //       ),
 //     );
-// }
+
+// 

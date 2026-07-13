@@ -206,7 +206,7 @@ class _ClientScreenState extends ConsumerState<ClientScreen> {
                                                 fontWeight: FontWeight.w500,
                                                 color: Color(0xFF00B94A),
                                                 letterSpacing: -0.54,
-                                              ),
+                                              ), 
                                             ),
                                             Spacer(),
                                             Icon(

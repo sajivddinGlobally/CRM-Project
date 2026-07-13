@@ -148,6 +148,7 @@ class _ApiStateNetwork implements ApiStateNetwork {
     String? time,
     String? remeniderNote,
     MultipartFile? image,
+    int? isSetFollow,
   ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
@@ -170,6 +171,9 @@ class _ApiStateNetwork implements ApiStateNetwork {
     }
     if (image != null) {
       _data.files.add(MapEntry('image', image));
+    }
+    if (isSetFollow != null) {
+      _data.fields.add(MapEntry('is_setFollow', isSetFollow.toString()));
     }
     final _options = _setStreamType<AddSaleResModel>(
       Options(
@@ -1099,7 +1103,7 @@ class _ApiStateNetwork implements ApiStateNetwork {
       Options(method: 'DELETE', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/api/auth/tickets/delete/${id}}',
+            '/api/auth/tickets/delete/${id}',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1109,6 +1113,131 @@ class _ApiStateNetwork implements ApiStateNetwork {
     late DeleteNotificationModel _value;
     try {
       _value = DeleteNotificationModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<CreateTicketResModel> updateTicket(
+    String id,
+    String issueTitle,
+    String issueDescription,
+    String issueCategory,
+    String priority,
+    MultipartFile? attachment,
+    String internalNote,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
+    final _data = FormData();
+    _data.fields.add(MapEntry('issue_title', issueTitle));
+    _data.fields.add(MapEntry('issue_description', issueDescription));
+    _data.fields.add(MapEntry('issue_category', issueCategory));
+    _data.fields.add(MapEntry('priority', priority));
+    if (attachment != null) {
+      _data.files.add(MapEntry('attachment', attachment));
+    }
+    _data.fields.add(MapEntry('internal_note', internalNote));
+    final _options = _setStreamType<CreateTicketResModel>(
+      Options(
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
+          .compose(
+            _dio.options,
+            '/api/auth/tickets/update/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late CreateTicketResModel _value;
+    try {
+      _value = CreateTicketResModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<DeleteNotificationModel> saleDelete(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<DeleteNotificationModel>(
+      Options(method: 'DELETE', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/api/auth/sales/delete/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late DeleteNotificationModel _value;
+    try {
+      _value = DeleteNotificationModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<AddSaleResModel> updateSale(
+    String id,
+    String issuetitle,
+    String quantity,
+    String paymentstatus,
+    String paymentmethod,
+    String note,
+    MultipartFile? image,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
+    final _data = FormData();
+    _data.fields.add(MapEntry('product_name', issuetitle));
+    _data.fields.add(MapEntry('quantity', quantity));
+    _data.fields.add(MapEntry('payment_status', paymentstatus));
+    _data.fields.add(MapEntry('payment_method', paymentmethod));
+    _data.fields.add(MapEntry('note', note));
+    if (image != null) {
+      _data.files.add(MapEntry('image', image));
+    }
+    final _options = _setStreamType<AddSaleResModel>(
+      Options(
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
+          .compose(
+            _dio.options,
+            '/api/auth/sales/update/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late AddSaleResModel _value;
+    try {
+      _value = AddSaleResModel.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
       rethrow;

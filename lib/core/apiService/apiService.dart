@@ -139,16 +139,17 @@ class AuthService {
     }
   }
 
-  Future<AddSaleResModel> AddSaleData({
+  Future<AddSaleResModel> addSaleData({
     required String productName,
     required String quantity,
     required String paymentStatus,
     required String paymentMethod,
     required String note,
     required File image,
-    DateTime? date,
+    String? date,
     String? time,
     String? remeniderNote,
+    int? isSetFollow,
   }) async {
     try {
       final imageFile = await MultipartFile.fromFile(
@@ -162,10 +163,11 @@ class AuthService {
         paymentStatus,
         paymentMethod,
         note,
-        date?.toIso8601String(),
+        date,
         time,
         remeniderNote,
         imageFile,
+        isSetFollow,
       );
       if (response.status == true) {
         return response;
@@ -194,6 +196,47 @@ class AuthService {
       );
 
       final response = await api.createTicket(
+        issueTitle,
+        issueDescription,
+        issueCategory,
+        priority,
+        multipartFile,
+        internalNote,
+      );
+
+      if (response.status == true) {
+        log(response.message ?? "Create Ticket Successful");
+        return response;
+      } else {
+        throw Exception(response.message ?? "Ticket Not Created");
+      }
+    } catch (e, st) {
+      log("CREATE TICKET ERROR => $e");
+      log("STACK TRACE => $st");
+      rethrow;
+    }
+  }
+
+  Future<CreateTicketResModel> updateTicketData({
+    required String ticketId,
+    required String issueTitle,
+    required String issueDescription,
+    required String issueCategory,
+    required String priority,
+    File? attachment,
+    required String internalNote,
+  }) async {
+    try {
+      MultipartFile? multipartFile;
+
+      if (attachment != null) {
+        multipartFile = await MultipartFile.fromFile(
+          attachment.path,
+          filename: attachment.path.split('/').last,
+        );
+      }
+      final response = await api.updateTicket(
+        ticketId,
         issueTitle,
         issueDescription,
         issueCategory,
@@ -267,7 +310,48 @@ class AuthService {
     }
   }
 
-  Future<ChangePasswordResModel> ChangePasswordData({
+  Future<AddSaleResModel> updateSaleData({
+    required String saleId,
+    required String productName,
+    required String quantity,
+    required String paymentStatus,
+    required String paymentMethod,
+    required String note,
+    File? image,
+  }) async {
+    try {
+      MultipartFile? multipartFile;
+
+      if (image != null) {
+        multipartFile = await MultipartFile.fromFile(
+          image.path,
+          filename: image.path.split('/').last,
+        );
+      }
+      final response = await api.updateSale(
+        saleId,
+        productName,
+        quantity,
+        paymentStatus,
+        paymentMethod,
+        note,
+        multipartFile,
+      );
+
+      if (response.status == true) {
+        log(response.message ?? "Create Sale Successful");
+        return response;
+      } else {
+        throw Exception(response.message ?? "Sale Not Created");
+      }
+    } catch (e, st) {
+      log("CREATE TICKET ERROR => $e");
+      log("STACK TRACE => $st");
+      rethrow;
+    }
+  }
+
+  Future<ChangePasswordResModel> changePasswordData({
     required String newPassword,
     required String confirmPassword,
     required String oldPassword,
@@ -679,7 +763,7 @@ class AuthService {
     }
   }
 
-   Future<bool> clientDelete({required String id}) async {
+  Future<bool> clientDelete({required String id}) async {
     try {
       final res = await api.clientDelete(id);
       if (res.status == true) {
@@ -694,7 +778,20 @@ class AuthService {
 
   Future<bool> ticketDelete({required String id}) async {
     try {
-      final res = await api.clientDelete(id);
+      final res = await api.ticketDelete(id);
+      if (res.status == true) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      log(e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> saleDeleteData({required String id}) async {
+    try {
+      final res = await api.saleDelete(id);
       if (res.status == true) {
         return true;
       }

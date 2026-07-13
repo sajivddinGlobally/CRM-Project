@@ -30,6 +30,10 @@
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"
+        },
+        {
+            "editor.fontSize": 16,
+            "editor.wordWrap": "on"
         }
     ]
 }
