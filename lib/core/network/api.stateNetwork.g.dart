@@ -1211,7 +1211,7 @@ class _ApiStateNetwork implements ApiStateNetwork {
     queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     final _data = FormData();
-    _data.fields.add(MapEntry('product_name', issuetitle));
+    _data.fields.add(MapEntry('product_id', issuetitle));
     _data.fields.add(MapEntry('quantity', quantity));
     _data.fields.add(MapEntry('payment_status', paymentstatus));
     _data.fields.add(MapEntry('payment_method', paymentmethod));

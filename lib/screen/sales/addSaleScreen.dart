@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/data/Model/GetProductIdModel.dart';
+import 'package:crm_app/data/Provider/GetSaleDetilesProvider.dart';
 import 'package:crm_app/data/Provider/GetSaleProvider.dart';
 import 'package:crm_app/screen/home/homeScreen.dart';
 import 'package:dio/dio.dart';
@@ -31,6 +32,7 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
   void initState() {
     super.initState();
     getProducts();
+    _loadTicketData();
   }
 
   Future<void> getProducts() async {
@@ -69,6 +71,73 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
   TextEditingController noteController = TextEditingController();
   File? selectedFile;
   String? selectedFileName;
+
+  String? getPaymentStatus(String? value) {
+    switch (value?.toLowerCase()) {
+      case "pending":
+        return "Pending";
+      case "paid":
+        return "Paid";
+      case "cancelled":
+        return "Cancelled";
+      default:
+        return null;
+    }
+  }
+
+  String? getPaymentMethod(String? value) {
+    switch (value?.toLowerCase()) {
+      case "cash":
+        return "Cash";
+      case "upi":
+        return "UPI";
+      case "card":
+        return "Card";
+      case "net banking":
+        return "Net Banking";
+      default:
+        return null;
+    }
+  }
+
+  void _loadTicketData() async {
+    final ticketData = await ref.read(
+      getSaleDetilesProvider(widget.saleId!).future,
+    );
+    final item = ticketData.data;
+    if (item == null) return;
+
+    final matchedProduct = products.cast<Datum?>().firstWhere(
+      (e) => e?.itemName == item.productName,
+      orElse: () => null,
+    );
+
+    setState(() {
+      selectedProductId = matchedProduct?.id;
+      selectedProduct = matchedProduct?.itemName;
+
+      selectedQty = item.quantity;
+      selectedPaymentStatus = getPaymentStatus(item.paymentStatus);
+      selectedPaymentMethod = getPaymentMethod(item.paymentMethod);
+      noteContoller.text = item.note ?? "";
+      selectedFileName = item.image ?? "";
+      isReminder = item.isSetFollow == 1;
+
+      // if (item.date != null && item.date!.isNotEmpty) {
+      //   selectedDate = DateTime.parse(item.date!);
+      // }
+
+      if (item.time != null && item.time!.isNotEmpty) {
+        final time = item.time!.split(":");
+        selectedTime = TimeOfDay(
+          hour: int.parse(time[0]),
+          minute: int.parse(time[1]),
+        );
+      }
+
+      reminderNoteController.text = item.remeniderNote ?? "";
+    });
+  }
 
   Future<void> pickDocument() async {
     try {
@@ -222,6 +291,7 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
                             .isNotEmpty
                         ? products.firstWhere((e) => e.id == selectedProductId)
                         : null,
+
                     hint: Text(
                       "Select Product",
                       style: GoogleFonts.inter(
@@ -672,7 +742,7 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
                         final service = ref.read(authServiceProvider);
                         final response = await service.updateSaleData(
                           saleId: widget.saleId ?? "",
-                          productName: selectedProductId.toString(),
+                          productId: selectedProductId.toString(),
                           quantity: selectedQty ?? "",
                           paymentStatus: selectedPaymentStatus ?? "",
                           paymentMethod: selectedPaymentMethod ?? "",
@@ -702,9 +772,7 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
                           ),
                         )
                       : Text(
-                        widget.saleId == null ?
-                          "Save Sale" : 
-                          "Update Sale",
+                          widget.saleId == null ? "Save Sale" : "Update Sale",
                           style: GoogleFonts.inter(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w500,

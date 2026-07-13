@@ -230,7 +230,7 @@ abstract class ApiStateNetwork {
   @POST("/api/auth/sales/update/{id}")
   Future<AddSaleResModel> updateSale(
     @Path("id") String id,
-    @Part(name: "product_name") String issuetitle,
+    @Part(name: "product_id") String issuetitle,
     @Part(name: "quantity") String quantity,
     @Part(name: "payment_status") String paymentstatus,
     @Part(name: "payment_method") String paymentmethod,

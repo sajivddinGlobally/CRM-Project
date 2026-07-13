@@ -42,7 +42,7 @@ class _MyBottomNavState extends ConsumerState<MyBottomNav> {
   final List<Widget> pages = [
     HomeScreen(),
     SalesTargetScreen(),
-    TicketScreen(), 
+    TicketScreen(),
     ActivityScreen(),
     SettingScreen(),
   ];
@@ -1003,7 +1003,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         },
         loading: () =>
             Center(child: CircularProgressIndicator(color: AppColors.buttonBg)),
-        error: (e, _) => Center(child: Text("Something went wrong")),
+        error: (e, st) {
+          log(st.toString());
+          return Center(child: Text("Something went wrong"));
+        },
       ),
       floatingActionButton: Container(
         width: 70.w,

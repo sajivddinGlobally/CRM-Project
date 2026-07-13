@@ -313,7 +313,7 @@ class AuthService {
 
   Future<AddSaleResModel> updateSaleData({
     required String saleId,
-    required String productName,
+    required String productId,
     required String quantity,
     required String paymentStatus,
     required String paymentMethod,
@@ -331,7 +331,7 @@ class AuthService {
       }
       final response = await api.updateSale(
         saleId,
-        productName,
+        productId,
         quantity,
         paymentStatus,
         paymentMethod,
@@ -559,7 +559,8 @@ class AuthService {
     try {
       final response = await api.getDashboard();
       return response;
-    } catch (e) {
+    } catch (e, st) {
+      log(st.toString());
       throw Exception(e.toString());
     }
   }
