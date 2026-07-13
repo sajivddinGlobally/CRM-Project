@@ -5,7 +5,6 @@ import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/core/utils/showMessage.dart';
 import 'package:crm_app/data/Provider/GetClientProvider.dart';
 import 'package:crm_app/screen/home/homeScreen.dart';
-import 'package:dio/dio.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';

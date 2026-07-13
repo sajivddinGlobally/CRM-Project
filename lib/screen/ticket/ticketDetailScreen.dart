@@ -102,7 +102,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
 
   String? selectStatus;
   final List<String> statusList = ["Open", "In Progress", "Closed"];
-  
+
   @override
   Widget build(BuildContext context) {
     final ticketDetails = ref.watch(getTicketDetailsProvider(widget.id));

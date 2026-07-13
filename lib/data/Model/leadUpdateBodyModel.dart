@@ -28,6 +28,7 @@ class LeadUpdateBodyModel {
   String? reminderDate;
   String? reminderNote;
   String? reminderTime;
+  
 
   LeadUpdateBodyModel({
     this.leadName,

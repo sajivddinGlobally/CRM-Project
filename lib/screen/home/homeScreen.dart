@@ -404,7 +404,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                           "${actualPercent.toStringAsFixed(2)}%",
                                           style: GoogleFonts.inter(
                                             color: Colors.white,
-                                            fontSize: 14.sp,
+                                            fontSize: 12.sp,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),

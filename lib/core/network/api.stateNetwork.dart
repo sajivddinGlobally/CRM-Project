@@ -12,6 +12,7 @@ import 'package:crm_app/data/Model/ForgotPasswordBodyModel.dart';
 import 'package:crm_app/data/Model/ForgotPasswordResModel.dart';
 import 'package:crm_app/data/Model/GetClientDetailsModel.dart';
 import 'package:crm_app/data/Model/GetClientModel.dart';
+import 'package:crm_app/data/Model/GetFollowUpReminderModel.dart';
 import 'package:crm_app/data/Model/GetLeadModel.dart';
 import 'package:crm_app/data/Model/GetProductIdModel.dart';
 import 'package:crm_app/data/Model/GetProfileModel.dart';
@@ -28,8 +29,11 @@ import 'package:crm_app/data/Model/leadUpdateBodyModel.dart';
 import 'package:crm_app/data/Model/leadUpdateResModel.dart';
 import 'package:crm_app/data/Model/loginBodyModel.dart';
 import 'package:crm_app/data/Model/loginResModel.dart';
+import 'package:crm_app/data/Model/markDoneFollowUpModel.dart';
 import 'package:crm_app/data/Model/markReadResModel.dart';
 import 'package:crm_app/data/Model/multipleDeleteNotificaionBodyModel.dart';
+import 'package:crm_app/data/Model/rescheduleFollowUpBodyModel.dart';
+import 'package:crm_app/data/Model/rescheduleFollowUpResModel.dart';
 import 'package:crm_app/data/Model/unreadCountModel.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
@@ -226,11 +230,22 @@ abstract class ApiStateNetwork {
   @POST("/api/auth/sales/update/{id}")
   Future<AddSaleResModel> updateSale(
     @Path("id") String id,
-    @Part( name: "product_name") String issuetitle,
-    @Part( name: "quantity") String quantity,
-    @Part( name: "payment_status") String paymentstatus,
-    @Part( name: "payment_method") String paymentmethod,
-    @Part( name: "note") String note,
-    @Part( name: "image") MultipartFile? image,
+    @Part(name: "product_name") String issuetitle,
+    @Part(name: "quantity") String quantity,
+    @Part(name: "payment_status") String paymentstatus,
+    @Part(name: "payment_method") String paymentmethod,
+    @Part(name: "note") String note,
+    @Part(name: "image") MultipartFile? image,
+  );
+  @GET("/api/auth/follow-up-reminders")
+  Future<GetFollowUpReminderModel> getLeadFollowUpReminder();
+
+  @POST("/api/auth/follow-up-mark-done/{id}")
+  Future<MarkDoneFollowUpModel> markDoneFolloUp(@Path('id') String id);
+
+  @POST("/api/auth/re-schedule follow-up/{id}")
+  Future<RescheduleFollowUpResModel> rescheduleFollowUp(
+    @Path('id') String id,
+    @Body() RescheduleFollowUpBodyModel body,
   );
 }

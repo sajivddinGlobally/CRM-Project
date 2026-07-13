@@ -1,12 +1,8 @@
 import 'dart:developer';
-import 'dart:math' hide log;
-
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
-import 'package:crm_app/core/utils/pretty.dio.dart';
 import 'package:crm_app/core/utils/showMessage.dart';
 import 'package:crm_app/screen/forgot/otpVerifyScreen.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

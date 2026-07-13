@@ -2,10 +2,11 @@ import 'dart:developer';
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/core/utils/showMessage.dart';
+import 'package:crm_app/data/Provider/GetLeadFollowUpReminderProvider.dart';
 import 'package:crm_app/data/Provider/GetLeadProvider.dart';
+import 'package:crm_app/data/Provider/GetProductIdProvider.dart';
 import 'package:crm_app/data/Provider/leadDetailsProvider.dart';
 import 'package:crm_app/screen/home/homeScreen.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -31,7 +32,7 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
 
   String? selectedIndustry;
   String? selectedCity;
-  String? selectedProduct;
+  int? selectedProductId;
   String? selectedBudget;
   String? selectedSource;
   String? selectedPriority;
@@ -129,6 +130,8 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
         selectedSource = item.leadSource;
         selectedPriority = item.priority;
 
+        selectedProductId = item.interestedProductId ?? 0;
+
         /// Reminder
         isReminder = item.issetFollow == 1;
 
@@ -157,6 +160,7 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
   @override
   Widget build(BuildContext context) {
     log("lead Id ${widget.leadId}");
+    final productState = ref.watch(productIdProvider);
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(
@@ -318,6 +322,78 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
                   ),
                 ),
                 SizedBox(height: 12.h),
+                productState.when(
+                  data: (data) {
+                    final item = data.data;
+                    return DropdownButtonFormField(
+                      value: item!.any((e) => e.id == selectedProductId)
+                          ? selectedProductId
+                          : null,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 14.w,
+                          vertical: 16.h,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20.r),
+                          borderSide: BorderSide(
+                            color: const Color.fromARGB(25, 0, 0, 0),
+                            width: 1.w,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20.r),
+                          borderSide: BorderSide(
+                            color: AppColors.buttonBg,
+                            width: 1.w,
+                          ),
+                        ),
+                      ),
+                      hint: Text(
+                        "Select Product",
+                        style: GoogleFonts.inter(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF063466),
+                          letterSpacing: -0.54,
+                        ),
+                      ),
+                      icon: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: const Color(0xFF063466),
+                        size: 22.sp,
+                      ),
+                      isExpanded: true,
+                      items: item?.map((e) {
+                        return DropdownMenuItem(
+                          value: e.id,
+                          child: Text(
+                            e.itemName ?? "",
+                            style: GoogleFonts.inter(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF063466),
+                              letterSpacing: -0.54,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedProductId = value;
+                        });
+                      },
+                    );
+                  },
+                  error: (error, stackTrace) {
+                    return Center(child: Text("Something went wrong"));
+                  },
+                  loading: () => Center(
+                    child: CircularProgressIndicator(color: AppColors.buttonBg),
+                  ),
+                ),
+                SizedBox(height: 12.h),
                 customDropdown(
                   hint: "Select Budget Range",
                   items: budgetList,
@@ -457,7 +533,9 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
                                       style: GoogleFonts.inter(
                                         fontSize: 14.sp,
                                         fontWeight: FontWeight.w400,
-                                        color: Color(0xFF7A7E93),
+                                        color: selectedDate == null
+                                            ? Color(0xFF7A7E93)
+                                            : Color(0xFF263238),
                                       ),
                                     ),
                                     Spacer(),
@@ -514,7 +592,9 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
                                       style: GoogleFonts.inter(
                                         fontSize: 14.sp,
                                         fontWeight: FontWeight.w400,
-                                        color: Color(0xFF7A7E93),
+                                        color: selectedTime == null
+                                            ? Color(0xFF7A7E93)
+                                            : Color(0xFF263238),
                                       ),
                                     ),
                                     Spacer(),
@@ -666,9 +746,11 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
                             isetFollow: isReminder ? 1 : 0,
                             reminderDate: formatDateForApi(selectedDate),
                             reminderTime: formatTimeForApi(selectedTime),
+                            interestedProductId: selectedProductId,
                           );
                           if (response.status == true) {
                             ref.invalidate(leadProvider);
+                            ref.invalidate(getLeadFollowUpReminderProvider);
                             setState(() {
                               isLoading = false;
                             });
@@ -733,6 +815,7 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
                             reminderNote: isReminder
                                 ? reminderController.text.trim()
                                 : null,
+                            interestedProductId: selectedProductId,
                           );
                           if (res.status == true) {
                             setState(() {
@@ -740,6 +823,7 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
                             });
                             ref.invalidate(leadProvider);
                             ref.invalidate(leadDetailsProvider(widget.leadId!));
+                            ref.invalidate(getLeadFollowUpReminderProvider);
                             Navigator.pop(context, true);
                           }
                         } catch (e) {

@@ -1,6 +1,9 @@
 import 'dart:developer';
 
+import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/core/utils/showMessage.dart';
+import 'package:crm_app/data/Provider/GetLeadFollowUpReminderProvider.dart';
 import 'package:crm_app/data/Provider/GetLeadProvider.dart';
 import 'package:crm_app/data/Provider/GetSaleProvider.dart';
 import 'package:crm_app/data/Provider/get_dashboard_provider.dart';
@@ -13,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class SalesTargetScreen extends ConsumerStatefulWidget {
@@ -58,11 +62,27 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
     super.dispose();
   }
 
+  bool isMarking = false;
+
   @override
   Widget build(BuildContext context) {
     final getSale = ref.watch(getSaleProvider);
     final leadState = ref.watch(leadProvider);
     final dashboardAsync = ref.watch(dashboardProvider);
+    final getFollowUpState = ref.watch(getLeadFollowUpReminderProvider);
+    final isLoading =
+        getSale.isLoading ||
+        leadState.isLoading ||
+        dashboardAsync.isLoading ||
+        getFollowUpState.isLoading;
+
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.buttonBg),
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(toolbarHeight: 0, backgroundColor: Color(0xFFE6EEFA)),
@@ -121,7 +141,14 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
                                           width: 58.w,
                                           height: 58.w,
                                           child: CircularProgressIndicator(
-                                            value: _animation.value,
+                                            // value: _animation.value,
+                                            value:
+                                                ((data
+                                                        .data
+                                                        ?.sales
+                                                        ?.achievementPercentage ??
+                                                    0) /
+                                                100),
                                             strokeWidth: 6,
                                             backgroundColor: Color(0xFF4493F3),
                                             valueColor:
@@ -131,11 +158,11 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
                                           ),
                                         ),
                                         Text(
-                                          "${(_animation.value * 100).toInt()}%",
-                                          // "${data.data?.sales?.achievementPercentage ?? "0"}%",
+                                          // "${(_animation.value * 100).toInt()}%",
+                                          "${data.data?.sales?.achievementPercentage ?? 0}%",
                                           style: GoogleFonts.inter(
                                             color: Colors.white,
-                                            fontSize: 16.sp,
+                                            fontSize: 12.sp,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
@@ -162,7 +189,8 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
                                     ),
                                     SizedBox(height: 6.w),
                                     Text(
-                                      "₹1,45,000 / ₹2,00,000",
+                                      // "₹1,45,000 / ₹2,00,000",
+                                      "₹${data.data?.sales?.totalSalesValue ?? 0} / ₹${data.data?.sales?.target ?? 0}",
                                       style: GoogleFonts.inter(
                                         fontSize: 18.sp,
                                         fontWeight: FontWeight.w500,
@@ -707,220 +735,289 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
               ],
             ),
             SizedBox(height: 30.h),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(left: 24.w),
-                  child: Text(
-                    "Today’s Follow-ups",
-                    style: GoogleFonts.inter(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF1E1E1E),
-                      letterSpacing: -0.54,
+            getFollowUpState.when(
+              data: (data) {
+                final followUpData = data.data;
+                if (followUpData!.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 24.w),
+                      child: Text(
+                        "Today’s Follow-ups",
+                        style: GoogleFonts.inter(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF1E1E1E),
+                          letterSpacing: -0.54,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.only(top: 12.h),
-                  height: 200.h,
-                  child: PageView.builder(
-                    controller: _salePageController,
-                    itemCount: 10,
-                    itemBuilder: (context, index) {
-                      return Container(
-                        margin: EdgeInsets.only(right: 15.w),
-                        padding: EdgeInsets.only(
-                          left: 20.w,
-                          right: 20.w,
-                          top: 20.h,
-                          bottom: 20.h,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20.r),
-                          color: Colors.transparent,
-                          border: Border.all(
-                            color: Color.fromARGB(25, 0, 0, 0),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              "Call Suresh Electronics",
-                              style: GoogleFonts.inter(
-                                fontSize: 15.sp,
-                                color: Color(0xFF050A14),
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: -0.54,
+                    Container(
+                      margin: EdgeInsets.only(top: 12.h),
+                      height: 200.h,
+                      child: PageView.builder(
+                        controller: _salePageController,
+                        itemCount: followUpData?.length,
+                        itemBuilder: (context, index) {
+                          return Container(
+                            margin: EdgeInsets.only(right: 15.w),
+                            padding: EdgeInsets.only(
+                              left: 20.w,
+                              right: 20.w,
+                              top: 20.h,
+                              bottom: 20.h,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20.r),
+                              color: Colors.transparent,
+                              border: Border.all(
+                                color: Color.fromARGB(25, 0, 0, 0),
                               ),
                             ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              "3:00 PM",
-                              style: GoogleFonts.inter(
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF007AFF),
-                                letterSpacing: -0.54,
-                                height: 0,
-                              ),
-                            ),
-                            SizedBox(height: 12.h),
-                            Container(
-                              width: double.infinity,
-                              padding: EdgeInsets.symmetric(
-                                vertical: 12.h,
-                                horizontal: 12.w,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Color(0xFFE5F2FF),
-                                border: Border(
-                                  left: BorderSide(
-                                    color: AppColors.buttonBg,
-                                    width: 2.w,
-                                  ),
-                                ),
-                              ),
-                              child: Text(
-                                "Interested in yearly plan”",
-                                style: GoogleFonts.inter(
-                                  fontSize: 11.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.buttonBg,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 20.h),
-                            Row(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: Container(
-                                    height: 35.h,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10.r),
-                                      color: Color(0xFFE5F2FF),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        "ADD NOTE",
-                                        style: GoogleFonts.inter(
-                                          fontSize: 11.sp,
-                                          fontWeight: FontWeight.w500,
-                                          color: AppColors.buttonBg,
-                                        ),
-                                      ),
-                                    ),
+                                Text(
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  // "Call Suresh Electronics",
+                                  "Call ${followUpData![index].businessName}",
+                                  style: GoogleFonts.inter(
+                                    fontSize: 15.sp,
+                                    color: Color(0xFF050A14),
+                                    fontWeight: FontWeight.w500,
+                                    letterSpacing: -0.54,
                                   ),
                                 ),
-                                SizedBox(width: 10.w),
-                                Expanded(
-                                  child: Container(
-                                    height: 35.h,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10.r),
-                                      border: Border.all(
-                                        color: AppColors.buttonBg,
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        "MARK CONVETED",
-                                        style: GoogleFonts.inter(
-                                          fontSize: 11.sp,
-                                          fontWeight: FontWeight.w500,
-                                          color: AppColors.buttonBg,
-                                        ),
-                                      ),
-                                    ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  // "3:00 PM",
+                                  followUpData[index].reminderTime ?? "N/A",
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF007AFF),
+                                    letterSpacing: -0.54,
+                                    height: 0,
                                   ),
                                 ),
-                                SizedBox(width: 10.w),
+                                SizedBox(height: 12.h),
                                 Container(
-                                  width: 35.w,
-                                  height: 35.h,
+                                  width: double.infinity,
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: 12.h,
+                                    horizontal: 12.w,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF007AFF),
-                                    borderRadius: BorderRadius.circular(10.r),
+                                    color: Color(0xFFE5F2FF),
+                                    border: Border(
+                                      left: BorderSide(
+                                        color: AppColors.buttonBg,
+                                        width: 2.w,
+                                      ),
+                                    ),
                                   ),
-                                  child: Icon(
-                                    Icons.call_outlined,
-                                    color: Colors.white,
-                                    size: 20.sp,
+                                  child: Text(
+                                    // "Interested in yearly plan”",
+                                    followUpData[index].reminderNote ?? "N/A",
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11.sp,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.buttonBg,
+                                      fontStyle: FontStyle.italic,
+                                    ),
                                   ),
+                                ),
+                                SizedBox(height: 20.h),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: InkWell(
+                                        onTap: () {
+                                          showRescheduleBottomSheet(
+                                            context,
+                                            followUpData[index].id.toString(),
+                                          );
+                                        },
+                                        child: Container(
+                                          height: 35.h,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              10.r,
+                                            ),
+                                            color: Color(0xFFE5F2FF),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              "RESCHEDULE",
+                                              style: GoogleFonts.inter(
+                                                fontSize: 11.sp,
+                                                fontWeight: FontWeight.w500,
+                                                color: AppColors.buttonBg,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 10.w),
+                                    Expanded(
+                                      child: InkWell(
+                                        onTap: () async {
+                                          setState(() {
+                                            isMarking = true;
+                                          });
+                                          try {
+                                            final service = ref.read(
+                                              authServiceProvider,
+                                            );
+                                            final res = await service
+                                                .markDoneFollowUp(
+                                                  id: followUpData[index].id
+                                                      .toString(),
+                                                );
+                                            if (res) {
+                                              ref.invalidate(
+                                                getLeadFollowUpReminderProvider,
+                                              );
+                                            }
+                                          } catch (e) {
+                                            log(e.toString());
+                                            setState(() {
+                                              isMarking = false;
+                                            });
+                                          } finally {
+                                            isMarking = false;
+                                          }
+                                        },
+                                        child: Container(
+                                          height: 35.h,
+                                          decoration: BoxDecoration(
+                                            color: isMarking
+                                                ? Colors.grey.shade200
+                                                : Colors.white,
+                                            borderRadius: BorderRadius.circular(
+                                              10.r,
+                                            ),
+                                            border: Border.all(
+                                              color: isMarking
+                                                  ? Colors.grey
+                                                  : AppColors.buttonBg,
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              isMarking
+                                                  ? "MARKING..."
+                                                  : "MARK DONE",
+                                              style: GoogleFonts.inter(
+                                                fontSize: 11.sp,
+                                                fontWeight: FontWeight.w500,
+                                                color: AppColors.buttonBg,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 10.w),
+                                    Container(
+                                      width: 35.w,
+                                      height: 35.h,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF007AFF),
+                                        borderRadius: BorderRadius.circular(
+                                          10.r,
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        Icons.call_outlined,
+                                        color: Colors.white,
+                                        size: 20.sp,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                SizedBox(height: 10.h),
-                Center(
-                  child: SmoothPageIndicator(
-                    controller: _salePageController,
-                    count: 10,
-                    effect: ScrollingDotsEffect(
-                      activeDotColor: Color(0xFF063466),
-                      dotColor: Color(0xFFCDD6E0),
-                      dotHeight: 6.h,
-                      dotWidth: 6.w,
-                      spacing: 5.w,
-                      activeStrokeWidth: 2,
-                      activeDotScale: 1.4,
-                      maxVisibleDots: 5,
-                    ),
-                    onDotClicked: (index) {
-                      _salePageController.animateToPage(
-                        index,
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.easeInOut,
-                      );
-                    },
-                  ),
-                ),
-                SizedBox(height: 30.h),
-                InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      CupertinoPageRoute(builder: (context) => AddSaleScreen()),
-                    );
-                  },
-                  child: Center(
-                    child: Container(
-                      width: 177.w,
-                      height: 81.h,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15.r),
-                        color: Color(0xFF007AFF),
+                          );
+                        },
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.add, color: Colors.white),
-                          Text(
-                            "Add New Sale",
-                            style: GoogleFonts.inter(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                              letterSpacing: -0.54,
-                            ),
+                    ),
+                    SizedBox(height: 10.h),
+                    if (followUpData.length > 1)
+                      Center(
+                        child: SmoothPageIndicator(
+                          controller: _salePageController,
+                          count: data.data?.length ?? 0,
+                          effect: ScrollingDotsEffect(
+                            activeDotColor: Color(0xFF063466),
+                            dotColor: Color(0xFFCDD6E0),
+                            dotHeight: 6.h,
+                            dotWidth: 6.w,
+                            spacing: 5.w,
+                            activeStrokeWidth: 2,
+                            activeDotScale: 1.4,
+                            maxVisibleDots: 5,
                           ),
-                        ],
+                          onDotClicked: (index) {
+                            _salePageController.animateToPage(
+                              index,
+                              duration: const Duration(milliseconds: 500),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                        ),
                       ),
-                    ),
+                  ],
+                );
+              },
+              error: (error, stackTrace) {
+                log(error.toString());
+                return Center(child: Text("Somwthing went wrong"));
+              },
+              loading: () => Center(
+                child: CircularProgressIndicator(color: AppColors.buttonBg),
+              ),
+            ),
+            SizedBox(height: 30.h),
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  CupertinoPageRoute(builder: (context) => AddSaleScreen()),
+                );
+              },
+              child: Center(
+                child: Container(
+                  width: 177.w,
+                  height: 81.h,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15.r),
+                    color: Color(0xFF007AFF),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add, color: Colors.white),
+                      Text(
+                        "Add New Sale",
+                        style: GoogleFonts.inter(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                          letterSpacing: -0.54,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
             SizedBox(height: 20.h),
           ],
@@ -999,185 +1096,316 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
   }
 }
 
+String? formatDateForApi(DateTime? date) {
+  if (date == null) return null;
+  return DateFormat("yyyy-MM-dd").format(date);
+}
 
+String? formatTimeForApi(TimeOfDay? time) {
+  if (time == null) return null;
 
+  return "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
+}
 
+void showRescheduleBottomSheet(BuildContext context, String id) {
+  DateTime? selectedDate;
+  TimeOfDay? selectedTime;
+  final TextEditingController noteController = TextEditingController();
+  bool isReschedule = false;
 
-// Container(
-//                   margin: EdgeInsets.only(top: 12.h),
-//                   height: 200.h,
-//                   child: PageView.builder(
-//                     controller: _pageController,
-//                     itemCount: 10,
-//                     itemBuilder: (context, index) {
-//                       return Container(
-//                         margin: EdgeInsets.only(right: 15.w),
-//                         padding: EdgeInsets.only(
-//                           left: 20.w,
-//                           right: 20.w,
-//                           top: 20.h,
-//                           bottom: 20.h,
-//                         ),
-//                         decoration: BoxDecoration(
-//                           borderRadius: BorderRadius.circular(20.r),
-//                           color: Colors.transparent,
-//                           border: Border.all(
-//                             color: Color.fromARGB(25, 0, 0, 0),
-//                           ),
-//                         ),
-//                         child: Column(
-//                           crossAxisAlignment: CrossAxisAlignment.start,
-//                           children: [
-//                             Row(
-//                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                               children: [
-//                                 Container(
-//                                   padding: EdgeInsets.symmetric(
-//                                     vertical: 10.h,
-//                                     horizontal: 15.w,
-//                                   ),
-//                                   decoration: BoxDecoration(
-//                                     borderRadius: BorderRadius.circular(7.r),
-//                                     color: Color.fromARGB(25, 0, 122, 255),
-//                                   ),
-//                                   child: Center(
-//                                     child: Text(
-//                                       "PREMIUM PLAN",
-//                                       style: GoogleFonts.inter(
-//                                         fontSize: 11.sp,
-//                                         fontWeight: FontWeight.w500,
-//                                         color: Color(0xFF007AFF),
-//                                         letterSpacing: -0.54,
-//                                       ),
-//                                     ),
-//                                   ),
-//                                 ),
-//                                 Container(
-//                                   padding: EdgeInsets.symmetric(
-//                                     vertical: 10.h,
-//                                     horizontal: 15.w,
-//                                   ),
-//                                   decoration: BoxDecoration(
-//                                     borderRadius: BorderRadius.circular(7.r),
-//                                     color: Color.fromARGB(25, 181, 197, 0),
-//                                   ),
-//                                   child: Center(
-//                                     child: Text(
-//                                       "PENDING",
-//                                       style: GoogleFonts.inter(
-//                                         fontSize: 11.sp,
-//                                         fontWeight: FontWeight.w500,
-//                                         color: Color(0XffB5C500),
-//                                         letterSpacing: -0.54,
-//                                       ),
-//                                     ),
-//                                   ),
-//                                 ),
-//                               ],
-//                             ),
-//                             SizedBox(height: 20.h),
-//                             Text(
-//                               maxLines: 1,
-//                               overflow: TextOverflow.ellipsis,
-//                               "Sharma Traders",
-//                               style: GoogleFonts.inter(
-//                                 fontSize: 15.sp,
-//                                 color: Color(0xFF050A14),
-//                                 fontWeight: FontWeight.w500,
-//                                 letterSpacing: -0.54,
-//                               ),
-//                             ),
-//                             SizedBox(height: 4.h),
-//                             Row(
-//                               mainAxisSize: MainAxisSize.min,
-//                               children: [
-//                                 Text(
-//                                   "₹5,000",
-//                                   style: GoogleFonts.inter(
-//                                     fontSize: 12.sp,
-//                                     fontWeight: FontWeight.bold,
-//                                     color: Color(0xFF007AFF),
-//                                     letterSpacing: -0.54,
-//                                     height: 0,
-//                                   ),
-//                                 ),
-//                                 SizedBox(width: 10.w),
-//                                 Container(
-//                                   width: 4.w,
-//                                   height: 4.w,
-//                                   decoration: BoxDecoration(
-//                                     color: Color(0xFF263238),
-//                                     shape: BoxShape.circle,
-//                                   ),
-//                                 ),
-//                                 SizedBox(width: 10.w),
-//                                 Text(
-//                                   "Today, 11:30 AM",
-//                                   style: GoogleFonts.inter(
-//                                     fontSize: 12.sp,
-//                                     fontWeight: FontWeight.w400,
-//                                     color: Color(0xFF263238),
-//                                     height: 0,
-//                                   ),
-//                                 ),
-//                               ],
-//                             ),
-//                             SizedBox(height: 20.h),
-//                             InkWell(
-//                               onTap: () {
-//                                 Navigator.push(
-//                                   context,
-//                                   CupertinoPageRoute(
-//                                     builder: (context) => SalesDetailScreen(),
-//                                   ),
-//                                 );
-//                               },
-//                               child: Container(
-//                                 width: double.infinity,
-//                                 height: 35.h,
-//                                 decoration: BoxDecoration(
-//                                   borderRadius: BorderRadius.circular(10.r),
-//                                   border: Border.all(color: AppColors.buttonBg),
-//                                 ),
-//                                 child: Center(
-//                                   child: Text(
-//                                     "VIEW DETAILS",
-//                                     style: GoogleFonts.inter(
-//                                       fontSize: 11.sp,
-//                                       fontWeight: FontWeight.w500,
-//                                       color: AppColors.buttonBg,
-//                                     ),
-//                                   ),
-//                                 ),
-//                               ),
-//                             ),
-//                           ],
-//                         ),
-//                       );
-//                     },
-//                   ),
-//                 ),
-                // SizedBox(height: 10.h),
-                // Center(
-                //   child: SmoothPageIndicator(
-                //     controller: _pageController,
-                //     count: 10,
-                //     effect: ScrollingDotsEffect(
-                //       activeDotColor: Color(0xFF063466),
-                //       dotColor: Color(0xFFCDD6E0),
-                //       dotHeight: 6.h,
-                //       dotWidth: 6.w,
-                //       spacing: 5.w,
-                //       activeStrokeWidth: 2,
-                //       activeDotScale: 1.4,
-                //       maxVisibleDots: 5,
-                //     ),
-                //     onDotClicked: (index) {
-                //       _pageController.animateToPage(
-                //         index,
-                //         duration: const Duration(milliseconds: 500),
-                //         curve: Curves.easeInOut,
-                //       );
-                //     },
-                //   ),
-                // ),
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.white,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+    ),
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return SafeArea(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: 20.w,
+                right: 20.w,
+                top: 20.h,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20.h,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    /// Handle
+                    Center(
+                      child: Container(
+                        width: 55.w,
+                        height: 5.h,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 22.h),
+
+                    /// Title
+                    Text(
+                      "Reschedule Follow-up",
+                      style: GoogleFonts.inter(
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF063466),
+                      ),
+                    ),
+
+                    SizedBox(height: 20.h),
+
+                    /// Date & Time
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final pickedDate = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime(2100),
+                              );
+
+                              if (pickedDate != null) {
+                                setState(() {
+                                  selectedDate = pickedDate;
+                                });
+                              }
+                            },
+                            child: Container(
+                              height: 55.h,
+                              padding: EdgeInsets.symmetric(horizontal: 14.w),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14.r),
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      selectedDate == null
+                                          ? "Select Date"
+                                          : "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}",
+                                      style: GoogleFonts.inter(
+                                        fontSize: 14.sp,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.calendar_month_outlined,
+                                    size: 20.sp,
+                                    color: Colors.grey,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final pickedTime = await showTimePicker(
+                                context: context,
+                                initialTime: TimeOfDay.now(),
+                              );
+
+                              if (pickedTime != null) {
+                                setState(() {
+                                  selectedTime = pickedTime;
+                                });
+                              }
+                            },
+                            child: Container(
+                              height: 55.h,
+                              padding: EdgeInsets.symmetric(horizontal: 14.w),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14.r),
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      selectedTime == null
+                                          ? "Select Time"
+                                          : selectedTime!.format(context),
+                                      style: GoogleFonts.inter(
+                                        fontSize: 14.sp,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.access_time,
+                                    size: 20.sp,
+                                    color: Colors.grey,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 18.h),
+
+                    /// Note
+                    TextField(
+                      controller: noteController,
+                      maxLines: 4,
+                      style: GoogleFonts.inter(fontSize: 14.sp),
+                      decoration: InputDecoration(
+                        hintText: "Enter reminder note",
+                        hintStyle: GoogleFonts.inter(
+                          fontSize: 14.sp,
+                          color: Colors.grey,
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 15.w,
+                          vertical: 14.h,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14.r),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14.r),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14.r),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF007AFF),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 24.h),
+
+                    /// Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: 50.h,
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(
+                                  color: Color(0xFF007AFF),
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14.r),
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text(
+                                "Cancel",
+                                style: GoogleFonts.inter(
+                                  fontSize: 15.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF007AFF),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        SizedBox(width: 14.w),
+
+                        Consumer(
+                          builder: (context, ref, child) {
+                            return Expanded(
+                              child: SizedBox(
+                                height: 50.h,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF007AFF),
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14.r),
+                                    ),
+                                  ),
+                                  onPressed: () async {
+                                    setState(() {
+                                      isReschedule = true;
+                                    });
+                                    try {
+                                      final service = ref.read(
+                                        authServiceProvider,
+                                      );
+                                      final res = await service
+                                          .rescheduleFollowUpLead(
+                                            id: id,
+                                            reminderDate: formatDateForApi(
+                                              selectedDate,
+                                            )!,
+                                            reminderTime: formatTimeForApi(
+                                              selectedTime,
+                                            )!,
+                                            reminderNote: noteController.text
+                                                .trim(),
+                                          );
+
+                                      if (res) {
+                                        ref.invalidate(
+                                          getLeadFollowUpReminderProvider,
+                                        );
+                                        Navigator.pop(context);
+                                      }
+                                    } catch (e) {
+                                      log(e.toString());
+                                    } finally {
+                                      setState(() {
+                                        isReschedule = false;
+                                      });
+                                    }
+                                  },
+                                  child: isReschedule
+                                      ? SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 1.5,
+                                          ),
+                                        )
+                                      : Text(
+                                          "Save",
+                                          style: GoogleFonts.inter(
+                                            fontSize: 15.sp,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10.h),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}

@@ -15,6 +15,7 @@ import 'package:crm_app/data/Model/ForgotPasswordBodyModel.dart';
 import 'package:crm_app/data/Model/ForgotPasswordResModel.dart';
 import 'package:crm_app/data/Model/GetClientDetailsModel.dart';
 import 'package:crm_app/data/Model/GetClientModel.dart';
+import 'package:crm_app/data/Model/GetFollowUpReminderModel.dart';
 import 'package:crm_app/data/Model/GetLeadModel.dart';
 import 'package:crm_app/data/Model/GetProductIdModel.dart';
 import 'package:crm_app/data/Model/GetProfileModel.dart';
@@ -24,7 +25,6 @@ import 'package:crm_app/data/Model/GetTicketDetailsModel.dart';
 import 'package:crm_app/data/Model/GetTicketModel.dart';
 import 'package:crm_app/data/Model/OtpVerifyBodyModel.dart';
 import 'package:crm_app/data/Model/OtpVerifyResModel.dart';
-import 'package:crm_app/data/Model/deleteNotificationModel.dart';
 import 'package:crm_app/data/Model/getNotificationModel.dart';
 import 'package:crm_app/data/Model/leadDetailsModel.dart';
 import 'package:crm_app/data/Model/leadUpdateBodyModel.dart';
@@ -32,6 +32,7 @@ import 'package:crm_app/data/Model/leadUpdateResModel.dart';
 import 'package:crm_app/data/Model/loginBodyModel.dart';
 import 'package:crm_app/data/Model/loginResModel.dart';
 import 'package:crm_app/data/Model/multipleDeleteNotificaionBodyModel.dart';
+import 'package:crm_app/data/Model/rescheduleFollowUpBodyModel.dart';
 import 'package:dio/dio.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../data/Model/AttendenceSummaryModel.dart';
@@ -510,6 +511,7 @@ class AuthService {
     String? reminderNote,
     String? reminderTime,
     int? isetFollow,
+    int? interestedProductId,
   }) async {
     try {
       final response = await api.addLead(
@@ -528,6 +530,7 @@ class AuthService {
           reminderNote: reminderNote,
           reminderTime: reminderTime,
           issetFollow: isetFollow,
+          interestedProductId: interestedProductId,
         ),
       );
       if (response.status == true) {
@@ -718,6 +721,7 @@ class AuthService {
     String? reminderNote,
     String? reminderTime,
     int? issetFollow,
+    int? interestedProductId,
   }) async {
     try {
       final body = LeadUpdateBodyModel(
@@ -735,6 +739,7 @@ class AuthService {
         reminderNote: reminderNote,
         reminderTime: reminderTime,
         issetFollow: issetFollow,
+        interestedProductId: interestedProductId,
       );
       final response = await api.leadUpdate(leadId!, body);
       if (response.status == true) {
@@ -792,6 +797,55 @@ class AuthService {
   Future<bool> saleDeleteData({required String id}) async {
     try {
       final res = await api.saleDelete(id);
+      if (res.status == true) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      log(e.toString());
+      return false;
+    }
+  }
+
+  Future<GetFollowUpReminderModel> getLeadFollowReminder() async {
+    try {
+      final res = await api.getLeadFollowUpReminder();
+      if (res.status == true) {
+        return res;
+      }
+      throw Exception(res.message ?? "Failed to fetch notifications");
+    } catch (e) {
+      log(e.toString());
+      rethrow;
+    }
+  }
+
+  Future<bool> markDoneFollowUp({required String id}) async {
+    try {
+      final res = await api.markDoneFolloUp(id);
+      if (res.status == true) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      log(e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> rescheduleFollowUpLead({
+    required String id,
+    required String reminderDate,
+    required String reminderTime,
+    String? reminderNote,
+  }) async {
+    try {
+      final body = RescheduleFollowUpBodyModel(
+        reminderDate: reminderDate,
+        reminderTime: reminderTime,
+        reminderNote: reminderNote,
+      );
+      final res = await api.rescheduleFollowUp(id, body);
       if (res.status == true) {
         return true;
       }
