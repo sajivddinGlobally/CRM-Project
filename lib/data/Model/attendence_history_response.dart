@@ -4,7 +4,6 @@
 
 import 'dart:convert';
 
-import '../../screen/setting/attandanceScreen.dart';
 
 AttendenceHistoryResponse attendenceHistoryResponseFromJson(String str) => AttendenceHistoryResponse.fromJson(json.decode(str));
 

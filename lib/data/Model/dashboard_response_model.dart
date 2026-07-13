@@ -4,26 +4,25 @@
 
 import 'dart:convert';
 
-DashboardResponseModel dashboardResponseModelFromJson(String str) => DashboardResponseModel.fromJson(json.decode(str));
+DashboardResponseModel dashboardResponseModelFromJson(String str) =>
+    DashboardResponseModel.fromJson(json.decode(str));
 
-String dashboardResponseModelToJson(DashboardResponseModel data) => json.encode(data.toJson());
+String dashboardResponseModelToJson(DashboardResponseModel data) =>
+    json.encode(data.toJson());
 
 class DashboardResponseModel {
   bool? status;
   String? message;
   Data? data;
 
-  DashboardResponseModel({
-    this.status,
-    this.message,
-    this.data,
-  });
+  DashboardResponseModel({this.status, this.message, this.data});
 
-  factory DashboardResponseModel.fromJson(Map<String, dynamic> json) => DashboardResponseModel(
-    status: json["status"],
-    message: json["message"],
-    data: json["data"] == null ? null : Data.fromJson(json["data"]),
-  );
+  factory DashboardResponseModel.fromJson(Map<String, dynamic> json) =>
+      DashboardResponseModel(
+        status: json["status"],
+        message: json["message"],
+        data: json["data"] == null ? null : Data.fromJson(json["data"]),
+      );
 
   Map<String, dynamic> toJson() => {
     "status": status,
@@ -39,16 +38,12 @@ class Data {
   Tickets? tickets;
   Clients? clients;
 
-  Data({
-    this.employee,
-    this.sales,
-    this.leads,
-    this.tickets,
-    this.clients,
-  });
+  Data({this.employee, this.sales, this.leads, this.tickets, this.clients});
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
-    employee: json["employee"] == null ? null : Employee.fromJson(json["employee"]),
+    employee: json["employee"] == null
+        ? null
+        : Employee.fromJson(json["employee"]),
     sales: json["sales"] == null ? null : Sales.fromJson(json["sales"]),
     leads: json["leads"] == null ? null : Leads.fromJson(json["leads"]),
     tickets: json["tickets"] == null ? null : Tickets.fromJson(json["tickets"]),
@@ -68,20 +63,12 @@ class Clients {
   int? total;
   int? active;
 
-  Clients({
-    this.total,
-    this.active,
-  });
+  Clients({this.total, this.active});
 
-  factory Clients.fromJson(Map<String, dynamic> json) => Clients(
-    total: json["total"],
-    active: json["active"],
-  );
+  factory Clients.fromJson(Map<String, dynamic> json) =>
+      Clients(total: json["total"], active: json["active"]);
 
-  Map<String, dynamic> toJson() => {
-    "total": total,
-    "active": active,
-  };
+  Map<String, dynamic> toJson() => {"total": total, "active": active};
 }
 
 class Employee {
@@ -130,12 +117,7 @@ class Leads {
   int? converted;
   int? lost;
 
-  Leads({
-    this.total,
-    this.pending,
-    this.converted,
-    this.lost,
-  });
+  Leads({this.total, this.pending, this.converted, this.lost});
 
   factory Leads.fromJson(Map<String, dynamic> json) => Leads(
     total: json["total"],
@@ -156,7 +138,7 @@ class Sales {
   int? totalSalesCount;
   int? totalSalesValue;
   int? target;
-  num? achievementPercentage;
+  int? achievementPercentage;
 
   Sales({
     this.totalSalesCount,
@@ -169,7 +151,7 @@ class Sales {
     totalSalesCount: json["total_sales_count"],
     totalSalesValue: json["total_sales_value"],
     target: json["target"],
-    achievementPercentage: json["achievement_percentage"]?.toDouble(),
+    achievementPercentage: json["achievement_percentage"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -187,13 +169,7 @@ class Tickets {
   int? resolved;
   int? closed;
 
-  Tickets({
-    this.total,
-    this.open,
-    this.inProgress,
-    this.resolved,
-    this.closed,
-  });
+  Tickets({this.total, this.open, this.inProgress, this.resolved, this.closed});
 
   factory Tickets.fromJson(Map<String, dynamic> json) => Tickets(
     total: json["total"],

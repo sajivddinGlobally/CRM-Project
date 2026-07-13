@@ -1,8 +1,6 @@
 import 'dart:developer';
-
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
-import 'package:crm_app/data/Model/GetClientDetailsModel.dart';
 import 'package:crm_app/data/Provider/GetClientDetailsProvider.dart';
 import 'package:crm_app/data/Provider/GetClientProvider.dart';
 import 'package:crm_app/data/Provider/GetTicketProvider.dart';

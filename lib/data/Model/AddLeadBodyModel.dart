@@ -25,6 +25,7 @@ class AddLeadBodyModel {
   String? reminderNote;
   String? reminderTime;
   int? issetFollow;
+  int? interestedProductId;
 
   AddLeadBodyModel({
     this.leadName,
@@ -40,7 +41,8 @@ class AddLeadBodyModel {
     this.reminderDate,
     this.reminderNote,
     this.reminderTime,
-    this.issetFollow
+    this.issetFollow,
+    this.interestedProductId,
   });
 
   factory AddLeadBodyModel.fromJson(
@@ -61,6 +63,7 @@ class AddLeadBodyModel {
     reminderNote: json["reminder_note"],
     reminderTime: json["reminder_time"],
     issetFollow: json["is_setFollow"],
+    interestedProductId: json["interested_product_id"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -78,5 +81,6 @@ class AddLeadBodyModel {
     "reminder_note": reminderNote,
     "reminder_time": reminderTime,
     "is_setFollow": issetFollow,
+    "interested_product_id": interestedProductId,
   };
 }

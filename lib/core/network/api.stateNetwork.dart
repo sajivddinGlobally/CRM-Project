@@ -12,6 +12,7 @@ import 'package:crm_app/data/Model/ForgotPasswordBodyModel.dart';
 import 'package:crm_app/data/Model/ForgotPasswordResModel.dart';
 import 'package:crm_app/data/Model/GetClientDetailsModel.dart';
 import 'package:crm_app/data/Model/GetClientModel.dart';
+import 'package:crm_app/data/Model/GetFollowUpReminderModel.dart';
 import 'package:crm_app/data/Model/GetLeadModel.dart';
 import 'package:crm_app/data/Model/GetProductIdModel.dart';
 import 'package:crm_app/data/Model/GetProfileModel.dart';
@@ -28,8 +29,11 @@ import 'package:crm_app/data/Model/leadUpdateBodyModel.dart';
 import 'package:crm_app/data/Model/leadUpdateResModel.dart';
 import 'package:crm_app/data/Model/loginBodyModel.dart';
 import 'package:crm_app/data/Model/loginResModel.dart';
+import 'package:crm_app/data/Model/markDoneFollowUpModel.dart';
 import 'package:crm_app/data/Model/markReadResModel.dart';
 import 'package:crm_app/data/Model/multipleDeleteNotificaionBodyModel.dart';
+import 'package:crm_app/data/Model/rescheduleFollowUpBodyModel.dart';
+import 'package:crm_app/data/Model/rescheduleFollowUpResModel.dart';
 import 'package:crm_app/data/Model/unreadCountModel.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
@@ -207,8 +211,7 @@ abstract class ApiStateNetwork {
   @DELETE("/api/auth/tickets/delete/{id}}")
   Future<DeleteNotificationModel> ticketDelete(@Path('id') String id);
 
-
-   @MultiPart()
+  @MultiPart()
   @POST("/api/auth/tickets/update/{id}")
   Future<CreateTicketResModel> updateTicket(
     @Path('id') String id,
@@ -218,5 +221,17 @@ abstract class ApiStateNetwork {
     @Part(name: "priority") String priority,
     @Part(name: "attachment") MultipartFile? attachment,
     @Part(name: "internal_note") String internalNote,
+  );
+
+  @GET("/api/auth/follow-up-reminders")
+  Future<GetFollowUpReminderModel> getLeadFollowUpReminder();
+
+  @POST("/api/auth/follow-up-mark-done/{id}")
+  Future<MarkDoneFollowUpModel> markDoneFolloUp(@Path('id') String id);
+
+  @POST("/api/auth/re-schedule follow-up/{id}")
+  Future<RescheduleFollowUpResModel> rescheduleFollowUp(
+    @Path('id') String id,
+    @Body() RescheduleFollowUpBodyModel body,
   );
 }
