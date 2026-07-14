@@ -40,7 +40,7 @@ class _MyBottomNavState extends ConsumerState<MyBottomNav> {
     {"image": "assets/SvgImage/settings.svg", "title": "SETTINGS"},
   ];
   final List<Widget> pages = [
-    HomeScreen(),
+    HomeScreen(), 
     SalesTargetScreen(),
     TicketScreen(),
     ActivityScreen(),

@@ -20,6 +20,7 @@ import 'package:crm_app/data/Model/GetSaleDetilesModel.dart';
 import 'package:crm_app/data/Model/GetSaleModel.dart';
 import 'package:crm_app/data/Model/GetTicketDetailsModel.dart';
 import 'package:crm_app/data/Model/GetTicketModel.dart';
+import 'package:crm_app/data/Model/MarkLostLeadResModel.dart';
 import 'package:crm_app/data/Model/OtpVerifyBodyModel.dart';
 import 'package:crm_app/data/Model/OtpVerifyResModel.dart';
 import 'package:crm_app/data/Model/deleteNotificationModel.dart';
@@ -258,4 +259,7 @@ abstract class ApiStateNetwork {
     @Path('id') String id,
     @Body() RescheduleFollowUpBodyModel body,
   );
+
+  @POST("/api/auth/leads/mark-lost/{id}")
+  Future<MarkLostLeadResModel> markLostLead(@Path("id") String id);
 }
