@@ -38,7 +38,38 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
           );
           log("Lead Id $leadId");
         }),
-        _menuItem(Icons.cancel_outlined, "Mark Lost", () {}),
+        _menuItem(Icons.cancel_outlined, "Mark Lost", ()async {
+          try {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) {
+                return Dialog(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.buttonBg),
+                  ),
+                );
+              },
+            );
+            final res = ref.read(authServiceProvider);
+            final isScuess = await res.markLostLeadData(id: markId!);
+            if (isScuess) {
+              ref.invalidate(leadProvider);
+              Navigator.pop(context, true);
+            }
+          } catch (e) {
+            if (mounted && Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+            log(e.toString());
+          } finally {
+            if (mounted && Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          }
+        }),
         _menuItem(Icons.delete, "Delete", () async {
           try {
             showDialog(
@@ -97,6 +128,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
   }
 
   String? leadId;
+  String? markId;
 
   @override
   Widget build(BuildContext context) {
@@ -146,6 +178,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
       body: leadDetailState.when(
         data: (data) {
           leadId = data.data?.id.toString();
+          markId = data.data?.id.toString();
           final preferredDate = data.data?.reminderDate != null
               ? DateFormat(
                   "dd MMM yyyy",

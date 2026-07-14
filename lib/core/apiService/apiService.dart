@@ -23,6 +23,7 @@ import 'package:crm_app/data/Model/GetSaleDetilesModel.dart';
 import 'package:crm_app/data/Model/GetSaleModel.dart';
 import 'package:crm_app/data/Model/GetTicketDetailsModel.dart';
 import 'package:crm_app/data/Model/GetTicketModel.dart';
+import 'package:crm_app/data/Model/MarkLostLeadResModel.dart';
 import 'package:crm_app/data/Model/OtpVerifyBodyModel.dart';
 import 'package:crm_app/data/Model/OtpVerifyResModel.dart';
 import 'package:crm_app/data/Model/getNotificationModel.dart';
@@ -856,4 +857,18 @@ class AuthService {
       return false;
     }
   }
+
+   Future<bool> markLostLeadData({required String id}) async {
+    try {
+      final res = await api.markLostLead(id);
+      if (res.status == true) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      log(e.toString());
+      return false;
+    }
+  }
+  
 }
