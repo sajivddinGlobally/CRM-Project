@@ -16,6 +16,10 @@ class LeadScreen extends ConsumerStatefulWidget {
 }
 
 class _LeadScreenState extends ConsumerState<LeadScreen> {
+  final serchController = TextEditingController();
+  List<dynamic> allLeads = [];
+  List<dynamic> filteredLeads = [];
+  bool isLoaded = false;
   @override
   Widget build(BuildContext context) {
     final leadDate = ref.watch(leadProvider);
@@ -81,6 +85,24 @@ class _LeadScreenState extends ConsumerState<LeadScreen> {
               children: [
                 Expanded(
                   child: TextField(
+                    controller: serchController,
+                    onChanged: (value) {
+                      setState(() {
+                        if (value.trim().isEmpty) {
+                          filteredLeads = List.from(allLeads);
+                        } else {
+                          filteredLeads = allLeads.where((lead) {
+                            return (lead.businessName ?? "")
+                                    .toLowerCase()
+                                    .contains(value.toLowerCase()) ||
+                                (lead.leadName ?? "").toLowerCase().contains(
+                                  value.toLowerCase(),
+                                ) ||
+                                (lead.mobileNumber ?? "").contains(value);
+                          }).toList();
+                        }
+                      });
+                    },
                     decoration: InputDecoration(
                       prefixIconConstraints: BoxConstraints(
                         minHeight: 55.h,
@@ -142,12 +164,17 @@ class _LeadScreenState extends ConsumerState<LeadScreen> {
             SizedBox(height: 20.h),
             leadDate.when(
               data: (data) {
+                if (!isLoaded) {
+                  allLeads = List.from(data.data ?? []);
+                  filteredLeads = List.from(data.data ?? []);
+                  isLoaded = true;
+                }
                 return Expanded(
                   child: ListView.builder(
                     padding: EdgeInsets.only(bottom: 100.h),
-                    itemCount: data.data?.length,
+                    itemCount: filteredLeads.length,
                     itemBuilder: (context, index) {
-                      final lead = data.data?[index];
+                      final lead = filteredLeads[index];
                       return Container(
                         margin: EdgeInsets.only(bottom: 20.w),
                         decoration: BoxDecoration(
@@ -167,7 +194,7 @@ class _LeadScreenState extends ConsumerState<LeadScreen> {
                                   context,
                                   CupertinoPageRoute(
                                     builder: (context) => LeadDetailScreen(
-                                      id: data.data![index].id.toString(),
+                                      id: lead.id.toString(),
                                     ),
                                   ),
                                 );
@@ -193,8 +220,7 @@ class _LeadScreenState extends ConsumerState<LeadScreen> {
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               // "Rajesh Enterprises",
-                                              data.data?[index].businessName ??
-                                                  "",
+                                              lead.businessName ?? "",
                                               style: GoogleFonts.inter(
                                                 fontSize: 15.sp,
                                                 color: Color(0xFF050A14),
@@ -253,7 +279,7 @@ class _LeadScreenState extends ConsumerState<LeadScreen> {
                                           ),
                                           child: Text(
                                             // "NEW LEAD",
-                                            data.data?[index].status ?? "N/A",
+                                            lead.status ?? "N/A",
                                             style: GoogleFonts.inter(
                                               fontSize: 11.sp,
                                               fontWeight: FontWeight.w500,
