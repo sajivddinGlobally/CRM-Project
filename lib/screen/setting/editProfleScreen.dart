@@ -111,7 +111,7 @@ class _EditProfleScreenState extends ConsumerState<EditProfleScreen> {
 
       nameController.text = data?.fullName ?? "";
       phoneController.text = data?.phone ?? "";
-      emailController.text = data?.email ?? "";
+      emailController.text = data?.loginEmail ?? "";
       saleController.text = data?.sale ?? "";
       departmentController.text = data?.department ?? "";
       empController.text = data?.employeeId ?? "";
@@ -140,7 +140,7 @@ class _EditProfleScreenState extends ConsumerState<EditProfleScreen> {
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(
-        backgroundColor: AppColors.scaffBg, 
+        backgroundColor: AppColors.scaffBg,
         automaticallyImplyLeading: false,
         leading: Padding(
           padding: EdgeInsets.only(left: 6.w),

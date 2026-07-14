@@ -25,7 +25,6 @@ class SettingScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingScreenState extends ConsumerState<SettingScreen> {
-  
   Future<void> showLogoutDialog(BuildContext context, VoidCallback onLogout) {
     return showDialog(
       context: context,
@@ -312,7 +311,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            data.data?.email ?? "smithjoh21@gmail.com",
+                            data.data?.loginEmail ?? "smithjoh21@gmail.com",
                             style: GoogleFonts.inter(
                               fontSize: 12.sp,
                               fontWeight: FontWeight.w500,
