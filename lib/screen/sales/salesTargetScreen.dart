@@ -610,7 +610,8 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
                                         color: Color(0xFFE5F8ED),
                                       ),
                                       child: Text(
-                                        "NEW LEAD",
+                                        // "NEW LEAD",
+                                        data.data![index].status ?? "N/A",
                                         style: GoogleFonts.inter(
                                           fontSize: 11.sp,
                                           fontWeight: FontWeight.w500,
