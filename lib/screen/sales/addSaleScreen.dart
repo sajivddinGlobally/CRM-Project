@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/data/Model/GetProductIdModel.dart';
+import 'package:crm_app/data/Provider/GetProductIdProvider.dart';
 import 'package:crm_app/data/Provider/GetSaleDetilesProvider.dart';
 import 'package:crm_app/data/Provider/GetSaleProvider.dart';
 import 'package:crm_app/screen/home/homeScreen.dart';
@@ -31,22 +32,7 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
   @override
   void initState() {
     super.initState();
-    getProducts();
     _loadTicketData();
-  }
-
-  Future<void> getProducts() async {
-    try {
-      final service = ref.read(authServiceProvider);
-
-      final response = await service.getProductIdData();
-
-      setState(() {
-        products = List<Datum>.from(response.data ?? []);
-      });
-    } catch (e) {
-      log(e.toString());
-    }
   }
 
   final List<String> qtyList = ["1", "2", "3", "4", "5"];
@@ -67,10 +53,12 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
   bool isReminder = false;
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
+  String? oldReminderDate;
+  String? oldReminderTime;
 
   TextEditingController noteController = TextEditingController();
   File? selectedFile;
-  String? selectedFileName;
+  String? networkImage;
 
   String? getPaymentStatus(String? value) {
     switch (value?.toLowerCase()) {
@@ -112,6 +100,9 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
       orElse: () => null,
     );
 
+    selectedProductId = matchedProduct?.id;
+    selectedProduct = matchedProduct?.itemName;
+
     setState(() {
       selectedProductId = matchedProduct?.id;
       selectedProduct = matchedProduct?.itemName;
@@ -120,12 +111,13 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
       selectedPaymentStatus = getPaymentStatus(item.paymentStatus);
       selectedPaymentMethod = getPaymentMethod(item.paymentMethod);
       noteContoller.text = item.note ?? "";
-      selectedFileName = item.image ?? "";
+      networkImage = item.image ?? "";
+
       isReminder = item.isSetFollow == 1;
 
-      // if (item.date != null && item.date!.isNotEmpty) {
-      //   selectedDate = DateTime.parse(item.date!);
-      // }
+      if (item.date != null && item.date!.isNotEmpty) {
+        selectedDate = DateTime.parse(item.date!);
+      }
 
       if (item.time != null && item.time!.isNotEmpty) {
         final time = item.time!.split(":");
@@ -134,7 +126,8 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
           minute: int.parse(time[1]),
         );
       }
-
+      oldReminderDate = item.date;
+      oldReminderTime = item.time;
       reminderNoteController.text = item.remeniderNote ?? "";
     });
   }
@@ -151,7 +144,7 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
 
         setState(() {
           selectedFile = File(file.path!);
-          selectedFileName = file.name;
+          networkImage = file.name;
         });
 
         debugPrint("File Name: ${file.name}");
@@ -175,6 +168,7 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final productState = ref.watch(productIdProvider);
     return Scaffold(
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(
@@ -271,27 +265,34 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
               SizedBox(height: 30.h),
               sectionTitle("PRODUCT DETAILS"),
               SizedBox(height: 15.h),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 14.w),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14.r),
-                  border: Border.all(
-                    color: const Color.fromARGB(25, 0, 0, 0),
-                    width: 1.w,
-                  ),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<Datum>(
-                    borderRadius: BorderRadius.circular(20.r),
-                    value:
-                        products
-                            .where((e) => e.id == selectedProductId)
-                            .isNotEmpty
-                        ? products.firstWhere((e) => e.id == selectedProductId)
+              productState.when(
+                data: (data) {
+                  final item = data.data;
+                  return DropdownButtonFormField(
+                    value: item!.any((e) => e.id == selectedProductId)
+                        ? selectedProductId
                         : null,
-
+                    decoration: InputDecoration(
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 14.w,
+                        vertical: 16.h,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20.r),
+                        borderSide: BorderSide(
+                          color: const Color.fromARGB(25, 0, 0, 0),
+                          width: 1.w,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20.r),
+                        borderSide: BorderSide(
+                          color: AppColors.buttonBg,
+                          width: 1.w,
+                        ),
+                      ),
+                    ),
                     hint: Text(
                       "Select Product",
                       style: GoogleFonts.inter(
@@ -307,11 +308,11 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
                       size: 22.sp,
                     ),
                     isExpanded: true,
-                    items: products.map<DropdownMenuItem<Datum>>((product) {
-                      return DropdownMenuItem<Datum>(
-                        value: product,
+                    items: item?.map((e) {
+                      return DropdownMenuItem(
+                        value: e.id,
                         child: Text(
-                          product.itemName ?? "",
+                          e.itemName ?? "",
                           style: GoogleFonts.inter(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w500,
@@ -321,16 +322,18 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
                         ),
                       );
                     }).toList(),
-                    onChanged: (Datum? value) {
+                    onChanged: (value) {
                       setState(() {
-                        selectedProduct = value?.itemName;
-                        selectedProductId = value?.id;
+                        selectedProductId = value;
                       });
-
-                      log("Product Name : ${value?.itemName}");
-                      log("Product Id : ${value?.id}");
                     },
-                  ),
+                  );
+                },
+                error: (error, stackTrace) {
+                  return Center(child: Text("Something went wrong"));
+                },
+                loading: () => Center(
+                  child: CircularProgressIndicator(color: AppColors.buttonBg),
                 ),
               ),
               SizedBox(height: 10.h),
@@ -457,7 +460,10 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
                           ),
                           SizedBox(height: 6.h),
                           Text(
-                            selectedFileName ?? "Upload",
+                            // networkImage ?? "Upload",
+                            selectedFile != null
+                                ? selectedFile!.path.split('/').last
+                                : (networkImage ?? "Upload"),
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               fontSize: 14.sp,
@@ -516,7 +522,7 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
                             onTap: () async {
                               final pickedDate = await showDatePicker(
                                 context: context,
-                                initialDate: DateTime.now(),
+                                initialDate: selectedDate ?? DateTime.now(),
                                 firstDate: DateTime(2000),
                                 lastDate: DateTime(2100),
                               );
@@ -551,7 +557,9 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
                                     style: GoogleFonts.inter(
                                       fontSize: 14.sp,
                                       fontWeight: FontWeight.w400,
-                                      color: Color(0xFF7A7E93),
+                                      color: selectedDate != null
+                                          ? Color(0xFF263238)
+                                          : Color(0xFF7A7E93),
                                     ),
                                   ),
                                   Spacer(),
@@ -608,7 +616,9 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
                                     style: GoogleFonts.inter(
                                       fontSize: 14.sp,
                                       fontWeight: FontWeight.w400,
-                                      color: Color(0xFF7A7E93),
+                                      color: selectedTime != null
+                                          ? Color(0xFF263238)
+                                          : Color(0xFF7A7E93),
                                     ),
                                   ),
                                   Spacer(),
@@ -741,13 +751,29 @@ class _AddSaleScreenState extends ConsumerState<AddSaleScreen> {
                       try {
                         final service = ref.read(authServiceProvider);
                         final response = await service.updateSaleData(
-                          saleId: widget.saleId ?? "",
+                          id: widget.saleId.toString(),
                           productId: selectedProductId.toString(),
                           quantity: selectedQty ?? "",
                           paymentStatus: selectedPaymentStatus ?? "",
                           paymentMethod: selectedPaymentMethod ?? "",
                           note: noteContoller.text.trim(),
-                          image: selectedFile!,
+                          // image: selectedFile,
+                          image: selectedFile,
+                          oldImage: networkImage,
+                          isSetFollow: isReminder ? 1 : 0,
+                          date: isReminder
+                              ? (selectedDate != null
+                                    ? formatDateForApi(selectedDate)
+                                    : oldReminderDate)
+                              : null,
+
+                          time: isReminder
+                              ? (selectedTime != null
+                                    ? formatTimeForApi(selectedTime)
+                                    : oldReminderTime)
+                              : null,
+
+                          remeniderNote: reminderNoteController.text.trim(),
                         );
                         if (response.status == true) {
                           ref.invalidate(getSaleProvider);

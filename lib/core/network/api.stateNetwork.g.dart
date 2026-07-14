@@ -680,6 +680,33 @@ class _ApiStateNetwork implements ApiStateNetwork {
   }
 
   @override
+  Future<GetLeadModel> leadFilter(String status) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'status': status};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<GetLeadModel>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/api/auth/leads/filters',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late GetLeadModel _value;
+    try {
+      _value = GetLeadModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<DashboardResponseModel> getDashboard() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
@@ -1199,25 +1226,45 @@ class _ApiStateNetwork implements ApiStateNetwork {
   @override
   Future<AddSaleResModel> updateSale(
     String id,
-    String issuetitle,
+    String productId,
     String quantity,
-    String paymentstatus,
-    String paymentmethod,
+    String paymentStatus,
+    String paymentMethod,
     String note,
+    String? date,
+    String? time,
+    String? remeniderNote,
     MultipartFile? image,
+    String? oldImage,
+    int? isSetFollow,
   ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     final _data = FormData();
-    _data.fields.add(MapEntry('product_id', issuetitle));
+    _data.fields.add(MapEntry('product_id', productId));
     _data.fields.add(MapEntry('quantity', quantity));
-    _data.fields.add(MapEntry('payment_status', paymentstatus));
-    _data.fields.add(MapEntry('payment_method', paymentmethod));
+    _data.fields.add(MapEntry('payment_status', paymentStatus));
+    _data.fields.add(MapEntry('payment_method', paymentMethod));
     _data.fields.add(MapEntry('note', note));
+    if (date != null) {
+      _data.fields.add(MapEntry('date', date));
+    }
+    if (time != null) {
+      _data.fields.add(MapEntry('time', time));
+    }
+    if (remeniderNote != null) {
+      _data.fields.add(MapEntry('remenider_note', remeniderNote));
+    }
     if (image != null) {
       _data.files.add(MapEntry('image', image));
+    }
+    if (oldImage != null) {
+      _data.fields.add(MapEntry('old_image', oldImage));
+    }
+    if (isSetFollow != null) {
+      _data.fields.add(MapEntry('is_setFollow', isSetFollow.toString()));
     }
     final _options = _setStreamType<AddSaleResModel>(
       Options(

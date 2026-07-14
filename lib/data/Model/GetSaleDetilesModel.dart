@@ -41,7 +41,7 @@ class Data {
     String? note;
     String? image;
     int? isSetFollow;
-    DateTime? date;
+    String? date;
     String? time;
     String? remeniderNote;
     String? fullName;
@@ -72,7 +72,8 @@ class Data {
         note: json["note"],
         image: json["image"],
         isSetFollow: json["is_setFollow"],
-        date: json["date"] == null ? null : DateTime.parse(json["date"]),
+        // date: json["date"] == null ? null : DateTime.parse(json["date"]),
+        date: json['data'],
         time: json["time"],
         remeniderNote: json["remenider_note"],
         fullName: json["full_name"],
@@ -88,7 +89,8 @@ class Data {
         "note": note,
         "image": image,
         "is_setFollow": isSetFollow,
-        "date": "${date!.year.toString().padLeft(4, '0')}-${date!.month.toString().padLeft(2, '0')}-${date!.day.toString().padLeft(2, '0')}",
+        // "date": "${date!.year.toString().padLeft(4, '0')}-${date!.month.toString().padLeft(2, '0')}-${date!.day.toString().padLeft(2, '0')}",
+        "data":date,
         "time": time,
         "remenider_note": remeniderNote,
         "full_name": fullName,

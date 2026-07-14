@@ -312,13 +312,18 @@ class AuthService {
   }
 
   Future<AddSaleResModel> updateSaleData({
-    required String saleId,
+    required String id,
     required String productId,
     required String quantity,
     required String paymentStatus,
     required String paymentMethod,
     required String note,
     File? image,
+    String? oldImage,
+    String? date,
+    String? time,
+    String? remeniderNote,
+    int? isSetFollow,
   }) async {
     try {
       MultipartFile? multipartFile;
@@ -330,13 +335,18 @@ class AuthService {
         );
       }
       final response = await api.updateSale(
-        saleId,
+        id,
         productId,
         quantity,
         paymentStatus,
         paymentMethod,
         note,
+        date,
+        time,
+        remeniderNote,
         multipartFile,
+        oldImage,
+        isSetFollow,
       );
 
       if (response.status == true) {
@@ -549,6 +559,15 @@ class AuthService {
   Future<GetLeadModel> getLeadData() async {
     try {
       final response = await api.getLead();
+      return response;
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<GetLeadModel> leadFilter({required String status}) async {
+    try {
+      final response = await api.leadFilter(status);
       return response;
     } catch (e) {
       throw Exception(e.toString());

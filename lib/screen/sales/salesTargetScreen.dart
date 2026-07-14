@@ -7,6 +7,7 @@ import 'package:crm_app/data/Provider/GetLeadFollowUpReminderProvider.dart';
 import 'package:crm_app/data/Provider/GetLeadProvider.dart';
 import 'package:crm_app/data/Provider/GetSaleProvider.dart';
 import 'package:crm_app/data/Provider/get_dashboard_provider.dart';
+import 'package:crm_app/data/Provider/leadFilterProvider.dart';
 import 'package:crm_app/screen/lead/leadDetailScreen.dart';
 import 'package:crm_app/screen/lead/leadScreen.dart';
 import 'package:crm_app/screen/sales/addSaleScreen.dart';
@@ -63,11 +64,13 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
   }
 
   bool isMarking = false;
+  final List<String> statusList = ["new", "contacted", "converted", "lost"];
 
   @override
   Widget build(BuildContext context) {
     final getSale = ref.watch(getSaleProvider);
     final leadState = ref.watch(leadProvider);
+    final filterLeadState = ref.watch(leadFilterProvider(statusList[tabIndex]));
     final dashboardAsync = ref.watch(dashboardProvider);
     final getFollowUpState = ref.watch(getLeadFollowUpReminderProvider);
     final isLoading =
@@ -231,7 +234,6 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
                 child: CircularProgressIndicator(color: AppColors.buttonBg),
               ),
             ),
-
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -536,8 +538,23 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
                   ),
                 ),
                 SizedBox(height: 15.h),
-                leadState.when(
+                // leadState.when(
+                filterLeadState.when(
                   data: (data) {
+                    if (data.data!.isEmpty) {
+                      return Container(
+                        margin: EdgeInsets.symmetric(vertical: 30.h),
+                        child: Center(
+                          child: Text(
+                            "No Data Found",
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              letterSpacing: 0,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
                     return ListView.builder(
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),
@@ -728,8 +745,13 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
                   error: (error, stackTrace) {
                     return Center(child: Text("Somwthing went wrong"));
                   },
-                  loading: () => Center(
-                    child: CircularProgressIndicator(color: AppColors.buttonBg),
+                  loading: () => Container(
+                    margin: EdgeInsets.symmetric(vertical: 30.h),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.buttonBg,
+                      ),
+                    ),
                   ),
                 ),
               ],

@@ -65,6 +65,7 @@ abstract class ApiStateNetwork {
   Future<CreatePasswordResModel> createPassword(
     @Body() CreatePasswordBodyModel body,
   );
+
   @MultiPart()
   @POST("/api/auth/add-sales")
   Future<AddSaleResModel> addSale(
@@ -158,6 +159,9 @@ abstract class ApiStateNetwork {
   @GET("/api/auth/leads")
   Future<GetLeadModel> getLead();
 
+  @GET("/api/auth/leads/filters")
+  Future<GetLeadModel> leadFilter(@Query('status') String status);
+
   @GET("/api/auth/dashboard")
   Future<DashboardResponseModel> getDashboard();
 
@@ -230,13 +234,19 @@ abstract class ApiStateNetwork {
   @POST("/api/auth/sales/update/{id}")
   Future<AddSaleResModel> updateSale(
     @Path("id") String id,
-    @Part(name: "product_id") String issuetitle,
+    @Part(name: "product_id") String productId,
     @Part(name: "quantity") String quantity,
-    @Part(name: "payment_status") String paymentstatus,
-    @Part(name: "payment_method") String paymentmethod,
+    @Part(name: "payment_status") String paymentStatus,
+    @Part(name: "payment_method") String paymentMethod,
     @Part(name: "note") String note,
+    @Part(name: "date") String? date,
+    @Part(name: "time") String? time,
+    @Part(name: "remenider_note") String? remeniderNote,
     @Part(name: "image") MultipartFile? image,
+    @Part(name: "old_image") String? oldImage,
+    @Part(name: "is_setFollow") int? isSetFollow,
   );
+
   @GET("/api/auth/follow-up-reminders")
   Future<GetFollowUpReminderModel> getLeadFollowUpReminder();
 
