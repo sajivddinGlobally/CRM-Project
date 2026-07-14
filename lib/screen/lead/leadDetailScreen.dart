@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
+import 'package:crm_app/data/Provider/GetLeadFollowUpReminderProvider.dart';
 import 'package:crm_app/data/Provider/GetLeadProvider.dart';
 import 'package:crm_app/data/Provider/leadDetailsProvider.dart';
 import 'package:crm_app/screen/lead/addNewLeadScreen.dart';
@@ -38,7 +39,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
           );
           log("Lead Id $leadId");
         }),
-        _menuItem(Icons.cancel_outlined, "Mark Lost", ()async {
+        _menuItem(Icons.cancel_outlined, "Mark Lost", () async {
           try {
             showDialog(
               context: context,
@@ -493,7 +494,12 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                     side: BorderSide.none,
                   ),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  showRescheduleBottomSheet(
+                    context,
+                    leadId.toString()
+                  );
+                },
                 child: Text(
                   "Schedule Follow-up",
                   style: GoogleFonts.inter(
@@ -604,4 +610,318 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
       ),
     );
   }
+}
+
+String? formatDateForApi(DateTime? date) {
+  if (date == null) return null;
+  return DateFormat("yyyy-MM-dd").format(date);
+}
+
+String? formatTimeForApi(TimeOfDay? time) {
+  if (time == null) return null;
+
+  return "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
+}
+
+void showRescheduleBottomSheet(BuildContext context, String id) {
+  DateTime? selectedDate;
+  TimeOfDay? selectedTime;
+  final TextEditingController noteController = TextEditingController();
+  bool isReschedule = false;
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.white,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+    ),
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return SafeArea(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: 20.w,
+                right: 20.w,
+                top: 20.h,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20.h,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    /// Handle
+                    Center(
+                      child: Container(
+                        width: 55.w,
+                        height: 5.h,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 22.h),
+
+                    /// Title
+                    Text(
+                      "Reschedule Follow-up",
+                      style: GoogleFonts.inter(
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF063466),
+                      ),
+                    ),
+
+                    SizedBox(height: 20.h),
+
+                    /// Date & Time
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final pickedDate = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime(2100),
+                              );
+
+                              if (pickedDate != null) {
+                                setState(() {
+                                  selectedDate = pickedDate;
+                                });
+                              }
+                            },
+                            child: Container(
+                              height: 55.h,
+                              padding: EdgeInsets.symmetric(horizontal: 14.w),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14.r),
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      selectedDate == null
+                                          ? "Select Date"
+                                          : "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}",
+                                      style: GoogleFonts.inter(
+                                        fontSize: 14.sp,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.calendar_month_outlined,
+                                    size: 20.sp,
+                                    color: Colors.grey,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final pickedTime = await showTimePicker(
+                                context: context,
+                                initialTime: TimeOfDay.now(),
+                              );
+
+                              if (pickedTime != null) {
+                                setState(() {
+                                  selectedTime = pickedTime;
+                                });
+                              }
+                            },
+                            child: Container(
+                              height: 55.h,
+                              padding: EdgeInsets.symmetric(horizontal: 14.w),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14.r),
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      selectedTime == null
+                                          ? "Select Time"
+                                          : selectedTime!.format(context),
+                                      style: GoogleFonts.inter(
+                                        fontSize: 14.sp,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.access_time,
+                                    size: 20.sp,
+                                    color: Colors.grey,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 18.h),
+
+                    /// Note
+                    TextField(
+                      controller: noteController,
+                      maxLines: 4,
+                      style: GoogleFonts.inter(fontSize: 14.sp),
+                      decoration: InputDecoration(
+                        hintText: "Enter reminder note",
+                        hintStyle: GoogleFonts.inter(
+                          fontSize: 14.sp,
+                          color: Colors.grey,
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 15.w,
+                          vertical: 14.h,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14.r),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14.r),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14.r),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF007AFF),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 24.h),
+
+                    /// Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: 50.h,
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(
+                                  color: Color(0xFF007AFF),
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14.r),
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text(
+                                "Cancel",
+                                style: GoogleFonts.inter(
+                                  fontSize: 15.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF007AFF),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        SizedBox(width: 14.w),
+
+                        Consumer(
+                          builder: (context, ref, child) {
+                            return Expanded(
+                              child: SizedBox(
+                                height: 50.h,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF007AFF),
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14.r),
+                                    ),
+                                  ),
+                                  onPressed: () async {
+                                    setState(() {
+                                      isReschedule = true;
+                                    });
+                                    try {
+                                      final service = ref.read(
+                                        authServiceProvider,
+                                      );
+                                      final res = await service
+                                          .rescheduleFollowUpLead(
+                                            id: id,
+                                            reminderDate: formatDateForApi(
+                                              selectedDate,
+                                            )!,
+                                            reminderTime: formatTimeForApi(
+                                              selectedTime,
+                                            )!,
+                                            reminderNote: noteController.text
+                                                .trim(),
+                                          );
+
+                                      if (res) {
+                                        ref.invalidate(
+                                         leadDetailsProvider
+                                        );
+                                        Navigator.pop(context);
+                                      }
+                                    } catch (e) {
+                                      log(e.toString());
+                                    } finally {
+                                      setState(() {
+                                        isReschedule = false;
+                                      });
+                                    }
+                                  },
+                                  child: isReschedule
+                                      ? SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 1.5,
+                                          ),
+                                        )
+                                      : Text(
+                                          "Save",
+                                          style: GoogleFonts.inter(
+                                            fontSize: 15.sp,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10.h),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
 }
