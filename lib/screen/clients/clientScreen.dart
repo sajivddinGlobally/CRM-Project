@@ -17,6 +17,11 @@ class ClientScreen extends ConsumerStatefulWidget {
 }
 
 class _ClientScreenState extends ConsumerState<ClientScreen> {
+
+  final searchController = TextEditingController();
+  
+  List<dynamic> allClient = [];
+  List<dynamic> filteredClient = [];
   @override
   Widget build(BuildContext context) {
     final client = ref.watch(getClientProvider);

@@ -18,6 +18,11 @@ class TicketScreen extends ConsumerStatefulWidget {
 }
 
 class _TicketScreenState extends ConsumerState<TicketScreen> {
+  final searchController = TextEditingController();
+
+  List<dynamic> allTicket = [];
+  List<dynamic> filteredTicket = [];
+
   @override
   Widget build(BuildContext context) {
     final getTicket = ref.watch(getTicketProvider);
@@ -48,6 +53,29 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
               children: [
                 Expanded(
                   child: TextField(
+                    controller: searchController,
+                    onChanged: (value) {
+                      setState(() {
+                        if (value.trim().isEmpty) {
+                          filteredTicket = List.from(allTicket);
+                        } else {
+                          filteredTicket = allTicket.where((ticket) {
+                            return (ticket.issueCategory ?? "")
+                                    .toLowerCase()
+                                    .contains(value.toLowerCase()) ||
+                                (ticket.ticketId ?? "").toLowerCase().contains(
+                                  value.toLowerCase(),
+                                ) ||
+                                (ticket.raisedBy ?? "").toLowerCase().contains(
+                                  value.toLowerCase(),
+                                ) ||
+                                (ticket.status ?? "").toLowerCase().contains(
+                                  value.toLowerCase(),
+                                );
+                          }).toList();
+                        }
+                      });
+                    },
                     decoration: InputDecoration(
                       prefixIconConstraints: BoxConstraints(
                         minHeight: 50.h,
@@ -109,12 +137,16 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
             SizedBox(height: 20.h),
             getTicket.when(
               data: (data) {
+                if (allTicket.isEmpty) {
+                  allTicket = List.from(data.data ?? []);
+                  filteredTicket = List.from(allTicket);
+                }
                 return Expanded(
                   child: ListView.builder(
                     padding: EdgeInsets.only(bottom: 100.h),
-                    itemCount: data.data?.length ?? 0,
+                  itemCount: filteredTicket.length,
                     itemBuilder: (context, index) {
-                      final item = data.data?[index];
+                     final item = filteredTicket[index];
                       return Container(
                         margin: EdgeInsets.only(bottom: 10.w),
                         padding: EdgeInsets.only(
