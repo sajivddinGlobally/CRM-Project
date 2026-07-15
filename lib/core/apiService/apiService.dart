@@ -312,6 +312,60 @@ class AuthService {
     }
   }
 
+  Future<AddNewClientResModel> updateClient({
+    required String clientId,
+    required String clientName,
+    required String primaryPhone,
+    required String alternatePhone,
+    required String email,
+    required String businessName,
+    required String industry,
+    required String city,
+    required String plan,
+    DateTime? planStartDate,
+    required String planDuration,
+    required String assignedTo,
+    File? document,
+  }) async {
+    try {
+      MultipartFile? documentFile;
+
+      if (document != null) {
+        documentFile = await MultipartFile.fromFile(
+          document.path,
+          filename: document.path.split('/').last,
+        );
+      }
+
+      final response = await api.updateClient(
+        clientId,
+        clientName,
+        primaryPhone,
+        alternatePhone,
+        email,
+        businessName,
+        industry,
+        city,
+        plan,
+        planStartDate?.toIso8601String(),
+        planDuration,
+        assignedTo,
+        documentFile,
+      );
+
+      if (response.status == true) {
+        log(response.message ?? "Add New Client Successful");
+        return response;
+      } else {
+        throw Exception(response.message ?? "Add New Client Not Successful");
+      }
+    } catch (e, st) {
+      log("UPDATE CLIENT ERROR => $e");
+      log("STACK TRACE => $st");
+      rethrow;
+    }
+  }
+
   Future<AddSaleResModel> updateSaleData({
     required String id,
     required String productId,
@@ -877,7 +931,7 @@ class AuthService {
     }
   }
 
-   Future<bool> markLostLeadData({required String id}) async {
+  Future<bool> markLostLeadData({required String id}) async {
     try {
       final res = await api.markLostLead(id);
       if (res.status == true) {
@@ -889,5 +943,4 @@ class AuthService {
       return false;
     }
   }
-  
 }

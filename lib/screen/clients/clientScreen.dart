@@ -17,6 +17,11 @@ class ClientScreen extends ConsumerStatefulWidget {
 }
 
 class _ClientScreenState extends ConsumerState<ClientScreen> {
+
+  final searchController = TextEditingController();
+  
+  List<dynamic> allClient = [];
+  List<dynamic> filteredClient = [];
   @override
   Widget build(BuildContext context) {
     final client = ref.watch(getClientProvider);
@@ -60,7 +65,7 @@ class _ClientScreenState extends ConsumerState<ClientScreen> {
               children: [
                 leadStatusCard(
                   title: 'TOTAL CLIENTS',
-                  count: (client.value!.data?.length ?? 0).toString(),
+                  count: (client.value?.data?.length ?? 0).toString(),
                 ),
                 SizedBox(width: 10.w),
                 leadStatusCard(title: 'ACTIVE CLIENTS', count: '74'),
@@ -144,7 +149,7 @@ class _ClientScreenState extends ConsumerState<ClientScreen> {
             client.when(
               data: (data) {
                 return Expanded(
-                  child: ListView.builder(     
+                  child: ListView.builder(
                     padding: EdgeInsets.only(bottom: 100.h),
                     itemCount: data.data?.length,
                     itemBuilder: (context, index) {
@@ -206,7 +211,7 @@ class _ClientScreenState extends ConsumerState<ClientScreen> {
                                                 fontWeight: FontWeight.w500,
                                                 color: Color(0xFF00B94A),
                                                 letterSpacing: -0.54,
-                                              ), 
+                                              ),
                                             ),
                                             Spacer(),
                                             Icon(
