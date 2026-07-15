@@ -781,7 +781,7 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
                     ),
                     Container(
                       margin: EdgeInsets.only(top: 12.h),
-                      height: 200.h,
+                      height: 215.h,
                       child: PageView.builder(
                         controller: _salePageController,
                         itemCount: followUpData?.length,
@@ -846,6 +846,8 @@ class _SalesTargetScreenState extends ConsumerState<SalesTargetScreen>
                                   ),
                                   child: Text(
                                     // "Interested in yearly plan”",
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                     followUpData[index].reminderNote ?? "N/A",
                                     style: GoogleFonts.inter(
                                       fontSize: 11.sp,
