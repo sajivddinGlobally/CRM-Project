@@ -5,6 +5,7 @@ import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/data/Provider/GetLeadFollowUpReminderProvider.dart';
 import 'package:crm_app/data/Provider/GetLeadProvider.dart';
 import 'package:crm_app/data/Provider/leadDetailsProvider.dart';
+import 'package:crm_app/data/Provider/leadFilterProvider.dart';
 import 'package:crm_app/screen/lead/addNewLeadScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -90,6 +91,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
             final isScuess = await res.leadDelete(id: leadId!);
             if (isScuess) {
               ref.invalidate(leadProvider);
+              ref.invalidate(leadFilterProvider("new"));
               Navigator.pop(context, true);
             }
           } catch (e) {
@@ -495,10 +497,7 @@ class _LeadDetailScreenState extends ConsumerState<LeadDetailScreen> {
                   ),
                 ),
                 onPressed: () {
-                  showRescheduleBottomSheet(
-                    context,
-                    leadId.toString()
-                  );
+                  showRescheduleBottomSheet(context, leadId.toString());
                 },
                 child: Text(
                   "Schedule Follow-up",
@@ -877,9 +876,7 @@ void showRescheduleBottomSheet(BuildContext context, String id) {
                                           );
 
                                       if (res) {
-                                        ref.invalidate(
-                                         leadDetailsProvider
-                                        );
+                                        ref.invalidate(leadDetailsProvider);
                                         Navigator.pop(context);
                                       }
                                     } catch (e) {

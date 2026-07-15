@@ -618,6 +618,7 @@ class AuthService {
       final response = await api.getLead();
       return response;
     } catch (e) {
+      log(e.toString());
       throw Exception(e.toString());
     }
   }

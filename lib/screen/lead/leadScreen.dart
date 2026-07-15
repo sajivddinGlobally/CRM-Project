@@ -421,6 +421,7 @@ class _LeadScreenState extends ConsumerState<LeadScreen> {
                 );
               },
               error: (error, stackTrace) {
+                
                 return Center(
                   child: Text(
                     "Something went wrong",

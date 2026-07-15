@@ -6,6 +6,7 @@ import 'package:crm_app/data/Provider/GetLeadFollowUpReminderProvider.dart';
 import 'package:crm_app/data/Provider/GetLeadProvider.dart';
 import 'package:crm_app/data/Provider/GetProductIdProvider.dart';
 import 'package:crm_app/data/Provider/leadDetailsProvider.dart';
+import 'package:crm_app/data/Provider/leadFilterProvider.dart';
 import 'package:crm_app/screen/home/homeScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -751,6 +752,7 @@ class _AddnewLeadScreenState extends ConsumerState<AddnewLeadScreen> {
                           if (response.status == true) {
                             ref.invalidate(leadProvider);
                             ref.invalidate(getLeadFollowUpReminderProvider);
+                            ref.invalidate(leadFilterProvider("new"));
                             setState(() {
                               isLoading = false;
                             });
