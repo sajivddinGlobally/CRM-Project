@@ -110,6 +110,24 @@ abstract class ApiStateNetwork {
     @Part(name: "document") MultipartFile? document,
   );
 
+  @MultiPart()
+  @POST("/clients/update/{id}")
+  Future<AddNewClientResModel> updateClient(
+    @Path("id") String clientId,
+    @Part(name: "client_name") String clientName,
+    @Part(name: "primary_phone") String primaryPhone,
+    @Part(name: "alternate_phone") String alternatePhone,
+    @Part(name: "email") String email,
+    @Part(name: "business_name") String businessName,
+    @Part(name: "industry") String industry,
+    @Part(name: "city") String city,
+    @Part(name: "plan") String plan,
+    @Part(name: "plan_start_date") String? planStartDate,
+    @Part(name: "plan_duration") String planDuration,
+    @Part(name: "assigned_to") String assignedTo,
+    @Part(name: "document") MultipartFile? document,
+  );
+
   @GET("/api/auth/sales/{id}")
   Future<GetSaleDetilesModel> getSaleDetiles(@Path('id') String id);
 

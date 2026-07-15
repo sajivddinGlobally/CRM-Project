@@ -309,6 +309,69 @@ class _ApiStateNetwork implements ApiStateNetwork {
   }
 
   @override
+  Future<AddNewClientResModel> updateClient(
+    String clientId,
+    String clientName,
+    String primaryPhone,
+    String alternatePhone,
+    String email,
+    String businessName,
+    String industry,
+    String city,
+    String plan,
+    String? planStartDate,
+    String planDuration,
+    String assignedTo,
+    MultipartFile? document,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
+    final _data = FormData();
+    _data.fields.add(MapEntry('client_name', clientName));
+    _data.fields.add(MapEntry('primary_phone', primaryPhone));
+    _data.fields.add(MapEntry('alternate_phone', alternatePhone));
+    _data.fields.add(MapEntry('email', email));
+    _data.fields.add(MapEntry('business_name', businessName));
+    _data.fields.add(MapEntry('industry', industry));
+    _data.fields.add(MapEntry('city', city));
+    _data.fields.add(MapEntry('plan', plan));
+    if (planStartDate != null) {
+      _data.fields.add(MapEntry('plan_start_date', planStartDate));
+    }
+    _data.fields.add(MapEntry('plan_duration', planDuration));
+    _data.fields.add(MapEntry('assigned_to', assignedTo));
+    if (document != null) {
+      _data.files.add(MapEntry('document', document));
+    }
+    final _options = _setStreamType<AddNewClientResModel>(
+      Options(
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
+          .compose(
+            _dio.options,
+            '/clients/update/${clientId}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late AddNewClientResModel _value;
+    try {
+      _value = AddNewClientResModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<GetSaleDetilesModel> getSaleDetiles(String id) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
