@@ -91,7 +91,9 @@ class _LeadScreenState extends ConsumerState<LeadScreen> {
                         if (value.trim().isEmpty) {
                           filteredLeads = List.from(allLeads);
                         } else {
-                          filteredLeads = allLeads.where((lead) {
+                          filteredLeads = allLeads.where((lead) {      
+
+                            
                             return (lead.businessName ?? "")
                                     .toLowerCase()
                                     .contains(value.toLowerCase()) ||
