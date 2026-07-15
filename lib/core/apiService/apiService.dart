@@ -326,6 +326,7 @@ class AuthService {
     required String planDuration,
     required String assignedTo,
     File? document,
+    required String oldImage,
   }) async {
     try {
       MultipartFile? documentFile;
@@ -351,6 +352,7 @@ class AuthService {
         planDuration,
         assignedTo,
         documentFile,
+        oldImage,
       );
 
       if (response.status == true) {

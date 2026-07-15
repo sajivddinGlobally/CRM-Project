@@ -3,17 +3,20 @@ import 'dart:io';
 import 'package:crm_app/core/apiService/apiServiceProvider.dart';
 import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/core/utils/showMessage.dart';
+import 'package:crm_app/data/Provider/GetClientDetailsProvider.dart';
 import 'package:crm_app/data/Provider/GetClientProvider.dart';
 import 'package:crm_app/screen/home/homeScreen.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AddClientScreen extends ConsumerStatefulWidget {
-  const AddClientScreen({super.key});
+  final String? clientId;
+  const AddClientScreen({super.key, this.clientId});
 
   @override
   ConsumerState<AddClientScreen> createState() => _AddClientScreenState();
@@ -26,6 +29,7 @@ class _AddClientScreenState extends ConsumerState<AddClientScreen> {
   final emailController = TextEditingController();
   final businessController = TextEditingController();
   bool isLoading = false;
+  bool isUpdate = false;
   String? selectedIndustry;
   String? selectedCity;
   DateTime? selectedDate;
@@ -94,6 +98,40 @@ class _AddClientScreenState extends ConsumerState<AddClientScreen> {
       }
     } catch (e) {
       debugPrint("File Pick Error: $e");
+    }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _loadClient();
+  }
+
+  void _loadClient() {
+    if (widget.clientId == null) return;
+    try {
+      final value = ref.read(clientDetailsProvider(widget.clientId!));
+      if (value.value == null) return;
+
+      value.whenData((clientData) {
+        final client = clientData.data;
+        nameController.text = client?.clientName ?? "";
+        mobileController.text = client?.primaryPhone ?? "";
+        mobileController.text = client?.primaryPhone ?? "";
+        contactController.text = client?.alternatePhone ?? "";
+        emailController.text = client?.email ?? "";
+        businessController.text = client?.businessName ?? "";
+        selectedIndustry = client?.industry ?? "";
+        selectedCity = client?.city ?? "";
+        selectedPlan = client?.plan ?? "";
+        selectedDate = client?.planStartDate;
+        selectedDuration = client?.planDuration ?? "";
+        selectedEmployee = client?.assignedTo ?? "";
+        selectedFileName = client?.document ?? "";
+      });
+    } catch (e) {
+      log(e.toString());
     }
   }
 
@@ -239,7 +277,7 @@ class _AddClientScreenState extends ConsumerState<AddClientScreen> {
                   }
                 },
                 child: Container(
-                  height: 50.h,
+                  height: 65.h,
                   padding: EdgeInsets.only(
                     left: 18.w,
                     right: 15.w,
@@ -378,43 +416,85 @@ class _AddClientScreenState extends ConsumerState<AddClientScreen> {
                     elevation: 0,
                   ),
                   onPressed: () async {
-                    if (selectedFile == null) {
-                      showErrorSnackBar("Please Select Document");
-                    }
-                    setState(() {
-                      isLoading = false;
-                    });
-                    try {
-                      final service = ref.read(authServiceProvider);
-                      final response = await service.addNewClientData(
-                        clientName: nameController.text.trim(),
-                        primaryPhone: mobileController.text.trim(),
-                        alternatePhone: contactController.text.trim(),
-                        email: emailController.text.trim(),
-                        businessName: businessController.text.trim(),
-                        industry: selectedIndustry ?? "",
-                        city: selectedCity ?? "",
-                        plan: selectedPlan ?? "",
-                        planStartDate: selectedDate,
-                        planDuration: selectedDuration ?? "",
-                        assignedTo: selectedEmployee ?? "",
-                        document: selectedFile!,
-                      );
-                      if (response.status = true) {
-                        ref.invalidate(getClientProvider);
-                        log("Add New Client Successfull");
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MyBottomNav(),
-                          ),
-                        );
+                    if (widget.clientId == null) {
+                      if (selectedFile == null) {
+                        showErrorSnackBar("Please Select Document");
                       }
-                    } catch (e) {
-                      setState(() => isLoading = false);
+                      setState(() {
+                        isLoading = true;
+                      });
+                      try {
+                        final service = ref.read(authServiceProvider);
+                        final response = await service.addNewClientData(
+                          clientName: nameController.text.trim(),
+                          primaryPhone: mobileController.text.trim(),
+                          alternatePhone: contactController.text.trim(),
+                          email: emailController.text.trim(),
+                          businessName: businessController.text.trim(),
+                          industry: selectedIndustry ?? "",
+                          city: selectedCity ?? "",
+                          plan: selectedPlan ?? "",
+                          planStartDate: selectedDate,
+                          planDuration: selectedDuration ?? "",
+                          assignedTo: selectedEmployee ?? "",
+                          document: selectedFile!,
+                        );
+                        if (response.status = true) {
+                          ref.invalidate(getClientProvider);
+                          log("Add New Client Successfull");
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (context) => MyBottomNav(),
+                            ),
+                            (route) => false,
+                          );
+                        }
+                      } catch (e) {
+                        setState(() => isLoading = false);
+                      }
+                    } else {
+                      if (selectedFile == null &&
+                          (selectedFileName == null ||
+                              selectedFileName!.isEmpty)) {
+                        showErrorSnackBar("Please Select Document");
+                        return;
+                      }
+                      setState(() {
+                        isUpdate = true;
+                      });
+                      try {
+                        final service = ref.read(authServiceProvider);
+                        final response = await service.updateClient(
+                          clientId: widget.clientId!,
+                          clientName: nameController.text.trim(),
+                          primaryPhone: mobileController.text.trim(),
+                          alternatePhone: contactController.text.trim(),
+                          email: emailController.text.trim(),
+                          businessName: businessController.text.trim(),
+                          industry: selectedIndustry ?? "",
+                          city: selectedCity ?? "",
+                          plan: selectedPlan ?? "",
+                          planStartDate: selectedDate,
+                          planDuration: selectedDuration ?? "",
+                          assignedTo: selectedEmployee ?? "",
+                          document: selectedFile,
+                          oldImage: selectedFileName ?? "",
+                        );
+                        if (response.status = true) {
+                          ref.invalidate(getClientProvider);
+                          ref.invalidate(
+                            clientDetailsProvider(widget.clientId!),
+                          );
+                          log("Update Client Successfull");
+                          Navigator.pop(context);
+                        }
+                      } catch (e) {
+                        setState(() => isUpdate = false);
+                      }
                     }
                   },
-                  child: isLoading
+                  child: isLoading || isUpdate
                       ? SizedBox(
                           width: 20.w,
                           height: 20.w,
@@ -424,7 +504,9 @@ class _AddClientScreenState extends ConsumerState<AddClientScreen> {
                           ),
                         )
                       : Text(
-                          "Create Client",
+                          widget.clientId == null
+                              ? "Create Client"
+                              : "Update Client",
                           style: GoogleFonts.inter(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w500,

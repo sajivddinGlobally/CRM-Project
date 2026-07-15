@@ -323,6 +323,7 @@ class _ApiStateNetwork implements ApiStateNetwork {
     String planDuration,
     String assignedTo,
     MultipartFile? document,
+    String? oldImage,
   ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
@@ -345,6 +346,9 @@ class _ApiStateNetwork implements ApiStateNetwork {
     if (document != null) {
       _data.files.add(MapEntry('document', document));
     }
+    if (oldImage != null) {
+      _data.fields.add(MapEntry('old_image', oldImage));
+    }
     final _options = _setStreamType<AddNewClientResModel>(
       Options(
             method: 'POST',
@@ -354,7 +358,7 @@ class _ApiStateNetwork implements ApiStateNetwork {
           )
           .compose(
             _dio.options,
-            '/clients/update/${clientId}',
+            '/api/auth/clients/update/${clientId}',
             queryParameters: queryParameters,
             data: _data,
           )

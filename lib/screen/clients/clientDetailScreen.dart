@@ -4,6 +4,7 @@ import 'package:crm_app/core/constant/appColors.dart';
 import 'package:crm_app/data/Provider/GetClientDetailsProvider.dart';
 import 'package:crm_app/data/Provider/GetClientProvider.dart';
 import 'package:crm_app/data/Provider/GetTicketProvider.dart';
+import 'package:crm_app/screen/clients/addClientScreen.dart';
 import 'package:crm_app/screen/clients/interactionHistoryScreen.dart';
 import 'package:crm_app/screen/ticket/ticketDetailScreen.dart';
 import 'package:flutter/cupertino.dart';
@@ -30,7 +31,14 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       color: Colors.white,
       items: [
-        _menuItem(Icons.edit_outlined, "Edit Client", () {}),
+        _menuItem(Icons.edit_outlined, "Edit Client", () {
+          Navigator.push(
+            context,
+            CupertinoPageRoute(
+              builder: (context) => AddClientScreen(clientId: clientId),
+            ),
+          );
+        }),
         _menuItem(Icons.description_outlined, "View Documents", () {}),
         _menuItem(Icons.delete_outline, "Delete", () async {
           try {

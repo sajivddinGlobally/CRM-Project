@@ -111,7 +111,7 @@ abstract class ApiStateNetwork {
   );
 
   @MultiPart()
-  @POST("/clients/update/{id}")
+  @POST("/api/auth/clients/update/{id}")
   Future<AddNewClientResModel> updateClient(
     @Path("id") String clientId,
     @Part(name: "client_name") String clientName,
@@ -126,6 +126,7 @@ abstract class ApiStateNetwork {
     @Part(name: "plan_duration") String planDuration,
     @Part(name: "assigned_to") String assignedTo,
     @Part(name: "document") MultipartFile? document,
+    @Part(name: "old_image") String? oldImage,
   );
 
   @GET("/api/auth/sales/{id}")
