@@ -17,11 +17,11 @@ class ClientScreen extends ConsumerStatefulWidget {
 }
 
 class _ClientScreenState extends ConsumerState<ClientScreen> {
-
   final searchController = TextEditingController();
-  
+
   List<dynamic> allClient = [];
   List<dynamic> filteredClient = [];
+  bool isLoaded = false;
   @override
   Widget build(BuildContext context) {
     final client = ref.watch(getClientProvider);
@@ -87,6 +87,23 @@ class _ClientScreenState extends ConsumerState<ClientScreen> {
               children: [
                 Expanded(
                   child: TextField(
+                    controller: searchController,
+                    onChanged: (value) {
+                      setState(() {
+                        if (value.trim().isEmpty) {
+                          filteredClient = List.from(allClient);
+                        } else {
+                          filteredClient = allClient.where((client) {
+                            return (client.clientName ?? "")
+                                    .toLowerCase()
+                                    .contains(value.toLowerCase()) ||
+                                (client.industry ?? "").toLowerCase().contains(
+                                  value.toLowerCase(),
+                                );
+                          }).toList();
+                        }
+                      });
+                    },
                     decoration: InputDecoration(
                       prefixIconConstraints: BoxConstraints(
                         minHeight: 55.h,
@@ -148,12 +165,17 @@ class _ClientScreenState extends ConsumerState<ClientScreen> {
             SizedBox(height: 20.h),
             client.when(
               data: (data) {
+                if (!isLoaded) {
+                  allClient = List.from(data.data ?? []);
+                  filteredClient = List.from(data.data ?? []);
+                  isLoaded = true;
+                }
                 return Expanded(
                   child: ListView.builder(
                     padding: EdgeInsets.only(bottom: 100.h),
-                    itemCount: data.data?.length,
+                  itemCount: filteredClient.length,
                     itemBuilder: (context, index) {
-                      final client = data.data?[index];
+                    final client = filteredClient[index];
                       return Container(
                         margin: EdgeInsets.only(bottom: 20.w),
                         decoration: BoxDecoration(

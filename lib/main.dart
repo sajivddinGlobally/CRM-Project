@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
           child: SafeArea(
             top: false,
             child: MaterialApp(
-              navigatorKey: navigatorKey,
+              navigatorKey: navigatorKey, 
               scaffoldMessengerKey: scaffoldMessengerKey,
               debugShowCheckedModeBanner: false,
               title: 'CRM App',

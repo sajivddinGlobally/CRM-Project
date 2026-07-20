@@ -120,7 +120,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                         onPressed: () {
                           Navigator.pop(context);
                           onLogout();
-                        },
+                        },  
                         child: Text(
                           "Logout",
                           style: GoogleFonts.inter(

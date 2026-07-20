@@ -995,7 +995,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ],
                   ),
                 ),
-
                 SizedBox(height: 30.h),
               ],
             ),

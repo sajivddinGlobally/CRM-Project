@@ -86,25 +86,25 @@ class _LeadScreenState extends ConsumerState<LeadScreen> {
                 Expanded(
                   child: TextField(
                     controller: serchController,
-                    onChanged: (value) {
-                      setState(() {
-                        if (value.trim().isEmpty) {
-                          filteredLeads = List.from(allLeads);
-                        } else {
-                          filteredLeads = allLeads.where((lead) {      
+                    // onChanged: (value) {
+                    //   setState(() {
+                    //     if (value.trim().isEmpty) {
+                    //       filteredLeads = List.from(allLeads);
+                    //     } else {
+                    //       filteredLeads = allLeads.where((lead) {      
 
                             
-                            return (lead.businessName ?? "")
-                                    .toLowerCase()
-                                    .contains(value.toLowerCase()) ||
-                                (lead.leadName ?? "").toLowerCase().contains(
-                                  value.toLowerCase(),
-                                ) ||
-                                (lead.mobileNumber ?? "").contains(value);
-                          }).toList();
-                        }
-                      });
-                    },
+                    //         return (lead.businessName ?? "")
+                    //                 .toLowerCase()
+                    //                 .contains(value.toLowerCase()) ||
+                    //             (lead.leadName ?? "").toLowerCase().contains(
+                    //               value.toLowerCase(),
+                    //             ) ||
+                    //             (lead.mobileNumber ?? "").contains(value);
+                    //       }).toList();
+                    //     }
+                    //   });
+                    // },
                     decoration: InputDecoration(
                       prefixIconConstraints: BoxConstraints(
                         minHeight: 55.h,

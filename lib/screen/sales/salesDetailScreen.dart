@@ -226,6 +226,7 @@ class _SalesDetailScreenState extends ConsumerState<SalesDetailScreen> {
                           ),
                           child: Center(
                             child: Text(
+                              data.data?.paymentStatus ?? 
                               "PENDING",
                               style: GoogleFonts.inter(
                                 fontSize: 11.sp,
@@ -281,6 +282,8 @@ class _SalesDetailScreenState extends ConsumerState<SalesDetailScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
+                              data.data?.fullName ??
+                              
                               "RAJESH TRADERS",
                               style: GoogleFonts.inter(
                                 fontSize: 12.sp,

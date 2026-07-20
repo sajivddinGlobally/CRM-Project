@@ -167,7 +167,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       backgroundColor: AppColors.scaffBg,
       appBar: AppBar(
         backgroundColor: AppColors.scaffBg,
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: false,  
         elevation: 0,
         leading: Padding(
           padding: EdgeInsets.only(left: 8.w),
@@ -235,8 +235,8 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                   ),
                   error: (e, s) => Center(child: Text(e.toString())),
                 ),
-                // _buildChartAndStats(currentSummary),
-                SizedBox(height: 40.h),
+                // _buildChartAndStats(currentSummary),//////
+                SizedBox(height: 40.h),////////////////////////////////
                 Text(
                   "MONTHLY ATTENDANCE LOG",
                   style: GoogleFonts.inter(
@@ -295,7 +295,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
         Text(
           "THIS MONTH'S ATTENDANCE",
           style: GoogleFonts.inter(
-            fontSize: 13.sp,
+            fontSize: 13.sp, 
             fontWeight: FontWeight.w500,
             color: Color(0xFF69818C),
           ),
@@ -367,6 +367,8 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   }
 
   // --- REST OF THE UI PARTS WITH PASSED PARAMETERS ---
+
+  
 
   Widget _buildCheckInCard() {
     return Container(
